@@ -140,9 +140,9 @@ plot_volcano = function(df, interactome, selected_top_n_labels, var) {
 options(shiny.maxRequestSize=30*1024^2)
 
 server <- function(input, output, session) {
-  shinyjs::addClass(id = "welcome", class = "navbar-right")
   source("sub/02_server_upload.R", local=T)
   source("sub/03_server_dorothea.R", local=T)
   source("sub/04_server_progeny.R", local=T)
   source("sub/05_server_kinact.R", local=T)
+  source("sub/06_server_integration.R", local=T)
 }

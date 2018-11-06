@@ -68,11 +68,11 @@ tabPanel(
   fluidRow(
     column(
       6,
-      downloadButton("download_network", "Download network file (.sif)")
+      downloadButton("download_dorothea_scores", "Download TF-activities")
     ),
     column(
       6, 
-      downloadButton("download_dorothea_scores", "Download TF-activities")
+      downloadButton("download_network", "Download network file (.sif)")
     )
   ),
   hr()

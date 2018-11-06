@@ -114,7 +114,6 @@ output$dorothea_select_contrast = renderUI({
 output$select_top_n_hits = renderUI({
   if (!is.null(D())) {
     max_tfs = D() %>%
-      filter(confidence %in% selected_conf_level()) %>%
       distinct(tf) %>%
       nrow()
     sliderInput("selected_top_n_hits",
