@@ -1,22 +1,22 @@
-## This is the help page of the FUNKI application.
+## Help page of the FUNKI application.
 ### Tab: Upload Data
 All tools can be either applied on mouse or human data and require independent of the omics technology the output of a differential expression analysis. The table must contain the following columns (in arbitrary order): 
  
 * `...`: Identifier of measured variable. `gene` for transcriptomics and `protein` for phosphoproteomics. Identifier must be encoded as symbols.
-* `contrast`: Name of the computed contrast in the differential expression analysis
-* `logFC`: Effect size of the variable of interest. 
-* `adj.p.value`: p-value corrected for multiple hypothesis
+* `contrast`: Name of the computed contrast in the differential expression analysis.
+* `logFC`: Effect size of the variable of interest.
+* `adj.p.value`: p-value corrected for multiple hypothesis.
 
 All other columns will be ignored.
 
 All implemented tools can compute the respective activies for multiple contrast in a single run. Simply concatenate all tables (in the above described format) row-wise.
 
-### Tab: DoRothEA
+### DoRothEA
 #### Before you start
 We provide two different gene regualtory networks for the computation of TF-activities:
 
-* **Coverage:** Contains all TF-target interactions. There is a confidence level assigned to each interaction
-* **Quality:** Here each TF is assigned with a confidence level. The confidence level of a TF is inferred by the its interaction confidence level.
+* **Coverage:** Contains all TF-target interactions. There is a confidence level assigned to each interaction. Filtering confidence level will remove interactions.
+* **Quality:** Here each TF is assigned with a confidence level. The confidence level of a TF is inferred by the its interaction confidence level. Filtering confidence level will remove regulons.
 
 Click on `Run DoRothEA` to start the computation of TF-activities
 
@@ -42,13 +42,13 @@ Here you find the raw TF-activities.
 #### Download
 You can download the TF-activities (as shown in the table above) and the network as .sif file to visualize in Cytoscape.
 
-### Tab: PROGENy
-...
+### PROGENy
+Coming soon ...
 
 ### Tab: KinAct
-...
+Coming soon ...
 
 ### Tab: Integration 
-...
+Coming soon ...
 
 
