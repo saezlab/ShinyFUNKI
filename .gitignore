@@ -20,6 +20,7 @@ packrat/lib*/
 
 # RStudio files
 .Rproj.user/
+.Rprofile
 
 # produced vignettes
 vignettes/*.html
