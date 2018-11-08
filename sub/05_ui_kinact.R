@@ -3,7 +3,8 @@ tabPanel(
   fluidRow(
     column(
       12, align="center",
-      actionButton("run_kinact", label="Run KinAct")
+      actionButton("run_kinact", label="Run KinAct"),
+      img(src="logo_kinact.png", align = "right", height=75, width=75)
     )
     
   ),

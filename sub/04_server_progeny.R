@@ -77,7 +77,7 @@ scatter_plot = eventReactive({
       scale_alpha_manual(values = c(0.25,1), guide="none") +
       scale_color_manual(values = rwth_color(c("magenta", "green")),
                          drop=F) +
-      labs(x="moderated t-value", y="PROGENy weight")
+      labs(x="Effect size", y="PROGENy weight")
     
     ggMarginal(scatter, type="histogram")
   }
@@ -91,7 +91,8 @@ output$pathway_scatter = renderPlot({
 # show TF activity df
 output$progeny_result = DT::renderDataTable({
   progeny_result_matrix = P() %>%
-    spread(contrast, activity) 
+    spread(contrast, activity) %>%
+    rename(Pathway = pathway)
   DT::datatable(progeny_result_matrix, option = list(scrollX = TRUE, autoWidth=T), filter = "top") %>%
     formatSignif(which(map_lgl(progeny_result_matrix, is.numeric)))
 })

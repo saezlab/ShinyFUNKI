@@ -1,5 +1,6 @@
 tabPanel(
   title="PROGENy",
+  img(src="logo_progeny.png", align = "right", width = (16/9)*75, height=75),
   actionButton("run_progeny", label="Run PROGENy"),
   uiOutput("progeny_select_contrast"),
   downloadButton("download_progeny_scores", "Download Pathway-activities"),

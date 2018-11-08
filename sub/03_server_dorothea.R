@@ -103,11 +103,14 @@ output$select_tf = renderUI({
 
 # select contrast
 output$dorothea_select_contrast = renderUI({
-  choices = expr() %>% 
-    distinct(contrast) %>%
-    pull()
-  pickerInput(inputId = "dorothea_selected_contrast", 
-              label = "Select Contrast", choices = choices)
+  if (!is.null(expr())) {
+    choices = expr() %>% 
+      distinct(contrast) %>%
+      pull() %>%
+      str_sort(numeric=T)
+    pickerInput(inputId = "dorothea_selected_contrast", 
+                label = "Select Contrast", choices = choices)
+  }
 })
 
 # select top n results
@@ -212,7 +215,8 @@ output$tf_network = renderPlot({
 # TF-activities
 output$dorothea_result = DT::renderDataTable({
   dorothea_result_matrix = D() %>%
-    spread(contrast, activity) 
+    spread(contrast, activity) %>%
+    rename(TF = tf)
   DT::datatable(dorothea_result_matrix, 
                 option = list(scrollX = TRUE, autoWidth=T), filter = "top") %>%
     formatSignif(which(map_lgl(dorothea_result_matrix, is.numeric)))
@@ -221,7 +225,7 @@ output$dorothea_result = DT::renderDataTable({
 # Download Handler --------------------------------------------------------
 # TF-activities
 output$download_dorothea_scores = downloadHandler(
-  filename = "dorothea_scores.csv",
+  filename = "tf_activities.csv",
   content = function(x) {
     write_csv(D(), x)
   })

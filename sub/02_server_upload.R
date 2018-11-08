@@ -2,11 +2,14 @@
 # if a file is uploaded, the calculation button in enabled
 observeEvent({
   input$upload_expr
+  input$upload_pprot
   input$take_example_data}, {
     toggleState("run_dorothea", 
                 input$take_example_data == T | !is.null(input$upload_expr))
     toggleState("run_progeny", 
                 input$take_example_data == T | !is.null(input$upload_expr))
+    toggleState("run_kinact", 
+                input$take_example_data == T | !is.null(input$upload_pprot))
   })
 
 
@@ -24,9 +27,9 @@ interactome = reactive({
            "Mus musculus" = dorothea_regulon_mouse_coverage_v1
     )
   } else if (input$take_example_data == T & quality_vs_coverage() == "Quality") {
-    dorothea_regulon_mouse_v1
+    dorothea_regulon_human_v1
   } else if (input$take_example_data == T & quality_vs_coverage() == "Coverage") {
-    dorothea_regulon_mouse_coverage_v1
+    dorothea_regulon_mouse_human_v1
   }
 })
 
@@ -37,7 +40,7 @@ matrix = reactive({
          "Mus musculus" = progeny_matrix_mouse_v1
   )
   } else {
-    progeny_matrix_mouse_v1
+    progeny_matrix_human_v1
   }
 })
 
@@ -60,7 +63,7 @@ expr = reactive({
   } else {
     shinyjs::disable("upload_expr")
     shinyjs::disable("select_organism")
-    read_csv("data/limma_result.csv") 
+    read_csv("data/example_data.csv") 
   }
 })
 

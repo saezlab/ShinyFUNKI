@@ -1,6 +1,6 @@
 ## Help page of the FUNKI application.
-### Tab: Upload Data
-All tools can be either applied on mouse or human data and require independent of the omics technology the output of a differential expression analysis. The table must contain the following columns (in arbitrary order): 
+### Upload Data
+All tools can be either applied on mouse or human data and require independent of the omics technology the output of a differential expression analysis. The table must contain the following commma separated columns (in arbitrary order): 
  
 * `...`: Identifier of measured variable. `gene` for transcriptomics and `protein` for phosphoproteomics. Identifier must be encoded as symbols.
 * `contrast`: Name of the computed contrast in the differential expression analysis.
@@ -45,10 +45,10 @@ You can download the TF-activities (as shown in the table above) and the network
 ### PROGENy
 Coming soon ...
 
-### Tab: KinAct
+### KinAct
 Coming soon ...
 
-### Tab: Integration 
+### Integration 
 Coming soon ...
 
 
