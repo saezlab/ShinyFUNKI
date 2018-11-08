@@ -53,7 +53,7 @@ plot_heatmap = function(df, var="tf") {
   mat = df %>%
     select(!!var, contrast, activity) %>% 
     spread(contrast, activity) %>%
-    data.frame(row.names = var)
+    data.frame(row.names = var, check.names = F)
   
   if (ncol(mat) > 1) {
     pheatmap(mat)
