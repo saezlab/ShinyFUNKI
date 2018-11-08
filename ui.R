@@ -4,6 +4,7 @@ source("sub/global.R")
 
 ui = fluidPage(
   useShinyjs(),
+  tags$head(includeScript("google-analytics.js")),
   #shinyjs::addClass(id = "welcome", class = "navbar-right"),
   #theme = shinythemes::shinytheme("spacelab"),
   navbarPage(
