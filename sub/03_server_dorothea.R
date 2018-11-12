@@ -233,7 +233,7 @@ output$download_dorothea_scores = downloadHandler(
 # Network
 output$download_network = downloadHandler(
   filename = function() {
-    paste0("network_", selected_tf(), ".sif")
+    paste0("network_", selected_tf(), dorothea_selected_contrast(), ".sif")
   },
   content = function(file) {
     if (!is.null(dorothea_network_df())) {
