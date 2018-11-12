@@ -30,10 +30,10 @@ Click on `Run DoRothEA` to start the computation of TF-activities
 * **Number of shown labels in Volcano plot/network:** Number of genes to be labelled in the volcano plot and number of nodes shown in the network (Default: 10).
 
 #### Figures
-* **Lollipop:** The plot shows the top *n* regulated TFs for a given contrast. Contrast and number of shown TFs can be adjusted with corresponding widgets. (**TODO**: Interpretation of Activity score)
+* **Lollipop:** The plot shows the top *n* regulated TFs for a given contrast. Contrast and number of shown TFs can be adjusted with corresponding widgets.
 * **Volcano:** The plot shows the targets of the selected TF and the selected contrast. Green dots represent significantly over-expressed and red dots represent significant down-regulated genes. The cutoff for the adjusted p-value can be changed with the corresponding widget.
 * **Network:** The plot shows the TF-target interactions of the selected TF and the selected contrast in a network. Green nodes indicate that the target is over-expressed and red nodes indicate that the target is down-regulated. The color of the edges represent the effect of the TF on its target (either activation or repression). The number of shown nodes can be changed by the corresponding widget.
-* **Heatmap:** The heatmap allows a comprehensive overview of all contrasts and computed TF-activities.
+* **Heatmap:** The heatmap provides a comprehensive overview of all contrasts and computed TF-activities.
 * **Bar:** The plot shows the activity of the selected TF for all given contrasts.
 
 #### Datatables
