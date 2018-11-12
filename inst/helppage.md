@@ -16,7 +16,7 @@ All implemented tools can compute the respective activities for multiple contras
 We provide two different gene regulatory networks for the computation of TF-activities:
 
 * **Coverage:** Contains all TF-target interactions. There is a confidence level assigned to each interaction. Filtering confidence level will remove interactions.
-* **Quality:** Here each TF is assigned with a confidence level. The confidence level of a TF is inferred by the its interaction confidence level. Filtering confidence level will remove regulons.
+* **Quality:** Here each TF is assigned with a confidence level. The confidence level of a TF is inferred by its interaction confidence level. Filtering confidence level will remove regulons.
 
 Click on `Run DoRothEA` to start the computation of TF-activities
 
@@ -37,7 +37,7 @@ Click on `Run DoRothEA` to start the computation of TF-activities
 * **Bar:** The plot shows the activity of the selected TF for all given contrasts.
 
 #### Datatables
-Table of TF-activites.
+Table of TF-activities.
 
 #### Download
 * **Download TF-activites**: Download of TF activities in [tidy](https://r4ds.had.co.nz/tidy-data.html) format
