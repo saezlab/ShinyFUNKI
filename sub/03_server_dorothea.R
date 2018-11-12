@@ -28,17 +28,25 @@ D = eventReactive({
 
 
 dorothea_network_df = reactive({
-  if (!is.null(selected_tf()) & !is.null(dorothea_selected_contrast())) {
+  if (!is.null(selected_tf()) & !is.null(dorothea_selected_contrast()) & !is.null(D())) {
     genes_of_interest = extended_expr() %>%
       ungroup() %>%
       filter(contrast == dorothea_selected_contrast()) %>%
       select(target=gene, importance, effect)
     
+    tf_of_interest = D() %>% 
+      filter(contrast == dorothea_selected_contrast()) %>%
+      filter(tf %in% selected_tf()) %>%
+      mutate(regulation = case_when(activity >= 0 ~ "upregulated",
+                                    activity < 0 ~ "downregulated")) %>%
+      select(-activity)
+    
     network = interactome() %>%
       filter(confidence %in% selected_conf_level()) %>%
       mutate(mor = as.factor(mor)) %>%
       filter(tf %in% selected_tf()) %>%
-      left_join(genes_of_interest, by = "target")
+      left_join(genes_of_interest, by = "target") %>%
+      inner_join(tf_of_interest, by=c("tf", "confidence"))
   }
 })
 
@@ -177,7 +185,7 @@ output$tf_volcano = renderPlot({
     
     plot_volcano(renamed_extended_expr, filtered_interactome, 
                  selected_top_n_labels = dorothea_selected_top_n_labels(), 
-                 var=tf)
+                 var=tf, var_label = "TF")
   }
 })
 
@@ -197,7 +205,8 @@ output$tf_bar = renderPlot({
       theme(legend.position = "none") +
       scale_fill_manual(values = rwth_color(c("magenta", "green")),
                         drop=F) +
-      theme(aspect.ratio = c(1))
+      theme(aspect.ratio = c(1)) +
+      ggtitle(paste0("TF: ", selected_tf()))
   }
 })
 
@@ -206,7 +215,7 @@ output$tf_network = renderPlot({
   if (!is.null(dorothea_network_df()) & 
       !is.null(dorothea_selected_top_n_labels())) {
     plot_network(network = dorothea_network_df(), 
-                 num_nodes = dorothea_selected_top_n_labels(), var="tf")
+                 num_nodes = dorothea_selected_top_n_labels(), var="tf", var_label = "TF")
   }
 })
 

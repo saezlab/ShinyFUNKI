@@ -41,11 +41,19 @@ kinact_network_df = reactive({
       ungroup() %>%
       filter(contrast == kinact_selected_contrast()) %>%
       select(target=protein, importance, effect)
+    
+    kinase_of_interest = K() %>% 
+      filter(contrast == kinact_selected_contrast()) %>%
+      filter(tf %in% selected_kinase()) %>%
+      mutate(regulation = case_when(activity >= 0 ~ "upregulated",
+                                    activity < 0 ~ "downregulated")) %>%
+      select(-activity)
 
     network = kinact_interactome() %>%
       mutate(mor = as.factor(mor)) %>%
       filter(kinase %in% selected_kinase()) %>%
-      left_join(proteins_of_interest, by = "target")
+      left_join(proteins_of_interest, by = "target") %>%
+      inner_join(kinase_of_interest, by="kinase")
   }
 })
 
@@ -115,7 +123,7 @@ output$kinase_volcano = renderPlot({
     sub_kinact_interactome = kinact_interactome() %>%
       filter(kinase == selected_kinase())
     
-    plot_volcano(renamed_extended_ppomics, sub_kinact_interactome, selected_top_n_labels = kinact_selected_top_n_labels(), var=kinase)
+    plot_volcano(renamed_extended_ppomics, sub_kinact_interactome, selected_top_n_labels = kinact_selected_top_n_labels(), var=kinase, var_label = "Kinase")
   }
 })
 # 
@@ -143,7 +151,7 @@ output$kinact_network = renderPlot({
   if (!is.null(kinact_network_df()) & !is.null(kinact_selected_top_n_labels())) {
     plot_network(network = kinact_network_df(),
                     num_nodes = kinact_selected_top_n_labels(),
-                    var="kinase")
+                    var="kinase", var_label = "Kinase")
   }
 })
 # 
