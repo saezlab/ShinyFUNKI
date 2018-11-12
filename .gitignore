@@ -42,3 +42,4 @@ vignettes/*.pdf
 rsconnect/
 data/
 packrat/
+sub/debugging.R
