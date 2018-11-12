@@ -111,7 +111,8 @@ extended_ppomics = reactive({
 
 output$expr = DT::renderDataTable({
   if (!is.null(expr())) {
-    DT::datatable(expr(), option = list(scrollX = TRUE, autoWidth=T), filter = "top") %>%
+    DT::datatable(expr(), option = list(scrollX = TRUE, autoWidth=T), 
+                  filter = "top", selection = list(target = "none")) %>%
       formatSignif(which(map_lgl(expr(), is.numeric)))
   }
 
@@ -119,7 +120,8 @@ output$expr = DT::renderDataTable({
 
 output$ppomics = DT::renderDataTable({
   if (!is.null(ppomics())) {
-    DT::datatable(ppomics(), option = list(scrollX = TRUE, autoWidth=T), filter = "top") %>%
+    DT::datatable(ppomics(), option = list(scrollX = TRUE, autoWidth=T), 
+                  filter = "top", selection = list(target = "none")) %>%
       formatSignif(which(map_lgl(ppomics(), is.numeric)))
   }
 })
