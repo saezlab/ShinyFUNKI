@@ -75,6 +75,6 @@ tabPanel(
       downloadButton("download_network", "Download network file (.sif)")
     )
   ),
-  bookmarkButton(id = "dorothea_bookmark"),
+  #bookmarkButton(id = "dorothea_bookmark"),
   hr()
 )

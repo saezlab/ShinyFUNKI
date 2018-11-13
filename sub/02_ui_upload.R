@@ -17,6 +17,6 @@ tabPanel(
       href = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi")),
   DT::dataTableOutput("expr"),
   #DT::dataTableOutput("ppomics"),
-  bookmarkButton(id = "upload_bookmark"),
+  #bookmarkButton(id = "upload_bookmark"),
   hr()
 )
