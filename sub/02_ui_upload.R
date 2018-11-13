@@ -10,8 +10,13 @@ tabPanel(
   #fileInput("upload_pprot", label="Upload phospho-protein expression"),
   switchInput(inputId = "take_example_data", label = "Take example data",
               onLabel = "Yes", offLabel = "No", value=TRUE),
-  "Example dataset taken from Blackham et al, J Virol., 2010 (GSE20948)",
+  p("Example dataset taken ",
+    a("Blackham et al, J Virol., 2010", 
+      href = "https://www.ncbi.nlm.nih.gov/pubmed/20200238"),
+    a("(GSE20948)",
+      href = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi")),
   DT::dataTableOutput("expr"),
   #DT::dataTableOutput("ppomics"),
+  bookmarkButton(id = "upload_bookmark"),
   hr()
 )
