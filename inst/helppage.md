@@ -40,5 +40,5 @@ Click on `Run DoRothEA` to start the computation of TF-activities
 Table of TF-activities.
 
 #### Download
-* **Download TF-activites**: Download of TF activities in [tidy](https://r4ds.had.co.nz/tidy-data.html) format
-* **Download network file (.sif)** Download of the TF-target network for a given TF and contrast in .sif format. Can be used to visualize the network in [Cytoscape](https://cytoscape.org)
+* **Download TF-activites**: Download of TF activities in <a href="https://r4ds.had.co.nz/tidy-data.html" target="_blank">tidy</a> format
+* **Download network file (.sif)** Download of the TF-target network for a given TF and contrast in .sif format. Can be used to visualize the network in <a href="https://cytoscape.org" target="_blank">Cytoscape</a>.
