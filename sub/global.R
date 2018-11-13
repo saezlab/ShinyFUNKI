@@ -13,6 +13,8 @@ library(tidygraph)
 library(ggraph)
 library(broom)
 
+enableBookmarking(store = "server")
+
 
 
 plot_lollipop = function(df, top_n_hits, var, var_label) {
