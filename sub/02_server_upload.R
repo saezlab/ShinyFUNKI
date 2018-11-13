@@ -1,4 +1,3 @@
-
 # if a file is uploaded, the calculation button in enabled
 observeEvent({
   input$upload_expr
