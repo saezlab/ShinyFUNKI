@@ -1,6 +1,5 @@
 # UI
 source("sub/global.R")
-
 ui = function(request) {
   fluidPage(
     useShinyjs(),

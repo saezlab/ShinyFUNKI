@@ -46,7 +46,7 @@ dorothea_network_df = reactive({
       mutate(mor = as.factor(mor)) %>%
       filter(tf %in% selected_tf()) %>%
       left_join(genes_of_interest, by = "target") %>%
-      inner_join(tf_of_interest, by=c("tf", "confidence"))
+      inner_join(tf_of_interest, by=c("tf"))
   }
 })
 

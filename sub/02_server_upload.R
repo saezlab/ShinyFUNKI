@@ -28,7 +28,7 @@ interactome = reactive({
   } else if (input$take_example_data == T & quality_vs_coverage() == "Quality") {
     dorothea_regulon_human_v1
   } else if (input$take_example_data == T & quality_vs_coverage() == "Coverage") {
-    dorothea_regulon_mouse_human_v1
+    dorothea_regulon_human_coverage_v1
   }
 })
 
