@@ -11,7 +11,7 @@ D = eventReactive({
       ungroup() %>%
       select(gene, contrast, logFC)
     
-    withProgress(message="Calculate DoRothEA matrix", value=1, {
+    withProgress(message="Calculate TF activities...", value=1, {
       filtered_interactome = interactome() %>% 
         filter(confidence %in% selected_conf_level())
       
