@@ -40,6 +40,6 @@ vignettes/*.pdf
 
 # Shiny token, see https://shiny.rstudio.com/articles/shinyapps.html
 rsconnect/
-data/
+data/ignore/
 packrat/
 sub/debugging.R
