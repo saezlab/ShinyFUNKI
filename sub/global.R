@@ -17,7 +17,8 @@ enableBookmarking(store = "server")
 options(shiny.maxRequestSize=30*1024^2)
 
 # load data
-rwth_colors_df = get(load("data/rwth_colors.rda"))
+rwth_colors_df = get(load("data/misc/rwth_colors.rda"))
+example_data = read_csv("data/examples/example_data.csv") 
 
 # dorothea
 load("data/models/dorothea_regulon_human_v1.rda")

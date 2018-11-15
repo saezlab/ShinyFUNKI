@@ -62,7 +62,7 @@ expr = reactive({
   } else {
     shinyjs::disable("upload_expr")
     shinyjs::disable("select_organism")
-    read_csv("data/example_data.csv") 
+    example_data 
   }
 })
 
