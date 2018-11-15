@@ -23,10 +23,9 @@ example_data = read_csv("data/examples/example_data.csv")
 # dorothea
 load("data/models/dorothea_regulon_human_v1.rda")
 load("data/models/dorothea_regulon_mouse_v1.rda")
-dorothea_regulon_mouse_coverage_v1 = get(load("data/models/dorothea_regulon_human_coverage_v1.rda")) %>%
-  mutate(tf = str_to_title(tf),
-         target = str_to_title(target))
-dorothea_regulon_human_coverage_v1 = get(load("data/models/dorothea_regulon_human_coverage_v1.rda"))
+
+load("data/models/dorothea_regulon_human_coverage_v1.rda")
+load("data/models/dorothea_regulon_mouse_coverage_v1.rda")
 
 # progeny
 load("data/models/progeny_matrix_mouse_v1.rda")
