@@ -1,5 +1,16 @@
 ## Help page of the FUNKI application.
+Dear User,
+
+if your data files are sensitive or confidential we highly encourage you to run this app locally by typing 
+
+```shiny::runGithub("ShinyFUNKI", "saezlab")``` 
+
+in an R session. **Please note that this feature will be enabled as soon as this App is published.**
+
+---
+
 ### Upload Data
+
 All tools can be either applied on mouse or human data and require, independently of the omics technology, the output of a differential expression analysis. The table must contain the following comma separated columns (in arbitrary order): 
  
 * `...`: Identifier of measured variable. `gene` for transcriptomics and `protein` for phosphoproteomics. Identifier must be encoded as symbols.
@@ -10,6 +21,8 @@ All tools can be either applied on mouse or human data and require, independentl
 All other columns will be ignored.
 
 All implemented tools can compute the respective activities for multiple contrast in a single run. Simply concatenate all tables (in the above described format) row-wise.
+
+---
 
 ### DoRothEA
 #### Before you start
