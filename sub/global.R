@@ -3,7 +3,6 @@
 
 library(shiny)
 library(shinyWidgets)
-#library(shinyjs)
 library(DT)
 library(tidyverse)
 library(dorothea)
