@@ -4,7 +4,7 @@ server = function(input, output, session) {
   
   # Reactive Computations ---------------------------------------------------
   
-  # dorothea_network_df = reactive({
+  #  dorothea_network_df = reactive({
   # })
   
   # Dynamic widgets / RenderUI ----------------------------------------------
@@ -24,7 +24,8 @@ server = function(input, output, session) {
     choices = unique(rownames(dorothea_result))
     
     default_selected = rownames(dorothea_result)[ 
-                          which( dorothea_result[, input$dorothea_selected_contrast] == max(dorothea_result[, input$dorothea_selected_contrast]) ) ]
+                          which( dorothea_result[, input$dorothea_selected_contrast] ==
+                                   max(dorothea_result[, input$dorothea_selected_contrast]) ) ]
     
     pickerInput(inputId = "selected_tf", 
                 label = "Select Transcription Factor", 
@@ -36,9 +37,8 @@ server = function(input, output, session) {
   
   # select number of targets
   output$dorothea_select_top_n_labels = renderUI({
-    print(input$selected_tf)
+    
     if ( ! is.null(input$selected_tf) ) {
-      
       targets = dorothea_hs %>% 
         dplyr::filter(tf == input$selected_tf & confidence %in% confidence_level) %>%
         dplyr::select(target) %>% nrow()
@@ -92,40 +92,47 @@ server = function(input, output, session) {
   
   # Network of a TF with it's targets
   output$tf_network = renderPlot({
-    print(input$dorothea_select_top_n_labels)
+    print(paste0("Nlabels: ", input$dorothea_select_top_n_labels))
+    print(paste0("contrast: ",input$dorothea_selected_contrast))
+    print(paste0("TF: ",input$selected_tf))
+    print(paste0("top TF: ", input$select_top_n_hits))
+    print(lapply(input$dorothea_network_df, head))
+    
       if ( !is.null(input$selected_tf) & 
-           !is.null(input$dorothea_selected_contrast) & 
-           !is.null(input$dorothea_select_top_n_labels) ) {
+           !is.null(input$dorothea_selected_contrast) ) {
         
-        edges = dorothea_hs %>% 
-          dplyr::filter(tf == input$selected_tf & confidence %in% confidence_level) %>%
-          dplyr::select(tf, mor, target)
+        aux = dorothea_hs %>% 
+          dplyr::filter(tf == input$selected_tf & 
+                          confidence %in% confidence_level)
         
-        nodes = dorothea_hs %>% 
-          dplyr::filter(tf == input$selected_tf & confidence %in% confidence_level) %>%
-          dplyr::select(target) 
-        
-        nodes = merge.data.frame(nodes, 
-                                 inputDorothea %>% dplyr::select(input$dorothea_selected_contrast) %>% 
+        nodes = merge.data.frame(aux %>% 
+                                   dplyr::select(target), 
+                                 inputDorothea %>% 
+                                   dplyr::select(input$dorothea_selected_contrast) %>% 
                                    tibble::rownames_to_column("target"), 
                                  by = "target")
         
-        nodes = nodes[order(nodes[,input$dorothea_selected_contrast]),]
+        nodes = nodes[order(abs(nodes[,input$dorothea_selected_contrast]),decreasing = T),] 
         
-        nodes = nodes[1:input$dorothea_select_top_n_labels,]
+        #nodes = nodes[1:input$dorothea_select_top_n_labels,]
         
-        nodes = rbind.data.frame(nodes, 
-                                 dorothea_result %>% 
-                                   tibble::rownames_to_column("target") %>% 
-                                   dplyr::filter(target == input$selected_tf) %>% 
-                                   dplyr::select(target, input$dorothea_selected_contrast)) %>%
-          mutate(regulation = case_when(input$dorothea_selected_contrast >= 0 ~ "upregulated",
-                                        input$dorothea_selected_contrast < 0 ~ "downregulated"))
+        nodes = tibble(rbind.data.frame(nodes,
+                                 dorothea_result %>%
+                                   tibble::rownames_to_column("target") %>%
+                                   dplyr::filter(target == input$selected_tf) %>%
+                                   dplyr::select(target, input$dorothea_selected_contrast))) 
         
+        nodes$regulation = nodes[, input$dorothea_selected_contrast] 
+         
+        nodes = nodes %>%
+                mutate(regulation = dplyr::case_when(regulation >= 0 ~ "upregulated",
+                                                     regulation < 0 ~ "downregulated"))
+
         gtitle = paste0("Sample/Contrast: ", input$dorothea_selected_contrast, "; TF: ", input$selected_tf)
         
-        edges %>%
-          plot_network(nodes = nodes, title = gtitle)
+        plot_network(network = aux %>% dplyr::select(tf, mor, target), 
+                     nodes = nodes, 
+                     title = gtitle)
         
         }
       
