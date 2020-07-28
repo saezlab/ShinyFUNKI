@@ -40,18 +40,15 @@ ui = function(request) {
     
     hr(),
      fluidRow(
-    #   column(
-    #     4, plotOutput("dorothea_lollipop")
-    #   ),
         column(
-          5, plotOutput("tf_bar")
+          6, plotOutput("tf_bar")
         ),
         column(
           2, uiOutput("dorothea_select_top_n_labels")
         ),
         
         column(
-          4, plotOutput("tf_network")
+          6, plotOutput("tf_network")
         )
      ),
     hr(),
@@ -59,6 +56,8 @@ ui = function(request) {
     # Table visualization
       DT::dataTableOutput("dorothea_result"),
     hr(),
+    
+    # Download content
     fluidRow(
       column(
         6,
