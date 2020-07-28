@@ -1,9 +1,15 @@
 # SERVER
 server = function(input, output, session) {
   
+  
+  # Reactive Computations ---------------------------------------------------
+  
+  # dorothea_network_df = reactive({
+  # })
+  
   # Dynamic widgets / RenderUI ----------------------------------------------
   
-  # select contrast
+  # select contrast/sample
   output$dorothea_select_contrast = renderUI({
     if ( ! is.null( dorothea_result ) ) {
       choices = colnames(dorothea_result) %>%
@@ -28,6 +34,21 @@ server = function(input, output, session) {
     )
   })
   
+  # select number of targets
+  output$dorothea_select_top_n_labels = renderUI({
+    print(input$selected_tf)
+    if ( ! is.null(input$selected_tf) ) {
+      
+      targets = dorothea_hs %>% 
+        dplyr::filter(tf == input$selected_tf & confidence %in% confidence_level) %>%
+        dplyr::select(target) %>% nrow()
+      
+      sliderInput("dorothea_selected_top_n_labels",
+                  label = "Number of targets to display", value = 10,
+                  min = 1, max = targets, step = 1)
+    }
+  })
+  
   # select top n results
   output$select_top_n_hits = renderUI({
     if ( ! is.null( dorothea_result ) ) {
@@ -38,9 +59,8 @@ server = function(input, output, session) {
     }
   })
   
-  
+
   # Render Tables -----------------------------------------------------------
-  
   # TF-activities
   output$dorothea_result = DT::renderDataTable({
     results_confidence = unique.data.frame(merge(dorothea_hs[, c("tf", "confidence")], dorothea_result %>% rownames_to_column(var = "tf"), by="tf"))
@@ -70,23 +90,56 @@ server = function(input, output, session) {
     
   })
   
-  # Network
+  # Network of a TF with it's targets
   output$tf_network = renderPlot({
-    if (!is.null(dorothea_network_df()) & 
-        !is.null(dorothea_selected_top_n_labels())) {
-      plot_network(network = dorothea_network_df(), 
-                   num_nodes = dorothea_selected_top_n_labels(), var="tf", var_label = "TF")
-    }
+    print(input$dorothea_select_top_n_labels)
+      if ( !is.null(input$selected_tf) & 
+           !is.null(input$dorothea_selected_contrast) & 
+           !is.null(input$dorothea_select_top_n_labels) ) {
+        
+        edges = dorothea_hs %>% 
+          dplyr::filter(tf == input$selected_tf & confidence %in% confidence_level) %>%
+          dplyr::select(tf, mor, target)
+        
+        nodes = dorothea_hs %>% 
+          dplyr::filter(tf == input$selected_tf & confidence %in% confidence_level) %>%
+          dplyr::select(target) 
+        
+        nodes = merge.data.frame(nodes, 
+                                 inputDorothea %>% dplyr::select(input$dorothea_selected_contrast) %>% 
+                                   tibble::rownames_to_column("target"), 
+                                 by = "target")
+        
+        nodes = nodes[order(nodes[,input$dorothea_selected_contrast]),]
+        
+        nodes = nodes[1:input$dorothea_select_top_n_labels,]
+        
+        nodes = rbind.data.frame(nodes, 
+                                 dorothea_result %>% 
+                                   tibble::rownames_to_column("target") %>% 
+                                   dplyr::filter(target == input$selected_tf) %>% 
+                                   dplyr::select(target, input$dorothea_selected_contrast)) %>%
+          mutate(regulation = case_when(input$dorothea_selected_contrast >= 0 ~ "upregulated",
+                                        input$dorothea_selected_contrast < 0 ~ "downregulated"))
+        
+        gtitle = paste0("Sample/Contrast: ", input$dorothea_selected_contrast, "; TF: ", input$selected_tf)
+        
+        edges %>%
+          plot_network(nodes = nodes, title = gtitle)
+        
+        }
+      
   })
-  
-  
-  
-  
-  # Lollipop
-  # output$dorothea_lollipop = renderPlot({
-  #   dorothea_result[, dorothea_selected_contrast()]  %>%
-  #     plot_lollipop(top_n_hits = selected_top_n_hits(), 
-  #                   var = tf, var_label = "Transcription Factor")
-  # })
+
+
+
+  # Download Handler --------------------------------------------------------
+  # TF-activities
+  output$download_dorothea_scores = downloadHandler(
+    filename = "TFactivities_nes.csv",
+    content = function(x) {
+      write.csv(dorothea_result, x, quote=F)
+      #tar('tmp.tar.gz', 'tmp.txt', compression = 'gzip', tar="tar")
+    })
   
 }
