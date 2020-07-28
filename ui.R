@@ -2,7 +2,7 @@
 source("sub/global.R")
 ui = function(request) {
   fluidPage(
-    useShinyjs(),
+    #useShinyjs(),
       title = "DoRothEA",
     
       # Column with title and logo
@@ -44,18 +44,33 @@ ui = function(request) {
     #     4, plotOutput("dorothea_lollipop")
     #   ),
         column(
-          6, plotOutput("tf_bar")
+          5, plotOutput("tf_bar")
         ),
-       # column(
-       #   4, plotOutput("tf_network")
-       # )
+        column(
+          2, uiOutput("dorothea_select_top_n_labels")
+        ),
+        
+        column(
+          4, plotOutput("tf_network")
+        )
      ),
     hr(),
     
     # Table visualization
-      DT::dataTableOutput("dorothea_result")
-      
-    
+      DT::dataTableOutput("dorothea_result"),
+    hr(),
+    fluidRow(
+      column(
+        6,
+        downloadButton("download_dorothea_scores", "Download TF-activities (NES)")
+      ),
+      column(
+        6, 
+        downloadButton("download_graphics", "Download figues (.svg)")
+      )
+    ),
+    #bookmarkButton(id = "dorothea_bookmark"),
+    hr() 
 
   ) # close fluidPage
 }
