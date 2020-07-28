@@ -2,7 +2,8 @@
 #initialize
 
 library(shiny)
-#library(useShinyjs)
+library(shinyWidgets)
+#library(shinyjs)
 library(DT)
 library(tidyverse)
 library(dorothea)
@@ -82,7 +83,7 @@ barplot_tf = function(df, selTF){
 
 plot_network = function( network, nodes, title ){
   
-  edges = edges %>% 
+  edges = network %>% 
     dplyr::filter(target %in% unique(nodes$target))
   colnames(edges) = c("from", "sign", "to")
   
@@ -93,10 +94,10 @@ plot_network = function( network, nodes, title ){
     geom_node_point(aes(color = regulation), size=10) + #, shape=class
     geom_node_text(aes(label = target), vjust = 0.4) + 
     theme_graph() +
-    scale_color_manual(values = c("#99004C", "#4C9900"), drop=F) +
-    scale_edge_color_manual(values = c("#99004C", "#4C9900"), drop=F) +
+    scale_color_manual(values = c("downregulated" = "#99004C", "upregulated" = "#4C9900"), drop=F) +
+    scale_edge_color_manual(values = c("-1" = "#99004C", "1" = "#4C9900"), drop=F) +
     scale_shape_manual(values = c(16,15)) +
-    theme(legend.position = "none",
+    theme(#legend.position = "none",
           aspect.ratio = c(1), 
           plot.title = element_text(size = 14, face="plain")) +
     ggtitle(title)
