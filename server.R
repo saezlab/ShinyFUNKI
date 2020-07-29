@@ -160,10 +160,17 @@ server = function(input, output, session) {
     filename = "footprint_dorothea_saezLab.tar.gz",
     content = function(x) {
       fdir = "footprint_dorothea_saezLab"
-      dir.create(fdir)
+      
+      if (dir.exists(fdir)){
+        do.call(file.remove, list(list.files(fdir, full.names = TRUE)))
+      }else{
+        dir.create(fdir)
+      }
+      
       fnames = c(paste0("barplot_tfs_", input$select_contrast, ".png"), 
                  paste0("barplot_samples_", input$select_tf, ".png"),
                  paste0("network_", input$select_contrast, "_", input$select_tf, ".png"))
+      
       ggsave(file.path(fdir, fnames[1]), barplot_nes_reactive(), device = "png")
       ggsave(file.path(fdir, fnames[2]), barplot_tf_reactive(), device = "png")
       ggsave(file.path(fdir, fnames[3]), network_tf_reactive(), device = "png")
