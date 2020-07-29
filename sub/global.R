@@ -45,7 +45,7 @@ barplot_nes = function(df, smpl, nHits){
   
   ggplot(df, aes(x = NES, y = reorder(GeneID, NES) )) +
     geom_bar(aes(fill = NES), stat = "identity") +
-    scale_fill_gradient2(low = "darkblue", high = "indianred",
+    scale_fill_gradient2(low = "#99004C", high = "#4C9900",#"darkblue", "indianred"
                          mid = "whitesmoke", midpoint = 0) +
     theme_minimal() +
     theme(axis.title = element_text(face = "bold", size = 12),
