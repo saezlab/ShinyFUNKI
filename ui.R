@@ -2,53 +2,68 @@
 source("sub/global.R")
 ui = function(request) {
   fluidPage(
-    #useShinyjs(),
-      title = "DoRothEA",
     
-      # Column with title and logo
+    # Row with title and logos
+    titlePanel(
       fluidRow(
+        column(4, "DoRothEA"),
         column(
-          12, align="center", 
-          img(src="logo_dorothea.png", align = "right", height=75, width=75),
-        )),
-    
+          4, offset = 4, 
+          img( src = "logo_saezlab.png", align = "right", height = 75, width = 75 ),
+          img( src = "logo_dorothea.png", align = "right", height = 75, width = 75 ),
+        ))
+      ),
+
     hr(),
     
-    
+    # Row controlling the widgets
     fluidRow(
-      # select the column to render the plots
-      column(
-        6, align="center", uiOutput("dorothea_select_contrast")
-      ),
-      # select TF for specific plots
-      column(
-        6, align="center", uiOutput("select_tf")
+    column( 6, 
+      sidebarLayout(
+        sidebarPanel( width = 12,
+          uiOutput("select_contrast"),
+          uiOutput("select_tf") ,
+          downloadButton("download_dorothea_scores", "Download TF-activities (NES)"),
+          downloadButton("download_graphics", "Download figues (.svg)")
+        ),
+        mainPanel( width = 0 )
       )
     ),
-    
-    hr(),
-    
-    fluidRow(
-      #select number of TFs to show in the graphics
-      column(
-        3, uiOutput("select_top_n_hits")
-      ),
-      column(
-        8, plotOutput("barplot_nes")
+ 
+    column(6, 
+      sidebarLayout(
+        sidebarPanel( width = 12,
+          uiOutput("select_top_n_hits"),
+          uiOutput("select_top_n_labels")
+        ),
+        mainPanel( width = 0 )
       )
+    )
     ),
     
+    # column(4,
+    #   sidebarLayout(
+    #     sidebarPanel( width = 12,
+    #       downloadButton("download_dorothea_scores", "Download TF-activities (NES)"),
+    #       downloadButton("download_graphics", "Download figues (.svg)")
+    #     ),
+    #     mainPanel( width = 0 )
+    #   )
+    # ),
+    
+    
     hr(),
+ 
      fluidRow(
         column(
-          6, plotOutput("tf_bar")
+          3, plotOutput("tf_bar")
         ),
         column(
-          2, uiOutput("dorothea_select_top_n_labels")
+          4, plotOutput("barplot_nes")
         ),
         
         column(
-          6, plotOutput("tf_network")
+          5, plotOutput("tf_network")
         )
      ),
     hr(),
@@ -58,16 +73,16 @@ ui = function(request) {
     hr(),
     
     # Download content
-    fluidRow(
-      column(
-        6,
-        downloadButton("download_dorothea_scores", "Download TF-activities (NES)")
-      ),
-      column(
-        6, 
-        downloadButton("download_graphics", "Download figues (.svg)")
-      )
-    ),
+    # fluidRow(
+    #   column(
+    #     6,
+    #     downloadButton("download_dorothea_scores", "Download TF-activities (NES)")
+    #   ),
+    #   column(
+    #     6, 
+    #     downloadButton("download_graphics", "Download figues (.svg)")
+    #   )
+    # ),
     #bookmarkButton(id = "dorothea_bookmark"),
     hr() 
 
