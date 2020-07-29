@@ -23,8 +23,7 @@ ui = function(request) {
         sidebarPanel( width = 12,
           uiOutput("select_contrast"),
           uiOutput("select_tf") ,
-          downloadButton("download_dorothea_scores", "Download TF-activities (NES)"),
-          downloadButton("download_graphics", "Download figues (.svg)")
+          downloadButton("download_dorothea_analysis", "Download DoRothEA scores and figures"),
         ),
         mainPanel( width = 0 )
       )
