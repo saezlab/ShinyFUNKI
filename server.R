@@ -154,25 +154,21 @@ server = function(input, output, session) {
 
   # Download Handler --------------------------------------------------------
 
-  # TF-activities
-  output$download_dorothea_scores = downloadHandler(
-    filename = "TFactivities_nes.csv",
-    content = function(x) {
-      write.csv(dorothea_result, x, quote=F)
-      #tar('tmp.tar.gz', 'tmp.txt', compression = 'gzip', tar="tar")
-    })
-  
   # All in a tar
-  output$download_graphics = downloadHandler(
-    #filename = "footprint_dorothea_saezLab.tar.gz",
+  output$download_dorothea_analysis = downloadHandler(
+
     filename = "footprint_dorothea_saezLab.tar.gz",
     content = function(x) {
+      fdir = "footprint_dorothea_saezLab"
+      dir.create(fdir)
       fnames = c(paste0("barplot_tfs_", input$select_contrast, ".png"), 
-                 paste0("barplot_samples_", input$select_tf, ".png"))
-      ggsave(fnames[1], barplot_nes_reactive(), device = "png")
-      ggsave(fnames[2], barplot_tf_reactive(), device = "png")
-      ggsave(x, network_tf_reactive(), device = "png")
-      tar(x, files = fnames, compression = "gzip")
+                 paste0("barplot_samples_", input$select_tf, ".png"),
+                 paste0("network_", input$select_contrast, "_", input$select_tf, ".png"))
+      ggsave(file.path(fdir, fnames[1]), barplot_nes_reactive(), device = "png")
+      ggsave(file.path(fdir, fnames[2]), barplot_tf_reactive(), device = "png")
+      ggsave(file.path(fdir, fnames[3]), network_tf_reactive(), device = "png")
+      write.csv(dorothea_result, file.path(fdir, "TFactivities_nes.csv"), quote = F)
+      tar(x, files = fdir, compression = "gzip")
     })
   
 }
