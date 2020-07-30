@@ -87,19 +87,22 @@ plot_network = function( network, nodes, title ){
     dplyr::filter(target %in% unique(nodes$target))
   colnames(edges) = c("from", "sign", "to")
   
+  labels_edge = c("-1" = "inhibition", "1" = "activation")
   
   tbl_graph(nodes = nodes, edges = edges) %>%
     ggraph(layout = "nicely") + 
     geom_edge_link(arrow = arrow(), aes(edge_colour=as.factor(sign))) + 
-    geom_node_point(aes(color = regulation), size=10) + #, shape=class
+    geom_node_point(aes(color = regulation), size = 10) + #, shape=class
     geom_node_text(aes(label = target), vjust = 0.4) + 
     theme_graph() +
     scale_color_manual(name = "",
-                       values = c("downregulated" = "#99004C", "upregulated" = "#4C9900"), drop=F) +
+                       values = c("downregulated" = "#99004C", 
+                                  "upregulated" = "#4C9900"), drop=F) +
     scale_edge_color_manual(name = "Regulation",
-                            values = c("-1" = "#99004C", "1" = "#4C9900"),
+                            values = c("-1" = "#99004C", 
+                                       "1" = "#4C9900"),
                             breaks = unique(edges$sign),
-                            labels = c("-1" = "inhibition", "1" = "activation"),
+                            labels = labels_edge[names(labels_edge) %in% unique(edges$sign)],
                             drop=F) +
     scale_shape_manual(values = c(16,15)) +
     theme(#legend.position = "none",
