@@ -6,84 +6,46 @@ ui = function(request) {
     # Row with title and logos
     titlePanel(
       fluidRow(
-        column(4, "DoRothEA"),
+        column(4, "PROGENy"),
         column(
-          4, offset = 4, 
+          6, offset = 2, 
           img( src = "logo_saezlab.png", align = "right", height = 75, width = 75 ),
-          img( src = "logo_dorothea.png", align = "right", height = 75, width = 75 ),
+          img( src = "logo_progeny.png", align = "right", height = 75, width = 150 ),
         ))
       ),
 
     hr(),
     
     # Row controlling the widgets
-    fluidRow(
-    column( 6, 
       sidebarLayout(
         sidebarPanel( width = 12,
-          uiOutput("select_contrast"),
-          uiOutput("select_tf") ,
-          downloadButton("download_dorothea_analysis", "Download DoRothEA scores and figures"),
+                      uiOutput("select_contrast"),
+                      uiOutput("select_pathway"),
+                      downloadButton("download_progeny_analysis", "Download PROGENy scores and figures")
         ),
         mainPanel( width = 0 )
-      )
-    ),
- 
-    column(6, 
-      sidebarLayout(
-        sidebarPanel( width = 12,
-          uiOutput("select_top_n_hits"),
-          uiOutput("select_top_n_labels")
-        ),
-        mainPanel( width = 0 )
-      )
-    )
-    ),
+      ),
     
-    # column(4,
-    #   sidebarLayout(
-    #     sidebarPanel( width = 12,
-    #       downloadButton("download_dorothea_scores", "Download TF-activities (NES)"),
-    #       downloadButton("download_graphics", "Download figues (.svg)")
-    #     ),
-    #     mainPanel( width = 0 )
-    #   )
-    # ),
-    
-    
-    hr(),
+     hr(),
  
      fluidRow(
         column(
-          3, plotOutput("tf_bar")
+          3, plotOutput("scatter")
         ),
         column(
           4, plotOutput("barplot_nes")
         ),
         
         column(
-          5, plotOutput("tf_network")
+          5, plotOutput("heatmap_scores")
         )
      ),
     hr(),
     
     # Table visualization
-      DT::dataTableOutput("dorothea_result"),
-    hr(),
+      DT::dataTableOutput("progeny_result"),
     
-    # Download content
-    # fluidRow(
-    #   column(
-    #     6,
-    #     downloadButton("download_dorothea_scores", "Download TF-activities (NES)")
-    #   ),
-    #   column(
-    #     6, 
-    #     downloadButton("download_graphics", "Download figues (.svg)")
-    #   )
-    # ),
-    #bookmarkButton(id = "dorothea_bookmark"),
-    hr() 
+    hr()
 
   ) # close fluidPage
 }

@@ -5,13 +5,16 @@ library(shiny)
 library(shinyWidgets)
 library(DT)
 library(tidyverse)
-library(dorothea)
 library(ggplot2)
+library(ggrepel)
 library(dplyr)
 library(reshape2)
 library(tidygraph)
 library(ggraph)
 library(plotly)
+library(pheatmap)
+library(progeny)
+library(gridExtra)
 
 # shiny options
 enableBookmarking(store = "server")
@@ -20,93 +23,109 @@ options(shiny.maxRequestSize=30*1024^2)
 # Load data
 
 # input for dorothea
-inputDorothea <- read.csv("data/examples/data_test.csv", row.names = 1 )
+inputProgeny <- read.csv("data/examples/progeny_example.csv", row.names = 1 )
 
 # dorothea results
-d_file = "data/examples/dorothea_scores_ABC.csv"
-dorothea_result = read.csv( d_file, row.names = 1 ) # from VRE
-data(dorothea_hs, package = "dorothea")
+p_file = "data/examples/progeny_scores_Human_100.csv"
+progeny_result = read.csv( p_file, row.names = 1 ) # from VRE
 
-#get confidence levels
-confidence_level = unlist(strsplit(  gsub(".csv", "", d_file, fixed = T) , split="_" ))
-confidence_level = unlist(strsplit( confidence_level[length(confidence_level)] , split="" ))
+aux = unlist(strsplit(  gsub(".csv", "", p_file, fixed = T) , split="_" ))[-c(1,2)]
+organism = aux[1]
+top = as.numeric(aux[2])
 
 # PLOTS -------------------------------------------------------------
 
-barplot_nes = function(df, smpl, nHits){
+heatmap_scores = function(df){
   
-  df = df[, c("GeneID", smpl)] %>%
-    dplyr::rename(NES = smpl) %>%
-    dplyr::top_n(nHits, wt = abs(NES)) %>%
-    dplyr::arrange(NES) %>%
-    dplyr::mutate(GeneID = factor(GeneID))
+  paletteLength = 100
+  myColor <- colorRampPalette(c("#99004C", "whitesmoke", "#0859A2"))(paletteLength)
+  
+  progenyBreaks <- c(seq(min(as.vector(df)), 0, 
+                         length.out=ceiling(paletteLength/2) + 1),
+                     seq(max(as.vector(df))/paletteLength, 
+                         max(as.vector(df)), 
+                         length.out=floor(paletteLength/2)))
+  
+  pheatmap(df,fontsize=14, 
+           fontsize_row = 10, fontsize_col = 10, 
+           color=myColor, breaks = progenyBreaks,
+           angle_col = 45, treeheight_col = 0,  
+           border_color = NA)
+}
+
+barplot_nes = function(df, smpl){
+  
+  df = df[, c("pathways", smpl)] %>%
+    dplyr::rename(zscore = smpl) %>%
+    dplyr::arrange(zscore) %>%
+    dplyr::mutate(pathways = factor(pathways))
     
   title = paste("Sample/Contrast:", smpl, sep = " ")
   
-  ggplot(df, aes(x = NES, y = reorder(GeneID, NES) )) +
-    geom_bar(aes(fill = NES), stat = "identity") +
-    scale_fill_gradient2(low = "#99004C", high = "#4C9900",#"darkblue", "indianred"
+  ggplot(df, aes(x = zscore, y = reorder(pathways, zscore) )) +
+    geom_bar(aes(fill = zscore), stat = "identity") +
+    scale_fill_gradient2(low = "#99004C", high = "#0859A2",
                          mid = "whitesmoke", midpoint = 0) +
     theme_minimal() +
     theme(axis.title = element_text(face = "bold", size = 12),
           axis.text.x = element_text(hjust = 1, size = 15, face= "bold"),
           axis.text.y = element_text(size = 15, face= "bold")) +
-    ylab("Transcription Factors") +
-    xlab("Normalized Enrichment scores (NES)") +
+    ylab("Pathways") +
+    xlab("z-scores") +
     ggtitle(title)
 }
 
-barplot_tf = function(df, selTF){
+#adapted from progeny::progenyScatter
+scater_pathway = function (df, weight_matrix, tittle) {
+  
+  #prepare data 
+  names(df) <- c("ID", "stat")
+  names(weight_matrix) <- c("ID", "weight")
+  
+  weight_matrix <- weight_matrix %>% 
+    dplyr::filter(weight != 0)
+  
+  sub_df <- merge.data.frame(df, weight_matrix, by = "ID")
+  sub_df$color <- "3"
+  sub_df[(sub_df$weight > 0 & sub_df$stat > 0), "color"] <- "1"
+  sub_df[(sub_df$weight > 0 & sub_df$stat < 0), "color"] <- "2"
+  sub_df[(sub_df$weight < 0 & sub_df$stat > 0), "color"] <- "2"
+  sub_df[(sub_df$weight < 0 & sub_df$stat < 0), "color"] <- "1"
+  
+  
+  #create Histogram with input data
+  minstat <- min(df$stat)
+  maxstat <- max(df$stat)
+      
+  histo <- ggplot(df, aes(x = stat, fill = "")) + 
+           geom_density() + 
+           coord_flip() + 
+           scale_fill_manual(values = c("#dbdcdb")) + 
+           xlim(minstat, maxstat) + 
+           theme_minimal() + 
+           theme(legend.position = "none", 
+                  axis.text.x = element_blank(), axis.ticks.x = element_blank(), 
+                  axis.title.y = element_blank(), axis.text.y = element_blank(), 
+                  axis.ticks.y = element_blank(), panel.grid.major = element_blank(), 
+                  panel.grid.minor = element_blank())
+      
+  # create scatterplot
+  percentile <- ecdf(df$stat)
+  sub_df[(percentile(sub_df$stat) < 0.95 & percentile(sub_df$stat) > 0.05), 1] <- NA
+  
 
-  df %>%
-    rownames_to_column(var = "tf") %>%
-    dplyr::filter(tf == selTF)  %>% 
-    reshape2::melt() %>%
-    arrange(value) %>%
-    dplyr::mutate(variable = factor(variable, variable),
-           effect = factor(sign(value), c(-1,1))) %>%
-    ggplot(aes(x=variable, y=value, fill=effect)) +
-    geom_col() +
-    coord_flip() +
-    labs( x = "Sample/Contrast", y = "Normalized Enrichment scores (NES)") +
-    theme_minimal() +
-    theme(legend.position = "none", 
-          axis.title = element_text(face = "bold", size = 12),
-          axis.text.x = element_text(hjust = 1, size = 15, face= "bold"),
-          axis.text.y = element_text(size = 15, face= "bold")) +
-    scale_fill_manual(values = c("#99004C", "#4C9900"),
-                      drop=F) +
-    theme(aspect.ratio = c(1)) +
-    ggtitle(paste0("TF: ", selTF))
-  
-}
-
-plot_network = function( network, nodes, title ){
-  
-  edges = network %>% 
-    dplyr::filter(target %in% unique(nodes$target))
-  colnames(edges) = c("from", "sign", "to")
-  
-  labels_edge = c("-1" = "inhibition", "1" = "activation")
-  
-  tbl_graph(nodes = nodes, edges = edges) %>%
-    ggraph(layout = "nicely") + 
-    geom_edge_link(arrow = arrow(), aes(edge_colour=as.factor(sign))) + 
-    geom_node_point(aes(color = regulation), size = 10) + #, shape=class
-    geom_node_text(aes(label = target), vjust = 0.4) + 
-    theme_graph() +
-    scale_color_manual(name = "",
-                       values = c("downregulated" = "#99004C", 
-                                  "upregulated" = "#4C9900"), drop=F) +
-    scale_edge_color_manual(name = "Regulation",
-                            values = c("-1" = "#99004C", 
-                                       "1" = "#4C9900"),
-                            breaks = unique(edges$sign),
-                            labels = labels_edge[names(labels_edge) %in% unique(edges$sign)],
-                            drop=F) +
-    scale_shape_manual(values = c(16,15)) +
-    theme(#legend.position = "none",
-          aspect.ratio = c(1), 
-          plot.title = element_text(size = 14, face="plain")) +
-    ggtitle(title)
-}
+  scatterplot <- ggplot(sub_df, aes(x = weight, y = stat, color = color)) + 
+    geom_point() + 
+    scale_colour_manual(values = c("#99004C", "#0859A2", "grey")) + #"red", "royalblue3"
+    geom_label_repel(aes(label = ID)) + 
+    ylim(minstat, maxstat) + 
+    theme_minimal() + 
+    theme(legend.position = "none") + 
+    geom_vline(xintercept = 0, linetype = "dotted") + 
+    geom_hline(yintercept = 0, linetype = "dotted") #+ 
+  #labs(x = title, y = statName)
+  lay <- t(as.matrix(c(1, 1, 1, 1, 2)))
+  gg <- arrangeGrob(scatterplot, histo, 
+                    nrow = 1, ncol = 2, 
+                    layout_matrix = lay)
+  }
