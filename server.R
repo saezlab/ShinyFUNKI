@@ -99,7 +99,9 @@ server = function(input, output, session) {
       
       nodes = nodes[order(abs(nodes[,input$select_contrast]),decreasing = T),] 
       
-      nodes = nodes[1:input$select_top_n_labels,]
+      if ( input$select_top_n_labels <= nrow(nodes) ){
+        nodes = nodes[1:input$select_top_n_labels,] 
+      }
       
       nodes = tibble(rbind.data.frame(nodes,
                                       dorothea_result %>%
@@ -159,6 +161,7 @@ server = function(input, output, session) {
 
     filename = "footprint_dorothea_saezLab.tar.gz",
     content = function(x) {
+      
       fdir = "footprint_dorothea_saezLab"
       
       if (dir.exists(fdir)){
