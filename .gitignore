@@ -43,3 +43,12 @@ rsconnect/
 data/ignore/
 packrat/
 sub/debugging.R
+
+#mac stuf
+.DS_Store
+data/.DS_Store
+sub/.DS_Store
+www/.DS_Store
+
+#restults for download
+footprint_dorothea_saezLab/
