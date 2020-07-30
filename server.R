@@ -15,30 +15,36 @@ server = function(input, output, session) {
   
   # select TFs
   output$select_tf = renderUI({
-    choices = unique(rownames(dorothea_result))
-    
-    default_selected = rownames(dorothea_result)[ 
-      which( dorothea_result[, input$select_contrast] ==
-               max(dorothea_result[, input$select_contrast]) ) ]
-    
-    pickerInput(inputId = "select_tf", 
-                label = "Select Transcription Factor", 
-                choices = choices,
-                options = list("live-search" = TRUE), 
-                selected = default_selected
-    )
+    if ( ! is.null(input$select_contrast) ){
+      choices = unique(rownames(dorothea_result))
+      
+      default_selected = rownames(dorothea_result)[ 
+        which( dorothea_result[, input$select_contrast] ==
+                 max(dorothea_result[, input$select_contrast]) ) ]
+      
+      pickerInput(inputId = "select_tf", 
+                  label = "Select Transcription Factor", 
+                  choices = choices,
+                  options = list("live-search" = TRUE), 
+                  selected = default_selected )
+      
+    }
   })
   
   # select number of targets
   output$select_top_n_labels = renderUI({
     if ( ! is.null(input$select_tf) ) {
+      
       targets = dorothea_hs %>% 
         dplyr::filter(tf == input$select_tf & confidence %in% confidence_level) %>%
-        dplyr::select(target) %>% nrow()
+        dplyr::select(target) %>% 
+        dplyr::filter(target %in% rownames(inputDorothea)) %>%
+        nrow()
       
       sliderInput("select_top_n_labels",
                   label = "Number of targets to display", 
-                  value = 10, min = 1, max = targets, step = 1)
+                  value = dplyr::case_when(targets > 10 ~ 10, targets <= 10 ~ round(targets*(2/3))), 
+                  min = 1, max = targets, step = 1)
     }
   })
   
