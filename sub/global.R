@@ -28,6 +28,7 @@ inputProgeny <- read.csv("data/examples/progeny_example.csv", row.names = 1 )
 # dorothea results
 p_file = "data/examples/progeny_scores_Human_100.csv"
 progeny_result = read.csv( p_file, row.names = 1 ) # from VRE
+rownames(progeny_result) = gsub(".", "-", rownames(progeny_result), fixed = T)
 
 aux = unlist(strsplit(  gsub(".csv", "", p_file, fixed = T) , split="_" ))[-c(1,2)]
 organism = aux[1]
@@ -102,12 +103,13 @@ scater_pathway = function (df, weight_matrix, tittle) {
            coord_flip() + 
            scale_fill_manual(values = c("#dbdcdb")) + 
            xlim(minstat, maxstat) + 
-           theme_minimal() + 
+           theme_light() + 
            theme(legend.position = "none", 
                   axis.text.x = element_blank(), axis.ticks.x = element_blank(), 
                   axis.title.y = element_blank(), axis.text.y = element_blank(), 
                   axis.ticks.y = element_blank(), panel.grid.major = element_blank(), 
-                  panel.grid.minor = element_blank())
+                  panel.grid.minor = element_blank(), panel.border = element_blank(),
+                  axis.title = element_text(face = "bold", size = 12))
       
   # create scatterplot
   percentile <- ecdf(df$stat)
@@ -119,10 +121,16 @@ scater_pathway = function (df, weight_matrix, tittle) {
     scale_colour_manual(values = c("#99004C", "#0859A2", "grey")) + #"red", "royalblue3"
     geom_label_repel(aes(label = ID)) + 
     ylim(minstat, maxstat) + 
-    theme_minimal() + 
-    theme(legend.position = "none") + 
+    theme_light() +
+    theme(axis.title = element_text(face = "bold", size = 12),
+          axis.text.x = element_text(hjust = 1, size = 15, face= "bold"),
+          axis.text.y = element_text(size = 15, face= "bold"),
+          legend.position = "none") +
+    expand_limits(x = 0, y = 0) +
     geom_vline(xintercept = 0, linetype = "dotted") + 
-    geom_hline(yintercept = 0, linetype = "dotted") #+ 
+    geom_hline(yintercept = 0, linetype = "dotted") +
+    scale_y_continuous(breaks = scales::extended_breaks()) +
+    scale_x_continuous(breaks = scales::extended_breaks())#+ 
   #labs(x = title, y = statName)
   lay <- t(as.matrix(c(1, 1, 1, 1, 2)))
   gg <- arrangeGrob(scatterplot, histo, 
