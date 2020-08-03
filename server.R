@@ -31,34 +31,6 @@ server = function(input, output, session) {
     }
   })
   
-  # # select number of targets
-  # output$select_top_n_labels = renderUI({
-  #   if ( ! is.null(input$select_tf) ) {
-  #     
-  #     targets = dorothea_hs %>% 
-  #       dplyr::filter(tf == input$select_tf & confidence %in% confidence_level) %>%
-  #       dplyr::select(target) %>% 
-  #       dplyr::filter(target %in% rownames(inputDorothea)) %>%
-  #       nrow()
-  #     
-  #     sliderInput("select_top_n_labels",
-  #                 label = "Number of targets to display", 
-  #                 value = dplyr::case_when(targets > 10 ~ 10, targets <= 10 ~ round(targets*(2/3))), 
-  #                 min = 1, max = targets, step = 1)
-  #   }
-  # })
-  # 
-  # # select top n results
-  # output$select_top_n_hits = renderUI({
-  #   if ( ! is.null( dorothea_result ) ) {
-  #     max_tfs = length( unique( rownames( dorothea_result ) ) )
-  #     sliderInput("select_top_n_hits",
-  #                 label = "Numer of Transcription Factors to display", 
-  #                 value = 25, min = 1, max = max_tfs, step = 1)
-  #   }
-  # })
-
-  
   # Reactive Computations ---------------------------------------------------
   
   # Bar plot with the TFs for a condition
@@ -105,7 +77,7 @@ server = function(input, output, session) {
   # Render Tables -----------------------------------------------------------
   # TF-activities
   output$progeny_result = DT::renderDataTable({
-    results_progeny = progeny_result %>% rownames_to_column( var = "Pathways")
+    results_progeny = progeny_result %>% round(digits = 3) %>% rownames_to_column( var = "Pathways") 
     result_matrix = DT::datatable(results_progeny, 
                   option = list(scrollX = TRUE, autoWidth=T, pageLength = 14), filter = "top")
   })
