@@ -15,6 +15,7 @@ library(plotly)
 library(pheatmap)
 library(progeny)
 library(gridExtra)
+library(cowplot)
 
 # shiny options
 enableBookmarking(store = "server")
@@ -93,34 +94,18 @@ scater_pathway = function (df, weight_matrix, tittle) {
   sub_df[(sub_df$weight < 0 & sub_df$stat > 0), "color"] <- "2"
   sub_df[(sub_df$weight < 0 & sub_df$stat < 0), "color"] <- "1"
   
-  
-  #create Histogram with input data
   minstat <- min(df$stat)
   maxstat <- max(df$stat)
-      
-  histo <- ggplot(df, aes(x = stat, fill = "")) + 
-           geom_density() + 
-           coord_flip() + 
-           scale_fill_manual(values = c("#dbdcdb")) + 
-           xlim(minstat, maxstat) + 
-           theme_light() + 
-           theme(legend.position = "none", 
-                  axis.text.x = element_blank(), axis.ticks.x = element_blank(), 
-                  axis.title.y = element_blank(), axis.text.y = element_blank(), 
-                  axis.ticks.y = element_blank(), panel.grid.major = element_blank(), 
-                  panel.grid.minor = element_blank(), panel.border = element_blank(),
-                  axis.title = element_text(face = "bold", size = 12))
-      
+  
   # create scatterplot
   percentile <- ecdf(df$stat)
   sub_df[(percentile(sub_df$stat) < 0.95 & percentile(sub_df$stat) > 0.05), 1] <- NA
   
-
+  
   scatterplot <- ggplot(sub_df, aes(x = weight, y = stat, color = color)) + 
     geom_point() + 
     scale_colour_manual(values = c("#99004C", "#0859A2", "grey")) + #"red", "royalblue3"
     geom_label_repel(aes(label = ID)) + 
-    ylim(minstat, maxstat) + 
     theme_light() +
     theme(axis.title = element_text(face = "bold", size = 12),
           axis.text.x = element_text(hjust = 1, size = 15, face= "bold"),
@@ -132,8 +117,24 @@ scater_pathway = function (df, weight_matrix, tittle) {
     scale_y_continuous(breaks = scales::extended_breaks()) +
     scale_x_continuous(breaks = scales::extended_breaks())#+ 
   #labs(x = title, y = statName)
-  lay <- t(as.matrix(c(1, 1, 1, 1, 2)))
-  gg <- arrangeGrob(scatterplot, histo, 
-                    nrow = 1, ncol = 2, 
-                    layout_matrix = lay)
+  
+  
+  #create Histogram with input data
+  histo <- ggplot(df, aes(x = stat, fill = "")) + 
+           geom_density() + 
+           coord_flip() + 
+           scale_fill_manual(values = c("#dbdcdb")) + 
+           xlim(layer_scales(scatterplot)$y$range$range) +
+           #expand_limits(x = 0, y = 0) + #xlim(minstat, maxstat) + 
+           theme_light() + 
+           theme(legend.position = "none",
+                  axis.text.x = element_blank(), axis.ticks.x = element_blank(),
+                  axis.title.y = element_blank(), axis.text.y = element_blank(),
+                  axis.ticks.y = element_blank(), panel.grid.major = element_blank(),
+                  panel.grid.minor = element_blank(), panel.border = element_blank(),
+                  axis.title = element_text(face = "bold", size = 12))
+      
+  plot_grid(scatterplot, histo, align = "hv", nrow = 1)
+
+  
   }
