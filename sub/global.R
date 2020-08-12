@@ -94,9 +94,6 @@ scater_pathway = function (df, weight_matrix, tittle) {
   sub_df[(sub_df$weight < 0 & sub_df$stat > 0), "color"] <- "2"
   sub_df[(sub_df$weight < 0 & sub_df$stat < 0), "color"] <- "1"
   
-  minstat <- min(df$stat)
-  maxstat <- max(df$stat)
-  
   # create scatterplot
   percentile <- ecdf(df$stat)
   sub_df[(percentile(sub_df$stat) < 0.95 & percentile(sub_df$stat) > 0.05), 1] <- NA
@@ -115,7 +112,8 @@ scater_pathway = function (df, weight_matrix, tittle) {
     geom_vline(xintercept = 0, linetype = "dotted") + 
     geom_hline(yintercept = 0, linetype = "dotted") +
     scale_y_continuous(breaks = scales::extended_breaks()) +
-    scale_x_continuous(breaks = scales::extended_breaks())#+ 
+    scale_x_continuous(breaks = scales::extended_breaks())# +
+    #ggtitle(title)#+ 
   #labs(x = title, y = statName)
   
   
@@ -125,8 +123,7 @@ scater_pathway = function (df, weight_matrix, tittle) {
            coord_flip() + 
            scale_fill_manual(values = c("#dbdcdb")) + 
            xlim(layer_scales(scatterplot)$y$range$range) +
-           #expand_limits(x = 0, y = 0) + #xlim(minstat, maxstat) + 
-           theme_light() + 
+            theme_light() + 
            theme(legend.position = "none",
                   axis.text.x = element_blank(), axis.ticks.x = element_blank(),
                   axis.title.y = element_blank(), axis.text.y = element_blank(),
