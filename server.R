@@ -61,7 +61,7 @@ server = function(input, output, session) {
         dplyr::select( input$select_contrast ) %>%
         tibble::rownames_to_column("GeneID")
       
-      title = paste0("weights of ", input$select_pathway)
+      title = paste0("weights of ", input$select_pathway, "for sample/contrast ", input$select_contrast)
       
       scat_plots <- scater_pathway(df = inputProgeny_df, 
                                    weight_matrix = prog_matrix,
@@ -115,16 +115,43 @@ server = function(input, output, session) {
         dir.create(fdir)
       }
       
-      fnames = c(paste0("barplot_tfs_", input$select_contrast, ".png"), 
-                 paste0("barplot_samples_", input$select_tf, ".png"),
-                 paste0("heatmap_progeny.png"))
+      fnames = c(paste0("barplot_progeny_", input$select_contrast, ".png"), 
+                 paste0("scatter_density_progeny_", input$select_contrast, "_", input$select_pathway, ".png"),
+                 "heatmap_progeny.png")
       
       ggsave(file.path(fdir, fnames[1]), barplot_nes_reactive(), device = "png")
-      ggsave(file.path(fdir, fnames[2]), barplot_tf_reactive(), device = "png")
+      ggsave(file.path(fdir, fnames[2]), scatter_reactive(), device = "png")
       ggsave(file.path(fdir, fnames[3]), heatmap_scores(df = progeny_result), device = "png")
-      write.csv(dorothea_result, file.path(fdir, "TFactivities_nes.csv"), quote = F)
+      write.csv(progeny_result, file.path(fdir, "pathways_progeny_scores.csv"), quote = F)
       tar(x, files = fdir, compression = "gzip")
     })
+  
+  output$download_scatter = downloadHandler(
+    
+    filename = paste0("scatter_density_progeny_", input$select_contrast, "_", input$select_pathway, ".png"),
+    content = function(x) {
+      
+      ggsave(x, scatter_reactive(), device = "png")
+      
+     })
+ 
+  output$download_barplot = downloadHandler(
+    filename = paste0("barplot_progeny_", input$select_contrast, ".png"), 
+    
+    content = function(x) {
+      ggsave(x, barplot_nes_reactive(), device = "png")
+      
+    })
+  
+  output$download_heatmap = downloadHandler(
+    
+    filename = "heatmap_progeny.png",
+    content = function(x) {
+      
+      ggsave(x,  heatmap_scores(df = progeny_result), device = "png")
+      
+    })
+  
   
 }
 
