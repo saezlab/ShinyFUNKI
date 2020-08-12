@@ -16,29 +16,38 @@ ui = function(request) {
 
     hr(),
     
+    fluidRow(
+      plotOutput("heatmap_scores")
+    ),
+    
+    hr(),
+    
     # Row controlling the widgets
       sidebarLayout(
         sidebarPanel( width = 12,
                       uiOutput("select_contrast"),
                       uiOutput("select_pathway"),
-                      downloadButton("download_progeny_analysis", "Download PROGENy scores and figures")
+                      downloadButton("download_progeny_analysis", "Download PROGENy scores and figures"),
+                      downloadButton("download_scatter", "Download scatter plot"),
+                      downloadButton("download_barplot", "Download barplot"),
+                      downloadButton("download_heatmap", "Download heatmap")
         ),
         mainPanel( width = 0 )
       ),
     
      hr(),
- 
+    # Row showing plots
      fluidRow(
         column(
-          3, plotOutput("scatter")
+          6, plotOutput("scatter")
         ),
         column(
-          4, plotOutput("barplot_nes")
-        ),
-        
-        column(
-          5, plotOutput("heatmap_scores")
+          6, plotOutput("barplot_nes")
         )
+        
+        # column(
+        #   5, plotOutput("heatmap_scores")
+        # )
      ),
     hr(),
     
