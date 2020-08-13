@@ -52,3 +52,7 @@ www/.DS_Store
 
 #restults for download
 footprint_dorothea_saezLab/
+
+#for renv
+renv.lock
+renv/
