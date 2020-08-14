@@ -40,12 +40,12 @@ barplot_nes = function(df, smpl, nHits){
     dplyr::top_n(nHits, wt = abs(NES)) %>%
     dplyr::arrange(NES) %>%
     dplyr::mutate(GeneID = factor(GeneID))
-    
+
   title = paste("Sample/Contrast:", smpl, sep = " ")
   
   ggplot(df, aes(x = NES, y = reorder(GeneID, NES) )) +
     geom_bar(aes(fill = NES), stat = "identity") +
-    scale_fill_gradient2(low = "#99004C", high = "#4C9900",#"darkblue", "indianred"
+    scale_fill_gradient2(low = "#99004C", high = "#0859A2",#"darkblue", "indianred"
                          mid = "whitesmoke", midpoint = 0) +
     theme_minimal() +
     theme(axis.title = element_text(face = "bold", size = 12),
@@ -74,7 +74,7 @@ barplot_tf = function(df, selTF){
           axis.title = element_text(face = "bold", size = 12),
           axis.text.x = element_text(hjust = 1, size = 15, face= "bold"),
           axis.text.y = element_text(size = 15, face= "bold")) +
-    scale_fill_manual(values = c("#99004C", "#4C9900"),
+    scale_fill_manual(values = c("#99004C", "#0859A2"),
                       drop=F) +
     theme(aspect.ratio = c(1)) +
     ggtitle(paste0("TF: ", selTF))
@@ -97,10 +97,10 @@ plot_network = function( network, nodes, title ){
     theme_graph() +
     scale_color_manual(name = "",
                        values = c("downregulated" = "#99004C", 
-                                  "upregulated" = "#4C9900"), drop=F) +
+                                  "upregulated" = "#0859A2"), drop=F) +
     scale_edge_color_manual(name = "Regulation",
                             values = c("-1" = "#99004C", 
-                                       "1" = "#4C9900"),
+                                       "1" = "#0859A2"),
                             breaks = unique(edges$sign),
                             labels = labels_edge[names(labels_edge) %in% unique(edges$sign)],
                             drop=F) +
