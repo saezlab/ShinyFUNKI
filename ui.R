@@ -16,6 +16,7 @@ ui = function(request) {
 
     hr(),
     
+    # Row with static heatmap 
     fluidRow(
       plotOutput("heatmap_scores")
     ),
@@ -36,6 +37,7 @@ ui = function(request) {
       ),
     
      hr(),
+    
     # Row showing plots
      fluidRow(
         column(
@@ -45,9 +47,6 @@ ui = function(request) {
           6, plotOutput("barplot_nes")
         )
         
-        # column(
-        #   5, plotOutput("heatmap_scores")
-        # )
      ),
     hr(),
     
