@@ -7,7 +7,6 @@ library(DT)
 library(tidyverse)
 library(dorothea)
 library(ggplot2)
-library(dplyr)
 library(reshape2)
 library(tidygraph)
 library(ggraph)
@@ -91,13 +90,13 @@ plot_network = function( network, nodes, title ){
   
   tbl_graph(nodes = nodes, edges = edges) %>%
     ggraph(layout = "nicely") + 
-    geom_edge_link(arrow = arrow(), aes(edge_colour=as.factor(sign))) + 
-    geom_node_point(aes(color = regulation), size = 10) + #, shape=class
-    geom_node_text(aes(label = target), vjust = 0.4) + 
+    geom_edge_link(arrow = arrow(), aes(edge_colour = as.factor(sign))) + 
+    geom_node_point(aes(color = regulation), size = 10, alpha = 0.7) + 
+    geom_node_text(aes(label = target), vjust = 0.4) + ##colour = "#C8D1E0"
     theme_graph() +
     scale_color_manual(name = "",
                        values = c("downregulated" = "#99004C", 
-                                  "upregulated" = "#0859A2"), drop=F) +
+                                  "upregulated" = "#0859A2"), drop = F) +
     scale_edge_color_manual(name = "Regulation",
                             values = c("-1" = "#99004C", 
                                        "1" = "#0859A2"),
@@ -105,8 +104,7 @@ plot_network = function( network, nodes, title ){
                             labels = labels_edge[names(labels_edge) %in% unique(edges$sign)],
                             drop=F) +
     scale_shape_manual(values = c(16,15)) +
-    theme(#legend.position = "none",
-          aspect.ratio = c(1), 
+    theme(aspect.ratio = c(1), 
           plot.title = element_text(size = 14, face="plain")) +
     ggtitle(title)
 }
