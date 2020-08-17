@@ -4,18 +4,13 @@
 library(shiny)
 library(shinyWidgets)
 library(DT)
+library(progeny)
 library(tidyverse)
 library(ggplot2)
 library(ggrepel)
-library(dplyr)
-library(reshape2)
-library(tidygraph)
-library(ggraph)
-library(plotly)
-library(pheatmap)
-library(progeny)
-library(gridExtra)
 library(cowplot)
+library(pheatmap)
+library(plotly)
 
 # shiny options
 enableBookmarking(store = "server")
@@ -48,9 +43,9 @@ heatmap_scores = function(df){
                          max(as.vector(df)), 
                          length.out=floor(paletteLength/2)))
   
-  pheatmap(df,fontsize=14, 
+  pheatmap(df, fontsize = 14, 
            fontsize_row = 10, fontsize_col = 10, 
-           color=myColor, breaks = progenyBreaks,
+           color = myColor, breaks = progenyBreaks,
            angle_col = 45, treeheight_col = 0,  
            border_color = NA)
 }
