@@ -137,7 +137,7 @@ server = function(input, output, session) {
   # TF-activities
   output$dorothea_result = DT::renderDataTable({
     results_confidence = unique.data.frame(merge(dorothea_hs[, c("tf", "confidence")], 
-                                                 dorothea_result %>% rownames_to_column(var = "tf"), by="tf"))
+                                                 dorothea_result %>% round(digits = 3) %>% rownames_to_column(var = "tf"), by="tf"))
     colnames(results_confidence)[ colnames(results_confidence) == "tf" ] = "Transcription Factor"
     dorothea_result_matrix = DT::datatable(results_confidence, 
                   option = list(scrollX = TRUE, autoWidth=T), filter = "top")
