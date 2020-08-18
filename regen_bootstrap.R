@@ -1,9 +1,9 @@
 #.libPaths( c( "R/libs", .libPaths()) )
 
 # Zero, cleanup of libs
-unlink(list.dirs("renv/library",recursive=FALSE),recursive=TRUE)
+unlink(list.dirs("renv/library", recursive=FALSE),recursive=TRUE)
 
-# First, install renv (if it is needed!)
+# Install renv (if it is needed!)
 options(renv.consent = TRUE)
 if (!requireNamespace("renv", quietly = TRUE)) {
 	install.packages("renv")
@@ -20,11 +20,11 @@ if (!requireNamespace("BiocManager", quietly = TRUE)) {
 # in order to have the URLs to their repos in the
 # reproducible snapshot
 options(repos=BiocManager::repositories())
-#BiocManager::install(version = "3.11")
+# BiocManager::install(version = "3.11")
 
-packageList <- c("shiny","shinyWidgets","DT","tidyverse","ggplot2","dplyr","reshape2","tidygraph","ggraph","plotly","bioc::dorothea")
+packageList <- c("shiny", "shinyWidgets", "DT", "tidyverse", "ggplot2", "reshape2",
+	"tidygraph", "ggraph", "plotly", "bioc::dorothea")
 
 renv::install(packageList)
 
 renv::snapshot(prompt=FALSE)
-

@@ -13,4 +13,6 @@ docker-compose exec shiny /srv/shiny-server/dorothea/install_deps.sh
 
 # (Superseded) Step to run to materialize dependences
 
+```
 docker-compose exec -u shiny -w /srv/shiny-server/dorothea shiny R -f "bootstrap.R"
+```
