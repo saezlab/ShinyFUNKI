@@ -23,8 +23,10 @@ options(repos=BiocManager::repositories())
 # BiocManager::install(version = "3.11")
 
 packageList <- c("shiny", "shinyWidgets", "DT", "tidyverse", "ggplot2", "reshape2",
-	"tidygraph", "ggraph", "plotly", "bioc::dorothea")
+	"tidygraph", "ggraph", "plotly")
 
 renv::install(packageList)
+
+BiocManager::install("dorothea")
 
 renv::snapshot(prompt=FALSE)
