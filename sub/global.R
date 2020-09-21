@@ -16,20 +16,6 @@ library(plotly)
 enableBookmarking(store = "server")
 options(shiny.maxRequestSize=30*1024^2)
 
-# Load data
-
-# input for dorothea
-inputProgeny <- read.csv("data/examples/progeny_example.csv", row.names = 1 )
-
-# dorothea results
-p_file = "data/examples/progeny_scores_Human_100.csv"
-progeny_result = read.csv( p_file, row.names = 1 ) # from VRE
-rownames(progeny_result) = gsub(".", "-", rownames(progeny_result), fixed = T)
-
-aux = unlist(strsplit(  gsub(".csv", "", p_file, fixed = T) , split="_" ))[-c(1,2)]
-organism = aux[1]
-top = as.numeric(aux[2])
-
 # PLOTS -------------------------------------------------------------
 
 heatmap_scores = function(df){
