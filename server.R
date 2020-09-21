@@ -1,6 +1,20 @@
 # SERVER
 server = function(input, output, session) {
   
+  # Load data from VRE
+  query <- parseQueryString( isolate( session$clientData$url_search ) )
+  
+  # input for dorothea
+  inputProgeny <- read.csv( query$file1, row.names = 1 )
+  
+  # progeny results
+  progeny_result = read.csv( query$file2, row.names = 1 ) # from VRE
+  rownames(progeny_result) = gsub(".", "-", rownames(progeny_result), fixed = T)
+  
+  aux = unlist(strsplit(  gsub(".csv", "", p_file, fixed = T) , split="_" ))[-c(1,2)]
+  organism = aux[1]
+  top = as.numeric(aux[2])
+  
   # Dynamic widgets / RenderUI ----------------------------------------------
   
   # select contrast/sample

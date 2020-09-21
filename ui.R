@@ -1,7 +1,12 @@
 # UI
-source("sub/global.R")
+
+
 ui = function(request) {
-  fluidPage(
+  
+  
+  source("sub/global.R")
+
+    fluidPage(
     
     # Row with title and logos
     titlePanel(
