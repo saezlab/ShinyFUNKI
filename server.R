@@ -4,14 +4,14 @@ server = function(input, output, session) {
   query <-
     parseQueryString(isolate(session$clientData$url_search))
   
-  # input for dorothea
+  # input for progeny
   inputProgeny <- read.csv(query$file1, row.names = 1)
   
   # progeny results
   progeny_result = read.csv(query$file2, row.names = 1) # from VRE
   rownames(progeny_result) = gsub(".", "-", rownames(progeny_result), fixed = T)
   
-  aux = unlist(strsplit(gsub(".csv", "", p_file, fixed = T) , split = "_"))[-c(1, 2)]
+  aux = unlist(strsplit(gsub(".csv", "", query$file2, fixed = T) , split = "_"))[-c(1, 2)]
   organism = aux[1]
   top = as.numeric(aux[2])
   
