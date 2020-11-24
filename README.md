@@ -6,9 +6,3 @@ FUNKI is still under development, and the following approaches are implemented o
 
 #### DoRothEA
 [DoRothEA](https://saezlab.github.io/DoRothEA/) is a gene regulatory network linking Transcription Factors (TFs) with their downstream targets. The unity of TF and its targets is referred as regulon. Such gene regulatory networks allow the computation of TF-activities from gene expression data by enrichment analysis using the regulons as underlying gene-sets. The network has been build integrating TF-target interactions from four different strategies: (i) manually curated interaction repositories, (ii) interactions derived from ChIP-seq binding data, (iii) in silico predictions of TF binding on gene promoters, and (iv) reverse-engineered regulons from large gene expression datasets. Based on the number of supporting evidences each interaction is accompanied with a confidence level ranging from high-confident (A) to low-confident (E).
-
-#### PROGENy
-[PROGENy](https://saezlab.github.io/progeny/) is a linear model to infer pathway activity from gene expression data. Pathway activities are calculated based on consensus gene signatures obtained from perturbation experiments, that is, the footprint of pathway on gene expression. More coming soon...
-
-#### KinAct
-[KinAct](http://saezlab.github.io/kinact/) is a network linking kinases to phosphorylation sites. This resource allows the estimation of kinase activities from phosphoproteomics data. More coming soon...
