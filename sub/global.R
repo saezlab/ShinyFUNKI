@@ -40,6 +40,11 @@ load("data/models/progeny_matrix_human_v1.rda")
 # kinact
 kinact_regulon_human = readRDS("data/models/kinact_regulon_human.rds")
 
+
+##############
+## ANALYSIS ##
+##############
+
 run_progeny <- function(data, organism = "Human", ...){
   # based on organism, we load the correct dataset
   if(input$select_organism == "Homo sapiens"){
@@ -64,48 +69,29 @@ run_progeny <- function(data, organism = "Human", ...){
   return(progeny_scores)
 }
 
-
-run_viper = function(E, regulon, gene_name = "gene", value_name = "expression",
-                     id_name = "sample", regulator_name = "tf",  ...) {
-  meta_data = E %>%
-    select(-c(!!gene_name, !!value_name)) %>%
-    distinct()
-  
-  meta_regulon_data = regulon %>%
-    select(-c(target, mor, likelihood)) %>%
-    distinct()
-  
-  emat = E %>%
-    select(!!gene_name, !!id_name, !!value_name) %>%
-    spread(!!id_name, !!value_name, fill=0) %>%
-    drop_na() %>%
-    data.frame(row.names = 1, stringsAsFactors = F, check.names = F)
-  
-  viper_regulon = regulon %>%
-    df2regulon(regulator_name = regulator_name)
-  
-  activity_scores = viper(eset = emat, regulon = viper_regulon, nes = T,
-                          method = 'none', minsize = 4, eset.filter = F,
-                          adaptive.size = F) %>%
-    data.frame(stringsAsFactors = F, check.names = F) %>%
-    rownames_to_column(var = regulator_name) %>%
-    gather(key=!!id_name, value="activity", -!!regulator_name) %>%
-    as_tibble() %>%
-    inner_join(., meta_data, by=id_name) %>%
-    inner_join(., meta_regulon_data, by = regulator_name)
+run_dorothea <- function(data, organism = "Human", confidence_level, minsize = 5, method = 'none', ...){
+  # based on organism, we load the correct dataset
+  if(organism == "Homo sapiens"){
+    
+    regulons <- data(dorothea_hs, package = "dorothea") %>%
+      dplyr::filter(confidence %in% confidence_level)
+    
+  }else if(organism == "Mus musculus"){
+    
+    regulons <- data(dorothea_mm, package = "dorothea") %>%
+      dplyr::filter(confidence %in% confidence_level)
+    
+  }
+  #run DOROTHEA
+  activity_scores <- dorothea::run_viper(dorothea_matrix, regulons,
+                                         options =  list(minsize = minsize,
+                                                         method = method,
+                                                         eset.filter = FALSE,
+                                                         cores = 1,
+                                                         verbose = FALSE, 
+                                                         nes = TRUE))
   
   return(activity_scores)
-}
-
-df2regulon = function(df, regulator_name = "tf") {
-  regulon = df %>%
-    split(.[regulator_name]) %>%
-    map(function(dat) {
-      targets = setNames(dat$mor, dat$target)
-      likelihood = dat$likelihood
-      list(tfmode = targets, likelihood = likelihood)
-    })
-  return(regulon)
 }
 
 rwth_color = function(colors) {
