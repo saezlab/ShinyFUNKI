@@ -11,10 +11,16 @@ library(ggExtra)
 library(tidygraph)
 library(ggraph)
 library(broom)
+library(dorothea)
+library(progeny)
+library(CARNIVAL)
 
 # shiny options
 enableBookmarking(store = "server")
 options(shiny.maxRequestSize=30*1024^2)
+
+# load examples
+example_result_carnival = readRDS("data/examples/carnival_result_celline_SIDM00194.rds")
 
 # load data
 rwth_colors_df = get(load("data/misc/rwth_colors.rda"))
@@ -34,68 +40,30 @@ load("data/models/progeny_matrix_human_v1.rda")
 # kinact
 kinact_regulon_human = readRDS("data/models/kinact_regulon_human.rds")
 
-# functions
-run_progeny = function (E, M, gene_name = "gene", value_name = "expression",
-                        id_name = "sample", permutation = 10000, ...) {
-  plan(multiprocess)
-  E = E %>% mutate_if(is.factor, as.character)
-  
-  if (permutation > 0) {
-    null_model = future_map_dfr(1:permutation, .progress = T, function(p) {
-      E %>%
-        group_by(!!!syms(id_name)) %>%
-        sample_frac() %>%
-        ungroup() %>%
-        mutate(!!gene_name := E[[gene_name]]) %>%
-        run_progeny(M, gene_name = gene_name, value_name = value_name,
-                    id_name = id_name, permutation = 0)
-    }) %>%
-      group_by(!!!syms(id_name), pathway) %>%
-      summarise(m = mean(activity),
-                s = sd(activity)) %>%
-      ungroup()
+run_progeny <- function(data, organism = "Human", ...){
+  # based on organism, we load the correct dataset
+  if(input$select_organism == "Homo sapiens"){
+    organism = "Human"
+    data(model_human_full, package = "progeny")
+  }else if(input$select_organism == "Mus musculus"){
+    organism = "Mouse"
+    data(model_mouse_full, package = "progeny")
   }
   
-  meta_data = E %>%
-    select(-c(!!gene_name, !!value_name)) %>%
-    distinct()
+  #run PROGENy
   
-  emat = E %>%
-    select(!!gene_name, !!id_name, !!value_name) %>%
-    spread(!!id_name, !!value_name, fill = 0) %>%
-    drop_na() %>%
-    data.frame(row.names = 1, stringsAsFactors = F, check.names = F)
+  #set seed to always get the same result
+  set.seed(7895874)
   
-  model = M %>%
-    spread(pathway, weight, fill = 0) %>%
-    data.frame(row.names = 1, check.names = F, stringsAsFactors = F)
-  
-  common_genes = intersect(rownames(emat), rownames(model))
-  emat_matched = emat[common_genes, , drop = FALSE] %>%
-    t()
-  model_matched = model[common_genes, , drop = FALSE] %>%
-    data.matrix()
-  
-  stopifnot(names(emat_matched) == rownames(model_matched))
-  
-  progeny_scores = emat_matched %*% model_matched %>%
-    data.frame(stringsAsFactors = F, check.names = F) %>%
-    rownames_to_column(id_name) %>%
-    gather(key = pathway, value = activity, -!!id_name) %>%
-    as_tibble() %>%
-    inner_join(meta_data, by = id_name)
-  
-  if (permutation > 0) {
-    progeny_z_scores = progeny_scores %>%
-      inner_join(null_model, by = c(id_name, "pathway")) %>%
-      mutate(activity = (activity - m)/s) %>%
-      select(!!id_name, pathway, activity)
-    return(progeny_z_scores)
-  }
-  else {
-    return(progeny_scores)
-  }
+  progeny_scores <- data %>%
+    as.matrix() %>%
+    progeny::progeny(., z_scores = FALSE, 
+                     organism = organism,
+                     top = 100,
+                     perm = 100)
+  return(progeny_scores)
 }
+
 
 run_viper = function(E, regulon, gene_name = "gene", value_name = "expression",
                      id_name = "sample", regulator_name = "tf",  ...) {
