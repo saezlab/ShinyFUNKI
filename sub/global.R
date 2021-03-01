@@ -14,6 +14,8 @@ library(broom)
 library(dorothea)
 library(progeny)
 library(CARNIVAL)
+library(OmnipathR)
+library(visNetwork)
 
 # shiny options
 enableBookmarking(store = "server")
@@ -24,28 +26,14 @@ example_result_carnival = readRDS("data/examples/carnival_result_celline_SIDM001
 
 # load data
 rwth_colors_df = get(load("data/misc/rwth_colors.rda"))
-example_data = read_csv("data/examples/example_data.csv") 
-
-# dorothea
-load("data/models/dorothea_regulon_human_v1.rda")
-load("data/models/dorothea_regulon_mouse_v1.rda")
-
-load("data/models/dorothea_regulon_human_coverage_v1.rda")
-load("data/models/dorothea_regulon_mouse_coverage_v1.rda")
-
-# progeny
-load("data/models/progeny_matrix_mouse_v1.rda")
-load("data/models/progeny_matrix_human_v1.rda")
 
 # kinact
 kinact_regulon_human = readRDS("data/models/kinact_regulon_human.rds")
 
 
-##############
-## ANALYSIS ##
-##############
+# ANALYSIS -------------------------------------------------------------
 
-run_progeny <- function(data, organism = "Human", ...){
+run_progeny <- function(data, organism = "Human", top = 100, perm = 100, ...){
   # based on organism, we load the correct dataset
   if(input$select_organism == "Homo sapiens"){
     organism = "Human"
@@ -64,21 +52,23 @@ run_progeny <- function(data, organism = "Human", ...){
     as.matrix() %>%
     progeny::progeny(., z_scores = FALSE, 
                      organism = organism,
-                     top = 100,
-                     perm = 100)
+                     top = top,
+                     perm = perm)
   return(progeny_scores)
 }
 
-run_dorothea <- function(data, organism = "Human", confidence_level, minsize = 5, method = 'none', ...){
+run_dorothea <- function(dorothea_matrix, organism = "Human", confidence_level, minsize = 5, method = 'none', ...){
   # based on organism, we load the correct dataset
-  if(organism == "Homo sapiens"){
+  if(organism == "Human"){
     
-    regulons <- data(dorothea_hs, package = "dorothea") %>%
+    data(dorothea_hs, package = "dorothea")
+    regulons <- dorothea_hs %>%
       dplyr::filter(confidence %in% confidence_level)
     
-  }else if(organism == "Mus musculus"){
+  }else if(organism == "Mouse"){
     
-    regulons <- data(dorothea_mm, package = "dorothea") %>%
+    data(dorothea_mm, package = "dorothea")
+    regulons <-  dorothea_mm %>%
       dplyr::filter(confidence %in% confidence_level)
     
   }
@@ -94,161 +84,205 @@ run_dorothea <- function(data, organism = "Human", confidence_level, minsize = 5
   return(activity_scores)
 }
 
-rwth_color = function(colors) {
-  if (!all(colors %in% rwth_colors_df$query)) {
-    wrong_queries = tibble(query = colors) %>%
-      anti_join(rwth_colors_df, by="query") %>%
-      pull(query)
-    warning(paste("The following queries are not available:",
-                  paste(wrong_queries, collapse = ", ")))
+get_network <- function(net_type = "gene", complx = T){
+  omniR = OmnipathR::import_Omnipath_Interactions()
+  
+  #consensus sign and direction
+  cNET <- omniR %>% 
+    dplyr::filter(consensus_direction == 1 &
+                    (consensus_stimulation == 1 | consensus_inhibition == 1)) %>%
+    dplyr::mutate(consensus_stimulation = dplyr::if_else(consensus_stimulation == 0, -1, 1)) %>%
+    dplyr::mutate(consensus_inhibition = dplyr::case_when(consensus_inhibition == 1 ~ -1,
+                                                          consensus_inhibition == 0 ~ 1)) %>%
+    dplyr::filter(consensus_stimulation==consensus_inhibition)
+  
+  # select gene or protein network
+  if(net_type == "gene"){
+    cNET <- cNET %>%
+      dplyr::select(source_genesymbol, consensus_stimulation, target_genesymbol) %>%
+      dplyr::rename(source = source_genesymbol, interaction = consensus_stimulation, target = target_genesymbol)
+    
+  }else if(net_type == "protein"){
+    cNET <- cNET %>%
+      dplyr::select(source, consensus_stimulation, target) %>%
+      dplyr::rename(interaction = consensus_stimulation)
   }
-  tibble(query = colors) %>%
-    inner_join(rwth_colors_df, by="query") %>%
-    pull(hex)
+  
+  # if true, keep the complexes
+  if(complx){
+    cNET <- cNET %>%
+      dplyr::mutate(source = gsub(":", "_", source)) %>%
+      dplyr::mutate(source = gsub(":", "_", target))
+    
+  }else{
+    cNET <- cNET %>%
+      dplyr::filter(! (grepl(":", source, fixed = T) | grepl(":", target, fixed = T)))
+  }
+  
+  return(cNET)
 }
 
-plot_lollipop = function(df, top_n_hits, var, var_label) {
-  var = enquo(var)
-  title = paste("Contrast:", unique(df$contrast))
-  df %>% 
-    arrange(activity) %>%
-    mutate(!!var := as_factor(!!var),
-           effect = factor(sign(activity)),
-           abs_activity = abs(activity)) %>%
-    group_by(effect) %>%
-    top_n(top_n_hits, abs_activity) %>%
-    ungroup() %>%
-    ggplot(aes(x=!!var, y=activity, color=effect)) +
-    geom_segment(aes(x=!!var, xend=!!var, y=0, yend=activity), color="grey") +
-    geom_point(size=4) +
-    coord_flip() +
-    theme_light() +
-    theme(
-      panel.grid.major.y = element_blank(),
-      panel.border = element_blank(),
-      axis.ticks.y = element_blank()
+run_carnival <- function(data, net = NULL, net_type = "gene", 
+                         dorothea = NULL, progeny = NULL,
+                         ini_nodes = "all_inputs", ...){
+  # load network
+  if( is.null(net) ){
+    cNET = get_network(net_type = "gene", complx = T)
+  }else{
+    cNET = read.delim(net, sep = "\t")
+    colnames(cNET) = c('source', 'interaction', 'target')
+  }
+  
+  # load dorothea
+  if( is.null(dorothea) ){
+    tf_activities = run_dorothea(data, organism = "Human", confidence_level, minsize = 5, method = 'none', ...)
+  }else{
+    tf_activities = read.delim(net, sep = "\t")
+    
+  }
+  
+  # load progeny
+  if( is.null(progeny) ){
+    progeny_scores = run_progeny(data, organism = "Human", ...)
+  }else{
+    progeny_scores = read.delim(net, sep = "\t")
+    
+  }
+  
+  # initial nodes
+  if(!is.null(ini_nodes)){
+    
+    if(ini_nodes == "all_inputs"){
+      # get initial nodes
+      ini_nodes = base::setdiff(cNET$source, cNET$target)
+    }
+    
+    iniciators = base::data.frame(base::matrix(data = NaN, nrow = 1, ncol = length(ini_nodes)), stringsAsFactors = F)
+    colnames(iniciators) = ini_nodes
+    
+  }
+  
+  
+  # run CARNIVAL
+  carnival_result = runCARNIVAL( inputObj = iniciators,
+                                 measObj = tfList$t, 
+                                 netObj = cNET, 
+                                 weightObj = progenylist$score, 
+                                 solverPath = "/Applications/CPLEX_Studio129/cplex/bin/x86-64_osx/cplex", 
+                                 solver = "cplex",
+                                 timelimit=7200,
+                                 mipGAP=0,
+                                 poolrelGAP=0 )
+  
+  carnival_result$weightedSIF = carnival_result$weightedSIF %>%
+    as.data.frame() %>% 
+    tibble::tibble() %>%
+    dplyr::mutate(across(c(Sign, Weight), as.numeric))
+    
+  carnival_result$nodesAttributes = carnival_result$nodesAttributes %>%
+    as.data.frame() %>% 
+    tibble::tibble() %>%
+    dplyr::mutate(across(c(ZeroAct, UpAct, DownAct, AvgAct), as.numeric))
+  
+  return(carnival_result)
+  
+}
+
+
+# PLOTS -------------------------------------------------------------
+
+barplot_nes = function(df, smpl, nHits) {
+  df = df[, c("GeneID", smpl)] %>%
+    dplyr::rename(NES = smpl) %>%
+    dplyr::top_n(nHits, wt = abs(NES)) %>%
+    dplyr::arrange(NES) %>%
+    dplyr::mutate(GeneID = factor(GeneID))
+  
+  title = paste("Sample/Contrast:", smpl, sep = " ")
+  
+  ggplot(df, aes(x = NES, y = reorder(GeneID, NES))) +
+    geom_bar(aes(fill = NES), stat = "identity") +
+    scale_fill_gradient2(
+      low = "#99004C",
+      high = "#0859A2",
+      #"darkblue", "indianred"
+      mid = "whitesmoke",
+      midpoint = 0
     ) +
-    labs(x = var_label, y="Activity (z-score)") +
-    scale_color_manual(values = rwth_color(c("magenta", "green"))) +
-    theme(legend.position = "none") +
-    theme(aspect.ratio = c(1)) + 
+    theme_minimal() +
+    theme(
+      axis.title = element_text(face = "bold", size = 12),
+      axis.text.x = element_text(
+        hjust = 1,
+        size = 15,
+        face = "bold"
+      ),
+      axis.text.y = element_text(size = 15, face = "bold")
+    ) +
+    ylab("Transcription Factors") +
+    xlab("Normalized Enrichment scores (NES)") +
     ggtitle(title)
 }
 
-plot_heatmap = function(df, var="tf") {
-  mat = df %>%
-    select(!!var, contrast, activity) %>% 
-    spread(contrast, activity) %>%
-    data.frame(row.names = var, check.names = F)
-  
-  if (ncol(mat) > 1) {
-    pheatmap(mat, show_rownames = F)
-  } else if (ncol(mat) == 1) {
-    pheatmap(mat, cluster_rows = F, cluster_cols = F, show_rownames = F)
-  }
-}
-
-plot_network = function(network, num_nodes, var="tf", var_label = "TF") {
-  var_of_interest = unique(network[[var]])
-  reg_var_of_interest = unique(network$regulation)
-  
-  feature_name = network %>% pull(!!var) %>% unique()
-  contrast_name = network %>% pull(contrast) %>% unique()
-  title = paste0("Contrast: ", contrast_name, ", ", var_label,": ", feature_name)
-  
-  sub_network = network %>% 
-    drop_na() %>%
-    filter(effect != "not regulated") %>%
-    arrange(-importance) %>%
-    mutate(n = row_number()) %>%
-    filter(n <= num_nodes) %>%
-    select(!!var, target, mor, effect, regulation)
-  
-  if (nrow(sub_network) > 0) {
-    nodes_df = sub_network %>%
-      distinct_(var, "target", "effect", "regulation") %>%
-      gather(class, name, -effect, -regulation) %>%
-      mutate(effect = case_when(class != var ~ effect,
-                                class == var ~ regulation)) %>%
-      mutate(effect = factor(effect, c("upregulated", "downregulated"))) %>%
-      distinct(class, name, effect) %>%
-      mutate(id = row_number())
-    
-    edges_df = sub_network %>%
-      select(!!var, target, mor) %>%
-      inner_join(rename(nodes_df, !!var:=name, from=id), by=var) %>%
-      select(-c(class,effect)) %>%
-      inner_join(rename(nodes_df, target=name, to=id), by="target") %>%
-      select(from, to, mor)
-    
-    g = tbl_graph(nodes = nodes_df, edges = edges_df) %>%
-      ggraph(layout = "nicely") + 
-      geom_edge_link(arrow = arrow(), aes(edge_colour=mor)) + 
-      geom_node_point(aes(color = effect, shape=class), size=10) +
-      geom_node_text(aes(label = name), vjust = 0.4) + 
-      theme_graph() +
-      scale_color_manual(values = rwth_color(c("green50", "bordeaux50")), drop=F) +
-      scale_edge_color_manual(values = rwth_color(c("bordeaux", "green")), drop=F) +
-      scale_shape_manual(values = c(16,15)) +
-      theme(legend.position = "none",
-            aspect.ratio = c(1), 
-            plot.title = element_text(size = 14, face="plain")) +
-      ggtitle(title)
-  } else {
-    nodes_df = tribble(
-      ~effect, ~class, ~name, ~id,
-      reg_var_of_interest, "tf", var_of_interest, 1
-    )
-    # nodes_df = sub_network %>%
-    #   distinct_(var, "target", "effect", "regulation") %>%
-    #   gather(class, name, -effect, -regulation) %>%
-    #   mutate(effect = case_when(class != var ~ effect,
-    #                             class == var ~ regulation)) %>%
-    #   mutate(effect = factor(effect, c("upregulated", "downregulated"))) %>%
-    #   distinct(class, name, effect) %>%
-    #   filter(class == "tf") %>%
-    #   mutate(id = row_number())
-    edges_df = NULL
-    
-    g = tbl_graph(nodes = nodes_df, edges = edges_df) %>%
-      ggraph(layout = "nicely") + 
-      geom_node_point(aes(color = effect, shape=class), size=10) +
-      geom_node_text(aes(label = name), vjust = 0.4) + 
-      theme_graph() +
-      scale_color_manual(values = rwth_color(c("green50", "red50")), drop=F) +
-      scale_edge_color_manual(values = rwth_color(c("red", "green")), drop=F) +
-      scale_shape_manual(values = c(15)) +
-      theme(legend.position = "none",
-            aspect.ratio = c(1)) +
-      ggtitle(title)
-  }
-  return(g)
-}
-
-plot_volcano = function(df, interactome, selected_top_n_labels, var, var_label = "TF") {
-  var = enquo(var)
-  
-  feature_name = interactome %>% pull(!!var) %>% unique()
-  contrast_name = df %>% pull(contrast) %>% unique()
-  
-  title = paste0("Contrast: ", contrast_name, ", ", var_label,": ", feature_name)
-  
-  interactome %>% 
-    inner_join(df, by=c("target")) %>%
-    mutate(effect = factor(effect, c("downregulated", "not regulated", "upregulated")),
-           regulated = case_when(effect %in% c("downregulated", "upregulated") ~ "yes",
-                                 effect %in% c("not regulated") ~ "no")) %>%
-    arrange(desc(regulated), -importance) %>%
-    mutate(n = row_number(),
-           label = case_when(n <= selected_top_n_labels & effect != "not regulated" ~ target,
-                             TRUE ~ "")) %>%
-    ggplot(aes(x=logFC, y=-log10(adj.p.value), label=label, color=effect)) +
-    geom_point() +
-    geom_label_repel() +
+barplot_tf = function(df, selTF) {
+  df %>%
+    rownames_to_column(var = "tf") %>%
+    dplyr::filter(tf == selTF)  %>%
+    reshape2::melt() %>%
+    arrange(value) %>%
+    dplyr::mutate(variable = factor(variable, variable),
+                  effect = factor(sign(value), c(-1, 1))) %>%
+    ggplot(aes(x = variable, y = value, fill = effect)) +
+    geom_col() +
+    coord_flip() +
+    labs(x = "Sample/Contrast", y = "Normalized Enrichment scores (NES)") +
     theme_minimal() +
-    theme(legend.position = "none") +
-    scale_color_manual(values = rwth_color(c("bordeaux", "black50","green")),
-                       drop=F) +
+    theme(
+      legend.position = "none",
+      axis.title = element_text(face = "bold", size = 12),
+      axis.text.x = element_text(
+        hjust = 1,
+        size = 15,
+        face = "bold"
+      ),
+      axis.text.y = element_text(size = 15, face = "bold")
+    ) +
+    scale_fill_manual(values = c("#99004C", "#0859A2"),
+                      drop = F) +
     theme(aspect.ratio = c(1)) +
+    ggtitle(paste0("TF: ", selTF))
+  
+}
+
+plot_network = function(network, nodes, title) {
+  edges = network %>%
+    dplyr::filter(target %in% unique(nodes$target))
+  colnames(edges) = c("from", "sign", "to")
+  
+  labels_edge = c("-1" = "inhibition", "1" = "activation")
+  
+  tbl_graph(nodes = nodes, edges = edges) %>%
+    ggraph(layout = "nicely") +
+    geom_edge_link(arrow = arrow(), aes(edge_colour = as.factor(sign))) +
+    geom_node_point(aes(color = regulation), size = 10, alpha = 0.7) +
+    geom_node_text(aes(label = target), vjust = 0.4) + ##colour = "#C8D1E0"
+    theme_graph() +
+    scale_color_manual(
+      name = "",
+      values = c("downregulated" = "#99004C",
+                 "upregulated" = "#0859A2"),
+      drop = F
+    ) +
+    scale_edge_color_manual(
+      name = "Regulation",
+      values = c("-1" = "#99004C",
+                 "1" = "#0859A2"),
+      breaks = unique(edges$sign),
+      labels = labels_edge[names(labels_edge) %in% unique(edges$sign)],
+      drop = F
+    ) +
+    scale_shape_manual(values = c(16, 15)) +
+    theme(aspect.ratio = c(1),
+          plot.title = element_text(size = 14, face = "plain")) +
     ggtitle(title)
 }

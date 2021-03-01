@@ -2,253 +2,271 @@
 D = eventReactive({
   input$run_dorothea
   input$selected_conf_level
-  input$quality_vs_coverage
+  input$minsize
+  input$method
+  input$select_organism
 }, {
   
-  if (!is.null(selected_conf_level()) & num_run_dorothea() > 0) {
-    print(num_run_dorothea())
-    dorothea_input = expr() %>%
-      ungroup() %>%
-      select(gene, contrast, logFC)
-    
+  if (!is.null(input$selected_conf_level)) {
+
     withProgress(message="Calculate TF activities...", value=1, {
-      filtered_interactome = interactome() %>% 
-        filter(confidence %in% selected_conf_level())
-      
-      dorothea_result = run_viper(dorothea_input, filtered_interactome, 
-                                  id_name = "contrast", value_name = "logFC", 
-                                  regulator_name = "tf")
-      switch(quality_vs_coverage(),
-             "Quality" = dorothea_result,
-             "Coverage" = distinct(dorothea_result, tf, contrast, activity))
+
+      dorothea_result = run_dorothea(dorothea_matrix = expr(), 
+                                     organism = input$select_organism, 
+                                     confidence_level = input$selected_conf_level, 
+                                     minsize = input$minsize, 
+                                     method = input$method)
     })
   }
+
 })
 
+# Dynamic widgets / RenderUI ----------------------------------------------
 
-
-dorothea_network_df = reactive({
-  if (!is.null(selected_tf()) & !is.null(dorothea_selected_contrast()) & !is.null(D())) {
-    genes_of_interest = extended_expr() %>%
-      ungroup() %>%
-      filter(contrast == dorothea_selected_contrast()) %>%
-      select(target=gene, importance, effect)
-    
-    tf_of_interest = D() %>% 
-      filter(contrast == dorothea_selected_contrast()) %>%
-      filter(tf %in% selected_tf()) %>%
-      mutate(regulation = case_when(activity >= 0 ~ "upregulated",
-                                    activity < 0 ~ "downregulated")) %>%
-      select(-activity)
-    
-    network = interactome() %>%
-      filter(confidence %in% selected_conf_level()) %>%
-      mutate(mor = as.factor(mor)) %>%
-      filter(tf %in% selected_tf()) %>%
-      left_join(genes_of_interest, by = "target") %>%
-      inner_join(tf_of_interest, by=c("tf"))
+# select contrast/sample
+output$select_contrast = renderUI({
+  if (!is.null(D())) {
+    choices = colnames(D()) %>%
+      str_sort(numeric = T)
+    pickerInput(inputId = "select_contrast",
+                label = "Select Sample/Contrast",
+                choices = choices)
   }
 })
 
-
-
-# Reactive widgets input --------------------------------------------------
-quality_vs_coverage = eventReactive(input$quality_vs_coverage, {
-  input$quality_vs_coverage
-})
-
-num_run_dorothea = eventReactive(input$run_dorothea, {
-  input$run_dorothea
-})
-
-selected_top_n_hits = eventReactive(input$selected_top_n_hits, {
-  input$selected_top_n_hits
-})
-
-selected_conf_level = eventReactive(input$selected_conf_level, {
-  input$selected_conf_level
-})
-
-dorothea_selected_top_n_labels = eventReactive(input$dorothea_selected_top_n_labels, {
-  input$dorothea_selected_top_n_labels
-})
-
-dorothea_selected_contrast = eventReactive(input$dorothea_selected_contrast, {
-  input$dorothea_selected_contrast
-})
-
-selected_tf = eventReactive(input$selected_tf, {
-  input$selected_tf
-})
-
-dorothea_selected_padj_cutoff = eventReactive(input$dorothea_padj_cutoff, {
-  input$dorothea_padj_cutoff
-})
-
-
-
-# Dynamic widgets / RenderUI ----------------------------------------------
 # select TFs
 output$select_tf = renderUI({
-  choices = D() %>%
-    filter(contrast %in% dorothea_selected_contrast()) %>%
-    distinct(tf) %>% 
-    pull()
-  
-  default_selected = D() %>%
-    filter(contrast == dorothea_selected_contrast()) %>%
-    arrange(-activity) %>%
-    slice(1) %>%
-    pull(tf)
-  
-  pickerInput(inputId = "selected_tf", 
-              label = "Select TF", 
-              choices = choices,
-              options = list("live-search" = TRUE), 
-              selected = default_selected
-              )
+  if (!is.null(input$select_contrast)) {
+    choices = unique(rownames(D()))
+    
+    default_selected = D() %>%
+      data.frame() %>%
+      tibble::rownames_to_column(var = "TF") %>%
+      dplyr::select(TF, input$select_contrast) %>%
+      dplyr::filter(input$select_contrast == max(input$select_contrast)) %>%
+      dplyr::select(TF) %>%
+      dplyr::pull()
+      
+    pickerInput(
+      inputId = "select_tf",
+      label = "Select Transcription Factor",
+      choices = choices,
+      options = list("live-search" = TRUE),
+      selected = default_selected
+    )
+    
+  }
 })
 
-# select contrast
-output$dorothea_select_contrast = renderUI({
-  if (!is.null(expr())) {
-    choices = expr() %>% 
-      distinct(contrast) %>%
-      pull() %>%
-      str_sort(numeric=T)
-    pickerInput(inputId = "dorothea_selected_contrast", 
-                label = "Select Contrast", choices = choices)
+# select number of targets
+output$select_top_n_labels = renderUI({
+  if (!is.null(input$select_tf)) {
+    if(input$select_organism == "Human"){
+      targets = dorothea_hs
+    }else{
+      targets = dorothea_mm
+    }
+    targets = targets %>%
+      dplyr::filter(tf == input$select_tf &
+                      confidence %in% input$selected_conf_level) %>%
+      dplyr::select(target) %>%
+      dplyr::filter(target %in% rownames(D())) %>%
+      nrow()
+    
+    sliderInput(
+      "select_top_n_labels",
+      label = "Number of targets to display",
+      value = dplyr::case_when(targets > 10 ~ 10, targets <= 10 ~ round(targets * (2 / 3))),
+      min = 1,
+      max = targets,
+      step = 1
+    )
   }
 })
 
 # select top n results
 output$select_top_n_hits = renderUI({
   if (!is.null(D())) {
-    max_tfs = D() %>%
-      distinct(tf) %>%
-      nrow()
-    sliderInput("selected_top_n_hits",
-                label = "# displayed TFs (per category)", value = 10,
-                min = 1, max=max_tfs, step=1)
+    max_tfs = nrow(D())
+    sliderInput(
+      "select_top_n_hits",
+      label = "Numer of Transcription Factors to display",
+      value = 25,
+      min = 1,
+      max = max_tfs,
+      step = 1
+    )
   }
 })
 
-# select top n labels
-output$dorothea_select_top_n_labels = renderUI({
-  if (!is.null(selected_tf()) & !is.null(dorothea_selected_contrast())) {
-    e = extended_expr() %>%
-      filter(contrast %in% dorothea_selected_contrast() & 
-               effect != "not regulated") %>%
-      rename(target=gene)
-    
-    max_labels = interactome() %>% 
-      filter(confidence %in% selected_conf_level()) %>%
-      filter(tf == selected_tf()) %>% 
-      inner_join(e, by="target") %>%
-      nrow()
-    
-    sliderInput("dorothea_selected_top_n_labels",
-                label = "# shown labels in Volcano plot/nework", value = 10,
-                min = 0, max=max_labels, step=1)
+# Reactive Computations ---------------------------------------------------
+
+# Bar plot with the TFs for a condition---------------------------------------------------
+barplot_nes_reactive = reactive ({
+  if (!is.null(input$select_contrast) &
+      !is.null(input$select_top_n_hits)) {
+    p <- D() %>%
+      as.data.frame() %>%
+      rownames_to_column(var = "GeneID") %>%
+      barplot_nes(smpl = input$select_contrast,
+                  nHits = input$select_top_n_hits)
   }
+  
 })
 
+barplot_tf_reactive = reactive({
+  if (!is.null(input$select_tf)) {
+    q <- D() %>%
+      data.frame() %>%
+      barplot_tf(selTF = input$select_tf)
+    
+  }
+  
+})
 
-
+network_tf_reactive = reactive({
+  
+  if(input$select_organism == "Human"){
+    aux = dorothea_hs
+  }else{
+    aux = dorothea_mm
+  }
+  
+  if (!is.null(input$select_tf) &
+      !is.null(input$select_contrast)) {
+    aux = aux %>%
+      dplyr::filter(tf == input$select_tf &
+                      confidence %in% input$selected_conf_level)
+    
+    nodes = merge.data.frame(
+      aux %>%
+        dplyr::select(target),
+      D() %>%
+      as.data.frame() %>%
+        dplyr::select(input$select_contrast) %>%
+        tibble::rownames_to_column("target"),
+      by = "target"
+    )
+    
+    nodes = nodes[order(abs(nodes[, input$select_contrast]), decreasing = T), ]
+    
+    if (input$select_top_n_labels <= nrow(nodes)) {
+      nodes = nodes[1:input$select_top_n_labels, ]
+    }
+    
+    nodes = tibble(
+      rbind.data.frame(
+        nodes,
+        D() %>%
+          data.frame() %>%
+          tibble::rownames_to_column("target") %>%
+          dplyr::filter(target == input$select_tf) %>%
+          dplyr::select(target, input$select_contrast)
+      )
+    )
+    
+    nodes$regulation = nodes[, input$select_contrast]
+    
+    nodes = nodes %>%
+      mutate(
+        regulation = dplyr::case_when(
+          regulation >= 0 ~ "upregulated",
+          regulation < 0 ~ "downregulated"
+        )
+      )
+    
+    gtitle = paste0("Sample/Contrast: ",
+                    input$select_contrast,
+                    "; TF: ",
+                    input$select_tf)
+    
+    plot_network(
+      network = aux %>% dplyr::select(tf, mor, target),
+      nodes = nodes,
+      title = gtitle
+    )
+    
+  }
+  
+  
+})
 
 # Render Plots ------------------------------------------------------------
-# Lollipop
-output$dorothea_lollipop = renderPlot({
-  D() %>% filter(contrast %in% dorothea_selected_contrast()) %>%
-    plot_lollipop(top_n_hits = selected_top_n_hits(), 
-                  var = tf, var_label = "Transcription Factor")
+
+# Bar plot with the TFs for a condition
+output$barplot_nes = renderPlot({
+  print(barplot_nes_reactive())
 })
 
-# Heatmap
-output$dorothea_heatmap = renderPlot({
-  D() %>% 
-    plot_heatmap(var="tf")
-})
-
-# Volcano
-output$tf_volcano = renderPlot({
-  if (!is.null(selected_tf()) & 
-      !is.null(dorothea_selected_contrast()) & 
-      !is.null(dorothea_selected_top_n_labels())) {
-    renamed_extended_expr = extended_expr() %>%
-      filter(contrast == dorothea_selected_contrast()) %>%
-      rename(target = gene)
-    
-    filtered_interactome  = interactome() %>%
-      filter(confidence %in% selected_conf_level()) %>%
-      filter(tf == selected_tf())
-    
-    plot_volcano(renamed_extended_expr, filtered_interactome, 
-                 selected_top_n_labels = dorothea_selected_top_n_labels(), 
-                 var=tf, var_label = "TF")
-  }
-})
-
-# Bar
+# Bar plot of activity for all conditions for a TF
 output$tf_bar = renderPlot({
-  if (!is.null(selected_tf())) {
-    D() %>%
-      filter(tf == selected_tf()) %>%
-      arrange(activity) %>%
-      mutate(contrast = factor(contrast, contrast),
-             effect = factor(sign(activity), c(-1,1))) %>%
-      ggplot(aes(x=contrast, y=activity, fill=effect)) +
-      geom_col() +
-      coord_flip() +
-      labs(x="Contrast", y = "Activity") +
-      theme_minimal() +
-      theme(legend.position = "none") +
-      scale_fill_manual(values = rwth_color(c("magenta", "green")),
-                        drop=F) +
-      theme(aspect.ratio = c(1)) +
-      ggtitle(paste0("TF: ", selected_tf()))
-  }
+  print(barplot_tf_reactive())
 })
 
-# Network
+# Network of a TF with it's targets
 output$tf_network = renderPlot({
-  if (!is.null(dorothea_network_df()) & 
-      !is.null(dorothea_selected_top_n_labels())) {
-    plot_network(network = dorothea_network_df(), 
-                 num_nodes = dorothea_selected_top_n_labels(), var="tf", var_label = "TF")
-  }
+  print(network_tf_reactive())
 })
-
 
 # Render Tables -----------------------------------------------------------
 # TF-activities
-output$dorothea_result = DT::renderDataTable({
-  dorothea_result_matrix = D() %>%
-    spread(contrast, activity) %>%
-    rename(TF = tf)
-  DT::datatable(dorothea_result_matrix, 
-                option = list(scrollX = TRUE, autoWidth=T), filter = "top") %>%
-    formatSignif(which(map_lgl(dorothea_result_matrix, is.numeric)))
+output$dorothea_table = DT::renderDataTable({
+  
+  if(input$select_organism == "Human"){
+    targets = dorothea_hs
+  }else{
+    targets = dorothea_mm
+  }
+
+  results_confidence = unique.data.frame(merge(
+    targets[, c("tf", "confidence")],
+    D() %>%
+    data.frame() %>%
+    round(digits = 3) %>% 
+    rownames_to_column(var = "tf"),
+    by = "tf"
+  ))
+  colnames(results_confidence)[colnames(results_confidence) == "tf"] = "Transcription Factor"
+  dorothea_result_matrix = DT::datatable(
+    results_confidence,
+    option = list(scrollX = TRUE, autoWidth = T),
+    filter = "top"
+  )
+  
 })
 
 # Download Handler --------------------------------------------------------
-# TF-activities
-output$download_dorothea_scores = downloadHandler(
-  filename = "tf_activities.csv",
-  content = function(x) {
-    write_csv(D(), x)
-  })
 
-# Network
-output$download_network = downloadHandler(
-  filename = function() {
-    paste0("network_", selected_tf(), dorothea_selected_contrast(), ".sif")
-  },
-  content = function(file) {
-    if (!is.null(dorothea_network_df())) {
-      dorothea_network_df() %>%
-        select(tf, mor, target) %>%
-        write_delim(., file, col_names = F)
+# All in a tar
+output$download_dorothea_analysis = downloadHandler(
+  filename = "footprint_dorothea_saezLab.tar.gz",
+  content = function(x) {
+    fdir = "footprint_dorothea_saezLab"
+    
+    if (dir.exists(fdir)) {
+      do.call(file.remove, list(list.files(fdir, full.names = TRUE)))
+    } else{
+      dir.create(fdir)
     }
     
-  })
+    fnames = c(
+      paste0("barplot_tfs_", input$select_contrast, ".png"),
+      paste0("barplot_samples_", input$select_tf, ".png"),
+      paste0(
+        "network_",
+        input$select_contrast,
+        "_",
+        input$select_tf,
+        ".png"
+      )
+    )
+    
+    ggsave(file.path(fdir, fnames[1]), barplot_nes_reactive(), device = "png")
+    ggsave(file.path(fdir, fnames[2]), barplot_tf_reactive(), device = "png")
+    ggsave(file.path(fdir, fnames[3]), network_tf_reactive(), device = "png")
+    write.csv(dorothea_result,
+              file.path(fdir, "TFactivities_nes.csv"),
+              quote = F)
+    tar(x, files = fdir, compression = "gzip")
+  }
+)
