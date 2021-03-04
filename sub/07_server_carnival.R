@@ -1,6 +1,5 @@
-# Reactive Computations ---------------------------------------------------
-
 output$network <- renderVisNetwork({
+  # carnival_result = readRDS("data/examples/carnival_result_celline_SIDM00194.rds")
   # create color scale for nodes
   
   pal_red_blue = c(rev(RColorBrewer::brewer.pal(9, 'Reds')), 
@@ -14,6 +13,11 @@ output$network <- renderVisNetwork({
     dplyr::mutate(color = dplyr::case_when(Sign == 1 ~ '#0578F0',
                                            Sign == -1 ~ '#F20404',
                                            Sign == 0 ~ '#777777'))
+  
+  intermediate_nodes = carnival_result$nodesAttributes %>%
+    dplyr::filter(NodeType == "" & ZeroAct != 100) %>%
+    dplyr::filter(Node %in% c(union(edges$from, edges$to))) %>%
+    nrow()
 
   nodes <- carnival_result$nodesAttributes %>%
     dplyr::filter(ZeroAct != 100) %>%
@@ -25,17 +29,46 @@ output$network <- renderVisNetwork({
                                            TRUE ~ "ellipse")) %>%
     dplyr::mutate(title = paste0("<p><b>", label, "</b><br> (", AvgAct, ")</p>")) %>%
     dplyr::mutate(color = findInterval(AvgAct, seq(from = -100, to = 100, length.out = 100))) %>%
-    dplyr::mutate(color = pal[color])
+    dplyr::mutate(color = pal[color]) # %>%
+    # dplyr::mutate(level = dplyr::case_when(NodeType == "S" ~ 1,
+    #                                        NodeType == "T" ~ 10,
+    #                                        NodeType == "" ~ floor(runif( nodes %>% nrow(), 
+    #                                                           min = 2, max = 9))))
   
-  ## legend for edges
+  ## legends
   ledges <- data.frame(color = c("#0578F0", "#F20404", "#777777"),
                        label = c("activation", "inhibition", "involved"), 
                        arrows = c("to", "to", "to"),
                        font.align = "top")
   
+  lnodes <- data.frame(label = c("TF", "Perturbed", "Intermediate"),
+                       color = c("gray"),
+                       shape = c("triangle", "diamond", "ellipse"))
+  
+  
   # render network
   visNetwork::visNetwork(nodes, edges) %>%
-    visNetwork::visLegend(addEdges = ledges, useGroups = T)
+    visNetwork::visLegend(addEdges = ledges, addNodes = lnodes,
+                          width = 0.1, position = "right", useGroups = FALSE)
 })
+
+# Reactive Computations ---------------------------------------------------
+
+observe({
+  visNetwork::visNetworkProxy("network") %>%
+    visNetwork::visFocus(id = input$Focus, scale = 4)
+})
+
+observe({
+  if(input$hierarchical){
+    visNetwork::visNetworkProxy("network") %>%
+      visNetwork::visHierarchicalLayout(levelSeparation = 500,
+                            sortMethod = "directed",
+                            treeSpacing = 20,
+                            edgeMinimization=F, blockShifting=F) %>%
+      visNetwork::visPhysics(hierarchicalRepulsion = list(nodeDistance = 300))
+  }
+})
+
 
 
