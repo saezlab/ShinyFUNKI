@@ -6,7 +6,7 @@ tabPanel(
       sidebarLayout(
         sidebarPanel(
           width = 12,
-          uiOutput("select_contrast"),
+          uiOutput("select_contrast_dorothea"),
           uiOutput("select_tf"),
           downloadButton(
             "download_dorothea_analysis",
@@ -32,10 +32,9 @@ tabPanel(
   hr(),
   
   fluidRow(
-    column(3, plotOutput("tf_bar")),
-    column(4, plotOutput("barplot_nes")),
-    
-    column(5, plotOutput("tf_network"))
+    column(4, plotOutput("tf_bar")),
+    column(4, plotOutput("barplot_nes_dorothea")),
+    column(4, plotOutput("tf_network"))
   ),
   
   hr(),

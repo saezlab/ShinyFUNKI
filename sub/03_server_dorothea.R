@@ -24,7 +24,7 @@ D = eventReactive({
 # Dynamic widgets / RenderUI ----------------------------------------------
 
 # select contrast/sample
-output$select_contrast = renderUI({
+output$select_contrast_dorothea = renderUI({
   if (!is.null(D())) {
     choices = colnames(D()) %>%
       str_sort(numeric = T)
@@ -42,8 +42,8 @@ output$select_tf = renderUI({
     default_selected = D() %>%
       data.frame() %>%
       tibble::rownames_to_column(var = "TF") %>%
-      dplyr::select(TF, input$select_contrast) %>%
-      dplyr::filter(input$select_contrast == max(input$select_contrast)) %>%
+      dplyr::select(TF, !!as.name(input$select_contrast)) %>%
+      dplyr::filter(!!as.name(input$select_contrast) == max(abs(!!as.name(input$select_contrast)))) %>%
       dplyr::select(TF) %>%
       dplyr::pull()
       
@@ -52,7 +52,7 @@ output$select_tf = renderUI({
       label = "Select Transcription Factor",
       choices = choices,
       options = list("live-search" = TRUE),
-      selected = default_selected
+      selected = default_selected[1]
     )
     
   }
@@ -99,16 +99,14 @@ output$select_top_n_hits = renderUI({
   }
 })
 
-# Reactive Computations ---------------------------------------------------
-
 # Bar plot with the TFs for a condition---------------------------------------------------
-barplot_nes_reactive = reactive ({
+barplot_nes_reactive_dorothea = reactive ({
   if (!is.null(input$select_contrast) &
       !is.null(input$select_top_n_hits)) {
     p <- D() %>%
       as.data.frame() %>%
       rownames_to_column(var = "GeneID") %>%
-      barplot_nes(smpl = input$select_contrast,
+      barplot_nes_dorothea(smpl = input$select_contrast,
                   nHits = input$select_top_n_hits)
   }
   
@@ -194,8 +192,8 @@ network_tf_reactive = reactive({
 # Render Plots ------------------------------------------------------------
 
 # Bar plot with the TFs for a condition
-output$barplot_nes = renderPlot({
-  print(barplot_nes_reactive())
+output$barplot_nes_dorothea = renderPlot({
+  print(barplot_nes_reactive_dorothea())
 })
 
 # Bar plot of activity for all conditions for a TF
