@@ -2,7 +2,7 @@ tabPanel(
   title = "Data and Parameters",
   fluidRow(
     h3("Upload Data"),
-    column(4,
+    column(4, align="center",
       #load the example data by default
       p("Example dataset taken from ",
         a("Blackham et al, J Virol., 2010", 
@@ -29,13 +29,14 @@ tabPanel(
         radioButtons("data_type", "Type of data",
                      choices = c("Gene expression matrix" = "gex",
                                  Contrast = "contrast"),
-                     selected = "gex"),
+                     selected = "gex",
+                     inline = TRUE),
         
         # select organism
         selectInput("select_organism", label="Select Organism",
-                    choices = c("Homo sapiens",
-                                "Mus musculus"),
-                    selected = "Homo sapiens")
+                    choices = c("Homo sapiens" = "Human",
+                                "Mus musculus" = "Mouse"),
+                    selected = "Human")
       )
     ),
     column(8,
@@ -48,23 +49,23 @@ tabPanel(
   hr(),
   fluidRow(
     h3("Select analysis and specific parameters"),
-    
+    br(),
     column(1, align="center", 
       img(src="logo_dorothea.png", align = "right", height=75, width=75)
     ),
     column(11,
       fluidRow(
-        column(3, 
+        column(3, align="center",
           awesomeCheckboxGroup(inputId = "selected_conf_level",
                                   label = "Select Confidence Level",
                                   choices = c("A", "B", "C", "D", "E"),
                                   selected = c("A","B", "C"),
                                   inline = TRUE)
         ),
-        column(3,
+        column(4, align="center",
                sliderInput(inputId = "minsize", label = "Regulon's minimal size", min = 1, max = 300, value = 5)
         ),
-        column(3,
+        column(3, align="center",
                selectInput(inputId = "method", label = "Method for computing signatures",
                            choices = c("scale" = "scale",
                                        "rank" = "rank", 
@@ -73,7 +74,7 @@ tabPanel(
                                        "none" = "none"),
                            selected = "none")
         ),
-        column(2,
+        column(1, align="center",
                actionButton("an_dorothea", "Run DoRothEA") )
       )
     )
@@ -85,13 +86,13 @@ tabPanel(
     ),
     column(11,
       fluidRow(
-        column(4,
+        column(5, align="center",
                sliderInput(inputId = "perm", label = "Number of permutations", min = 1, max = 300, value = 100)
         ),
-        column(4,
+        column(5, align="center",
                sliderInput(inputId = "top", label = "Top genes for model matrix", min = 1, max = 300, value = 100)
         ),
-        column(2,
+        column(1, align="center",
                actionButton("an_progeny", "Run PROGENy")
         )
       )
@@ -104,7 +105,7 @@ tabPanel(
     ),
     column(11,
       fluidRow(
-        column(3,
+        column(3, align="center",
           selectInput(inputId = "inputs_targets", label = "Targets",
                       choices = c("All posible from network" = "all_inputs",
                                   "Let CARNIVAL choose them" = "inverse", 
@@ -114,7 +115,7 @@ tabPanel(
             condition =  ("input.inputs_targets == 'up'"),
             fileInput("upload_network", label = NULL))  
         ),
-        column(2,
+        column(2, align="center",
                radioButtons("omnipath", label = "Network", 
                             choices = c("Omnipath" = "omni", "Upload" = "up"), 
                             selected = "omni",
@@ -131,7 +132,7 @@ tabPanel(
                             label = "Add complexes",
                             value = TRUE)
         ),
-        column(2,
+        column(2, align="center",
                radioButtons("dorothea", label = "TF's activities", 
                             choices = c("DoRothEA" = "doro", "Upload" = "up"), 
                             selected = "doro",
@@ -140,7 +141,7 @@ tabPanel(
                  condition = ("input.dorothea == 'up'"),
                  fileInput("upload_tfs", label = "Upload TF's activities")),
         ),
-        column(2,
+        column(2, align="center",
                radioButtons("progeny", label = "Measurments", 
                             choices = c("PROGENy" = "prog", "Upload" = "up"), 
                             selected = "prog",
@@ -149,7 +150,7 @@ tabPanel(
                  condition = ("input.progeny == 'up'"),
                  fileInput("upload_progeny", label = "Upload measurments"))
         ),
-        column(3,
+        column(3, align="center",
                radioButtons("solver", label = "Solver", 
                             choices = c("lpSolve" = "lpSolve", "cplex" = "cplex", "cbc" = "cbc"), 
                             selected = "cplex",

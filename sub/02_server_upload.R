@@ -3,7 +3,11 @@ expr = reactive({
   if (input$example_data) {
     shinyjs::disable("upload_expr")
     shinyjs::disable("select_organism")
-    expDATA = read_csv("data/examples/example_data.csv") 
+    expDATA = read_csv("data/examples/example_data.csv") %>% 
+      dplyr::select(contrast, gene, logFC) %>% 
+      tidyr::pivot_wider(names_from = contrast, values_from = logFC) %>%
+      data.frame() %>%
+      tibble::column_to_rownames(var = "gene")
   } else {
     shinyjs::enable("upload_expr")
     shinyjs::enable("select_organism")
@@ -36,3 +40,20 @@ observeEvent({
     toggleState("run_carnival",
                 input$example_data == T | !is.null(input$upload_pprot))
   })
+
+# jump to visualise results
+observeEvent(input$an_dorothea, {
+  updateTabsetPanel(session, inputId = "menu",
+                    selected = "DoRothEA")
+})
+
+observeEvent(input$an_progeny, {
+  updateTabsetPanel(session, inputId = "menu",
+                    selected = "PROGENy")
+})
+
+# jump to visualise results
+observeEvent(input$run_carnival, {
+  updateTabsetPanel(session, inputId = "menu",
+                    selected = "CARNIVAL")
+})
