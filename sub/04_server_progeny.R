@@ -1,105 +1,208 @@
-P = eventReactive(input$run_progeny, {
-  progeny_input = expr() %>%
-    ungroup() %>%
-    select(gene, contrast, t = statistic)
-  
-  withProgress(message="Calculate PROGENy matrix", value=1, {
-    print("run_progeny")
-    progeny_result = run_progeny(progeny_input, matrix(), id_name = "contrast", value_name = "t", permutation = 10)
-    print(progeny_result)
-  })
-})
-
-
-
-progeny_selected_top_n_labels = eventReactive(input$progeny_selected_top_n_labels, {
-  input$progeny_selected_top_n_labels
-})
-
-progeny_selected_contrast = eventReactive(input$progeny_selected_contrast, {
-  input$progeny_selected_contrast
-})
-
-# Plot lollipop
-output$progeny_lollipop = renderPlot({
-  #if (!is.null(input$file)){
-  P() %>%
-    filter(contrast %in% progeny_selected_contrast()) %>%
-    plot_lollipop(top_n_hits = 100, var = pathway, var_label = "Pathway")
-  #}
-})
-
-# select TFs
-output$select_pathway = renderUI({
-  pickerInput(inputId = "selected_pathway",
-              label = "Select pathway", choices = unique(filter(P(), contrast %in% progeny_selected_contrast())$pathway), options = list("live-search" = TRUE), selected = arrange(filter(P(), contrast %in% progeny_selected_contrast()), -activity)$pathway[1])
-})
-
-# select contrast
-output$progeny_select_contrast = renderUI({
-  pickerInput(inputId = "progeny_selected_contrast",
-              label = "Select Contrast", unique(expr()$contrast))
-})
-
-# volcano plot
-scatter_plot = eventReactive({
-  input$selected_pathway
-  input$progeny_selected_top_n_labels
-}, {
-  if (!is.null(input$selected_pathway)) {
-    scatter = matrix() %>% filter(pathway == input$selected_pathway) %>%
-      inner_join(expr(), by=c("gene")) %>%
-      filter(contrast %in% progeny_selected_contrast()) %>%
-      mutate(contribution = weight * statistic,
-             abs_contribution = abs(contribution)) %>%
-      arrange(pathway, -abs_contribution) %>%
-      group_by(pathway) %>%
-      mutate(importance = 1:n()) %>%
-      ungroup() %>%
-      mutate(lab = NA) %>%
-      mutate(lab = case_when(importance <= input$progeny_selected_top_n_labels ~ gene),
-             effect = case_when(sign(contribution) == 1 ~ "positive",
-                                sign(contribution) == -1 ~ "negative"),
-             effect = factor(effect, c("negative", "positive")),
-             alpha_param = case_when(!is.na(lab) ~ "1",
-                                     TRUE ~ "0")
-      ) %>%
-      ggplot(aes(x=statistic, y=weight, label=lab, color=effect)) +
-      geom_point(aes(alpha = alpha_param)) +
-      geom_hline(yintercept = c(0),
-                 linetype=c(1) ,
-                 color=c("black")) +
-      geom_vline(xintercept = c(0),
-                 linetype=c(1) , color=c("black")) +
-      geom_label_repel(show.legend = F, na.rm = T) +
-      theme_minimal() +
-      theme(aspect.ratio = c(1)) +
-      scale_alpha_manual(values = c(0.25,1), guide="none") +
-      scale_color_manual(values = rwth_color(c("magenta", "green")),
-                         drop=F) +
-      labs(x="Effect size", y="PROGENy weight")
+# Reactive Computations ---------------------------------------------------
+P = eventReactive({
+  input$an_progeny
+  input$select_organism
+  input$perm
+  input$top
+  },{
+    if(!is.null(input$an_progeny)){
+      withProgress(message = "Calculate PROGENy matrix", value = 1, {
+        expr() %>%
+          run_progeny(organism = input$select_organism, 
+                      top = input$perm, 
+                      perm = input$top)
+      })
+    }
     
-    ggMarginal(scatter, type="histogram")
+})
+
+# Dynamic widgets / RenderUI ----------------------------------------------
+
+# select contrast/sample
+output$select_contrast_progeny = renderUI({
+  if (!is.null(P())) {
+    choices = rownames(P()) 
+    
+    pickerInput(inputId = "select_contrast_progeny",
+                label = "Select Sample/Contrast",
+                choices = choices,
+                selected = choices[1])
   }
-
 })
 
-output$pathway_scatter = renderPlot({
-  scatter_plot()
+# select pathway
+output$select_pathway = renderUI({
+  if (!is.null(input$select_contrast_progeny)) {
+    choices = colnames(P()) %>%
+      str_sort(numeric = T)
+    
+    default_selected = P() %>%
+      t() %>%
+      as.data.frame() %>%
+      tibble::rownames_to_column(var = "pathway") %>%
+      dplyr::select(pathway, !!as.name(input$select_contrast_progeny)) %>%
+      dplyr::filter(!!as.name(input$select_contrast_progeny) == max(abs(!!as.name(input$select_contrast_progeny)))) %>%
+      dplyr::select(pathway) %>%
+      dplyr::pull()
+    
+    pickerInput(
+      inputId = "select_pathway",
+      label = "Select Pathway",
+      choices = choices,
+      options = list("live-search" = TRUE),
+      selected = default_selected[1]
+    )
+    
+  }
 })
 
-# show TF activity df
-output$progeny_result = DT::renderDataTable({
-  progeny_result_matrix = P() %>%
-    spread(contrast, activity) %>%
-    rename(Pathway = pathway)
-  DT::datatable(progeny_result_matrix, option = list(scrollX = TRUE, autoWidth=T), filter = "top") %>%
-    formatSignif(which(map_lgl(progeny_result_matrix, is.numeric)))
+# Bar plot with the TFs for a condition------------------------------------
+
+barplot_nes_reactive_progeny = reactive ({
+  if (!is.null(input$select_contrast_progeny)) {
+    p <- P() %>%
+      t() %>%
+      as.data.frame() %>%
+      rownames_to_column(var = "pathways") %>%
+      barplot_nes_progeny(smpl = input$select_contrast_progeny)
+  }
+  
 })
 
-# download tf activities
-output$download_progeny_scores = downloadHandler(
-  filename = "progeny_scores.csv",
-  content = function(x){
-    write_csv(P(), x)
-  })
+scatter_reactive = reactive({
+  if (!is.null(input$select_contrast_progeny) &
+      !is.null(input$select_pathway)) {
+    
+    if (input$example_data){
+      organism = "Human"
+    }else {organism = input$organism}
+
+    prog_matrix <- progeny::getModel(organism = organism, top =  input$top) %>%
+      tibble::rownames_to_column("GeneID") %>%
+      dplyr::select(GeneID, input$select_pathway)
+    
+    inputProgeny_df <- expr() %>%
+      as.data.frame() %>%
+      dplyr::select(input$select_contrast_progeny) %>%
+      tibble::rownames_to_column("GeneID")
+    
+    title = paste0(
+      "weights of ",    
+      input$select_pathway,
+      " for sample/contrast ",
+      input$select_contrast_progeny
+    )
+    
+    scat_plots <- scater_pathway(df = inputProgeny_df,
+                                 weight_matrix = prog_matrix,
+                                 title = title)
+  }
+  
+})
+
+# Render Tables -----------------------------------------------------------
+# TF-activities
+output$progeny_table = DT::renderDataTable({
+  # DT::datatable(P())
+  results_progeny = P() %>%
+    t() %>%
+    as.data.frame() %>%
+    round(digits = 3) %>%
+    rownames_to_column(var = "Pathways")
+  
+  result_matrix = DT::datatable(
+    results_progeny,
+    option = list(
+      scrollX = TRUE,
+      autoWidth = T,
+      pageLength = 14
+    ),
+    filter = "top"
+  )
+})
+
+# Render Plots ------------------------------------------------------------
+
+# Bar plot with the TFs for a condition
+output$barplot_progeny = renderPlot({
+  print(barplot_nes_reactive_progeny())
+})
+
+# Bar plot of activity for all conditions for a TF
+output$scatter = renderPlot({
+  plot(scatter_reactive())
+})
+
+# Heatmap for all samples and pathways
+output$heatmap_scores = renderPlot({
+  heatmap_scores(df = P())
+})
+
+# Download Handler --------------------------------------------------------
+
+# All in a tar
+output$download_progeny_analysis = downloadHandler(
+  filename = "footprint_progeny_saezLab.tar.gz",
+  content = function(x) {
+    fdir = "footprint_progeny_saezLab"
+    
+    if (dir.exists(fdir)) {
+      do.call(file.remove, list(list.files(fdir, full.names = TRUE)))
+    } else{
+      dir.create(fdir)
+    }
+    
+    fnames = c(
+      paste0("barplot_progeny_", input$select_contrast_progeny, ".png"),
+      paste0(
+        "scatter_density_progeny_",
+        input$select_contrast,
+        "_",
+        input$select_pathway,
+        ".png"
+      ),
+      "heatmap_progeny.png"
+    )
+    
+    ggsave(file.path(fdir, fnames[1]), barplot_nes_reactive_progeny(), device = "png")
+    ggsave(file.path(fdir, fnames[2]), scatter_reactive(), device = "png")
+    ggsave(file.path(fdir, fnames[3]),
+           heatmap_scores(df = P()),
+           device = "png")
+    write.csv(P(),
+              file.path(fdir, "pathways_progeny_scores.csv"),
+              quote = F)
+    tar(x, files = fdir, compression = "gzip")
+  }
+)
+
+output$download_scatter = downloadHandler(
+  filename = paste0(
+    "scatter_density_progeny_",
+    input$select_contrast_progeny,
+    "_",
+    input$select_pathway,
+    ".png"
+  ),
+  content = function(x) {
+    ggsave(x, scatter_reactive(), device = "png")
+    
+  }
+)
+
+output$download_barplot = downloadHandler(
+  filename = paste0("barplot_progeny_", input$select_contrast_progeny, ".png"),
+  
+  content = function(x) {
+    ggsave(x, barplot_nes_reactive(), device = "png")
+    
+  }
+)
+
+output$download_heatmap = downloadHandler(
+  filename = "heatmap_progeny.png",
+  content = function(x) {
+    ggsave(x,  heatmap_scores(df = P()), device = "png")
+    
+  }
+)
