@@ -22,24 +22,24 @@ enableBookmarking(store = "server")
 options(shiny.maxRequestSize=30*1024^2)
 
 # load examples
-example_result_carnival = readRDS("data/examples/carnival_result_celline_SIDM00194.rds")
+carnival_result = readRDS("data/examples/carnival_result_celline_SIDM00194.rds")
+carnival_result$nodesAttributes = as.data.frame(carnival_result$nodesAttributes)
+carnival_result$weightedSIF = as.data.frame(carnival_result$weightedSIF)
 
 # load data
-rwth_colors_df = get(load("data/misc/rwth_colors.rda"))
+# rwth_colors_df = get(load("data/misc/rwth_colors.rda"))
 
 # kinact
-kinact_regulon_human = readRDS("data/models/kinact_regulon_human.rds")
+# kinact_regulon_human = readRDS("data/models/kinact_regulon_human.rds")
 
 
 # ANALYSIS -------------------------------------------------------------
 
 run_progeny <- function(data, organism = "Human", top = 100, perm = 100, ...){
   # based on organism, we load the correct dataset
-  if(input$select_organism == "Homo sapiens"){
-    organism = "Human"
+  if(organism == "Human"){
     data(model_human_full, package = "progeny")
-  }else if(input$select_organism == "Mus musculus"){
-    organism = "Mouse"
+  }else if(organism == "Mouse"){
     data(model_mouse_full, package = "progeny")
   }
   
@@ -191,7 +191,8 @@ run_carnival <- function(data, net = NULL, net_type = "gene",
 
 # PLOTS -------------------------------------------------------------
 
-barplot_nes = function(df, smpl, nHits) {
+# Dorothea ----------------------------------------------------------
+barplot_nes_dorothea = function(df, smpl, nHits) {
   df = df[, c("GeneID", smpl)] %>%
     dplyr::rename(NES = smpl) %>%
     dplyr::top_n(nHits, wt = abs(NES)) %>%
@@ -285,4 +286,134 @@ plot_network = function(network, nodes, title) {
     theme(aspect.ratio = c(1),
           plot.title = element_text(size = 14, face = "plain")) +
     ggtitle(title)
+}
+
+# Progeny -----------------------------------------------------------
+
+heatmap_scores = function(df) {
+  paletteLength = 100
+  myColor <-
+    colorRampPalette(c("#99004C", "whitesmoke", "#0859A2"))(paletteLength)
+  
+  progenyBreaks <- c(
+    seq(min(as.vector(df)), 0,
+        length.out = ceiling(paletteLength / 2) + 1),
+    seq(
+      max(as.vector(df)) / paletteLength,
+      max(as.vector(df)),
+      length.out = floor(paletteLength / 2)
+    )
+  )
+  
+  pheatmap(
+    df,
+    fontsize = 14,
+    fontsize_row = 10,
+    fontsize_col = 10,
+    color = myColor,
+    breaks = progenyBreaks,
+    angle_col = 45,
+    treeheight_col = 0,
+    border_color = NA
+  )
+}
+
+barplot_nes_progeny = function(df, smpl) {
+  df = df[, c("pathways", smpl)] %>%
+    dplyr::rename(zscore = smpl) %>%
+    dplyr::arrange(zscore) %>%
+    dplyr::mutate(pathways = factor(pathways))
+  
+  title = paste("Sample/Contrast:", smpl, sep = " ")
+  
+  ggplot(df, aes(x = zscore, y = reorder(pathways, zscore))) +
+    geom_bar(aes(fill = zscore), stat = "identity") +
+    scale_fill_gradient2(
+      low = "#99004C",
+      high = "#0859A2",
+      mid = "whitesmoke",
+      midpoint = 0
+    ) +
+    theme_minimal() +
+    theme(
+      axis.title = element_text(face = "bold", size = 12),
+      axis.text.x = element_text(
+        hjust = 1,
+        size = 15,
+        face = "bold"
+      ),
+      axis.text.y = element_text(size = 15, face = "bold")
+    ) +
+    ylab("Pathways") +
+    xlab("z-scores") +
+    ggtitle(title)
+}
+
+#adapted from progeny::progenyScatter
+scater_pathway = function (df, weight_matrix, title) {
+  #prepare data
+  names(df) <- c("ID", "stat")
+  names(weight_matrix) <- c("ID", "weight")
+  
+  weight_matrix <- weight_matrix %>%
+    dplyr::filter(weight != 0)
+  
+  sub_df <- merge.data.frame(df, weight_matrix, by = "ID")
+  sub_df$color <- "3"
+  sub_df[(sub_df$weight > 0 & sub_df$stat > 0), "color"] <- "1"
+  sub_df[(sub_df$weight > 0 & sub_df$stat < 0), "color"] <- "2"
+  sub_df[(sub_df$weight < 0 & sub_df$stat > 0), "color"] <- "2"
+  sub_df[(sub_df$weight < 0 & sub_df$stat < 0), "color"] <- "1"
+  
+  # create scatterplot
+  percentile <- ecdf(df$stat)
+  sub_df[(percentile(sub_df$stat) < 0.95 &
+            percentile(sub_df$stat) > 0.05), 1] <- NA
+  
+  
+  scatterplot <-
+    ggplot(sub_df, aes(x = weight, y = stat, color = color)) +
+    geom_point() +
+    scale_colour_manual(values = c("#99004C", "#0859A2", "grey")) + #"red", "royalblue3"
+    geom_label_repel(aes(label = ID)) +
+    theme_light() +
+    theme(
+      axis.title = element_text(face = "bold", size = 12),
+      axis.text.x = element_text(
+        hjust = 1,
+        size = 15,
+        face = "bold"
+      ),
+      axis.text.y = element_text(size = 15, face = "bold"),
+      legend.position = "none"
+    ) +
+    expand_limits(x = 0, y = 0) +
+    geom_vline(xintercept = 0, linetype = "dotted") +
+    geom_hline(yintercept = 0, linetype = "dotted") +
+    scale_y_continuous(breaks = scales::extended_breaks()) +
+    scale_x_continuous(breaks = scales::extended_breaks()) +
+    ggtitle(title)
+  
+  #create Histogram with input data
+  histo <- ggplot(df, aes(x = stat, fill = "")) +
+    geom_density() +
+    coord_flip() +
+    scale_fill_manual(values = c("#dbdcdb")) +
+    xlim(layer_scales(scatterplot)$y$range$range) +
+    theme_light() +
+    theme(
+      legend.position = "none",
+      axis.text.x = element_blank(),
+      axis.ticks.x = element_blank(),
+      axis.title.y = element_blank(),
+      axis.text.y = element_blank(),
+      axis.ticks.y = element_blank(),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      panel.border = element_blank(),
+      axis.title = element_text(face = "bold", size = 12)
+    )
+  
+cowplot::plot_grid(scatterplot, histo, align = "hv", nrow = 1)
+
 }
