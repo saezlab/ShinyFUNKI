@@ -7,8 +7,13 @@ P = eventReactive({
   },{
     if(!is.null(input$an_progeny)){
       withProgress(message = "Calculate PROGENy matrix", value = 1, {
+        
+        if (input$example_data){
+          organism = "Human"
+        }else {organism = input$organism}
+        
         expr() %>%
-          run_progeny(organism = input$select_organism, 
+          run_progeny(organism = organism, 
                       top = input$perm, 
                       perm = input$top)
       })
