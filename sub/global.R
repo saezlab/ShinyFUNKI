@@ -22,9 +22,9 @@ enableBookmarking(store = "server")
 options(shiny.maxRequestSize=30*1024^2)
 
 # load examples
-carnival_result = readRDS("data/examples/carnival_result_celline_SIDM00194.rds")
-carnival_result$nodesAttributes = as.data.frame(carnival_result$nodesAttributes)
-carnival_result$weightedSIF = as.data.frame(carnival_result$weightedSIF)
+# carnival_result = readRDS("data/examples/carnival_result_celline_SIDM00194.rds")
+# carnival_result$nodesAttributes = as.data.frame(carnival_result$nodesAttributes)
+# carnival_result$weightedSIF = as.data.frame(carnival_result$weightedSIF)
 
 # load data
 # rwth_colors_df = get(load("data/misc/rwth_colors.rda"))
@@ -100,19 +100,21 @@ get_network <- function(net_type = "gene", complx = T){
   if(net_type == "gene"){
     cNET <- cNET %>%
       dplyr::select(source_genesymbol, consensus_stimulation, target_genesymbol) %>%
-      dplyr::rename(source = source_genesymbol, interaction = consensus_stimulation, target = target_genesymbol)
+      dplyr::rename(source = source_genesymbol, interaction = consensus_stimulation, target = target_genesymbol) %>%
+      unique.data.frame()
     
   }else if(net_type == "protein"){
     cNET <- cNET %>%
       dplyr::select(source, consensus_stimulation, target) %>%
-      dplyr::rename(interaction = consensus_stimulation)
+      dplyr::rename(interaction = consensus_stimulation) %>%
+      unique.data.frame()
   }
   
   # if true, keep the complexes
   if(complx){
     cNET <- cNET %>%
       dplyr::mutate(source = gsub(":", "_", source)) %>%
-      dplyr::mutate(source = gsub(":", "_", target))
+      dplyr::mutate(target = gsub(":", "_", target))
     
   }else{
     cNET <- cNET %>%
@@ -122,57 +124,75 @@ get_network <- function(net_type = "gene", complx = T){
   return(cNET)
 }
 
-run_carnival <- function(data, net = NULL, net_type = "gene", 
-                         dorothea = NULL, progeny = NULL,
-                         ini_nodes = "all_inputs", ...){
+run_carnival <- function(data, net = NULL, dorothea = NULL, progeny = NULL,
+                         ini_nodes = "all_inputs", 
+                         solver =  list(spath = NULL , solver = "lpSolve"), ...){
   # load network
-  if( is.null(net) ){
-    cNET = get_network(net_type = "gene", complx = T)
+  if( is.list(net) ){
+    cNET = get_network(net_type = net$net_type, complx = net$net_complex)
   }else{
     cNET = read.delim(net, sep = "\t")
     colnames(cNET) = c('source', 'interaction', 'target')
   }
   
   # load dorothea
-  if( is.null(dorothea) ){
-    tf_activities = run_dorothea(data, organism = "Human", confidence_level, minsize = 5, method = 'none', ...)
+  if( is.list(dorothea) ){
+      
+    tf_activities = run_dorothea(dorothea_matrix = data, 
+                                 organism = dorothea$organism, 
+                                 confidence_level = dorothea$confidence_level, 
+                                 minsize = dorothea$minsize, 
+                                 method = dorothea$method)
   }else{
-    tf_activities = read.delim(net, sep = "\t")
-    
+    tf_activities = read.delim(dorothea, sep = "\t")
   }
-  
+
   # load progeny
-  if( is.null(progeny) ){
-    progeny_scores = run_progeny(data, organism = "Human", ...)
-  }else{
-    progeny_scores = read.delim(net, sep = "\t")
+  if( is.list(progeny) ){
     
+    progeny_scores = run_progeny(data, 
+                                 organism = progeny$organism, 
+                                 top = progeny$top, 
+                                 perm = progeny$perm)
+  }else{
+    progeny_scores = read.delim(progeny, sep = "\t")
   }
   
+  #dorothea
+  tfList = generateTFList(tf_activities, top = 50, access_idx = 1:ncol(tf_activities))
+  
+  #progeny
+  load(file = system.file("progenyMembers.RData",package="CARNIVAL"))
+  
+  progenylist = assignPROGENyScores(progeny_scores,
+                                    progenyMembers = progenyMembers, 
+                                    id = "gene",
+                                    access_idx = 1:nrow(progeny_scores))
+
   # initial nodes
-  if(!is.null(ini_nodes)){
+  if( ini_nodes != "inverse" ){
     
     if(ini_nodes == "all_inputs"){
-      # get initial nodes
       ini_nodes = base::setdiff(cNET$source, cNET$target)
+    }else if(ini_nodes == "up"){
+      ini_nodes = read.delim(ini_nodes, sep = "\t")
     }
-    
+      
     iniciators = base::data.frame(base::matrix(data = NaN, nrow = 1, ncol = length(ini_nodes)), stringsAsFactors = F)
     colnames(iniciators) = ini_nodes
-    
-  }
-  
-  
+      
+  }else{iniciators = NULL}
+
   # run CARNIVAL
   carnival_result = runCARNIVAL( inputObj = iniciators,
-                                 measObj = tfList$t, 
+                                 measObj = tfList[[1]], 
                                  netObj = cNET, 
-                                 weightObj = progenylist$score, 
-                                 solverPath = "/Applications/CPLEX_Studio129/cplex/bin/x86-64_osx/cplex", 
-                                 solver = "cplex",
-                                 timelimit=7200,
-                                 mipGAP=0,
-                                 poolrelGAP=0 )
+                                 weightObj = progenylist[[1]], 
+                                 solverPath = solver$spath, 
+                                 solver = solver$solver,
+                                 timelimit = 7200,
+                                 mipGAP = 0,
+                                 poolrelGAP = 0 )
   
   carnival_result$weightedSIF = carnival_result$weightedSIF %>%
     as.data.frame() %>% 
@@ -188,6 +208,71 @@ run_carnival <- function(data, net = NULL, net_type = "gene",
   
 }
 
+assignPROGENyScores <- function (progeny = progeny, progenyMembers = progenyMembers, 
+                                 id = "gene", access_idx = 1) 
+{
+  if (id == "uniprot") {
+    idx <- which(names(progenyMembers) == "uniprot")
+    progenyMembers <- progenyMembers[[idx]]
+  }
+  else {
+    idx <- which(names(progenyMembers) == "gene")
+    progenyMembers <- progenyMembers[[idx]]
+  }
+  members <- matrix(data = , nrow = 1, ncol = 2)
+  pathways <- colnames(progeny)
+  ctrl <- intersect(x = access_idx, y = 1:nrow(progeny))
+  if (length(ctrl) == 0) {
+    stop("The indeces you inserted do not correspond to \n              the number of rows/samples")
+  }
+  for (ii in 1:length(pathways)) {
+    mm <- progenyMembers[[which(names(progenyMembers) == 
+                                  pathways[ii])]]
+    for (jj in 1:length(mm)) {
+      members <- rbind(members, c(pathways[ii], mm[jj]))
+    }
+  }
+  members <- members[-1, ]
+  scores <- matrix(data = , nrow = nrow(progeny), ncol = nrow(members))
+  colnames(scores) <- members[, 2]
+  rownames(scores) <- rownames(progeny)
+  members <- unique(members)
+  for (i in 1:ncol(scores)) {
+    for (j in 1:nrow(scores)) {
+      scores[j, i] <- as.numeric(progeny[j, members[which(members[, 
+                                                                  2] == colnames(scores)[i]), 1]])
+    }
+  }
+  pxList <- list()
+  for (ii in 1:length(access_idx)) {
+    pxList[[length(pxList) + 1]] <- as.data.frame(t(as.matrix(scores[access_idx[ii], 
+                                                                     ])))
+  }
+  names(pxList) <- rownames(progeny)[ctrl]
+  return(pxList)
+}
+
+generateTFList <- function (df = df, top = 50, access_idx = 1) 
+{
+  if (top == "all") {
+    top <- nrow(df)
+  }
+  if (top > nrow(df)) {
+    warning("Number of to TF's inserted exceeds the number of actual TF's in the data frame. All the TF's will be considered.")
+    top <- nrow(df)
+  }
+  ctrl <- intersect(x = access_idx, y = 1:ncol(df))
+  if (length(ctrl) == 0) {
+    stop("The indeces you inserted do not correspond to the number of columns/samples")
+  }
+  returnList <- list()
+  for (ii in 1:length(ctrl)) {
+    tfThresh <- sort(x = abs(df[, ctrl[ii]]), decreasing = TRUE)[1:top]
+    currDF <- df[which(rownames(df)%in%names(tfThresh)), ctrl[ii]]
+    returnList[[ colnames(df)[ctrl[ii]] ]] <- as.data.frame(t(currDF))
+  }
+  return(returnList)
+}
 
 # PLOTS -------------------------------------------------------------
 
