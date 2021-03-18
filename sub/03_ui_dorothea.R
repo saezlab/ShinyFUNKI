@@ -2,7 +2,7 @@ tabPanel(
   title="DoRothEA", value = "DoRothEA",
   # Row controlling the widgets
   fluidRow(
-    column(6,
+    column(6, align = "center",
       sidebarLayout(
         sidebarPanel(
           width = 12,
