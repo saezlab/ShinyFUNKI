@@ -2,15 +2,19 @@ tabPanel(
   title="CARNIVAL",
   fluidRow(
     column(
-      11, align="center", 
+      12, align="center", 
       sidebarLayout(
         sidebarPanel(
           width = 12,
           fluidRow(
+            # column(6, align = "center",
+            #        uiOutput("select_node")
+            #        ),
+            # column(6, align = "center",
+            #        uiOutput("select_node")
+            # ),
             
-            selectInput("Focus", "Focus on node :",carnival_result$nodesAttributes$Node, selected = NULL),
-            checkboxInput("hierarchical", label = "Hierarchical layout", value = FALSE),
-            selectInput("function", "Focus on node :",carnival_result$nodesAttributes$Node, selected = NULL),
+            checkboxInput("hierarchical", label = "Hierarchical layout", value = FALSE)
             
           )
         ),
@@ -22,6 +26,6 @@ tabPanel(
   fluidPage(
     visNetwork::visNetworkOutput("network")
   ),
-  #bookmarkButton(id = "dorothea_bookmark"),
+ 
   hr()
 )

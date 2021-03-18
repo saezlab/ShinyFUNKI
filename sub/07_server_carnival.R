@@ -1,5 +1,81 @@
+# Reactive Computations ---------------------------------------------------
+
+C = eventReactive({
+  input$run_carnival
+  input$solver
+  input$progeny
+  input$dorothea
+  input$net_type
+  input$omnipath
+  input$inputs_targets
+  input$net_complex
+  input$upload_network
+  input$upload_targets
+  input$upload_tfs
+  input$upload_progeny
+  input$solverPath
+}, {
+  
+  if (!is.null(input$solver)) {
+    
+    withProgress(message="Running CARNIVAL", value=1, {
+      
+      if (input$example_data){
+        organism = "Human"
+      }else {organism = input$organism}
+      
+      #dorthea
+      if(input$dorothea == "doro"){
+        param_doro = list("organism" = organism,
+                          "confidence_level" = input$selected_conf_level,
+                          "minsize" = input$minsize, 
+                          "method" = input$method)
+      }else{param_doro = input$upload_tfs}
+      
+      #progeny
+      if(input$progeny == "prog"){
+        param_prog = list("organism" = organism, 
+                          "top" = input$top, 
+                          "perm" = input$perm)
+      }else{param_prog = input$upload_progeny}
+      
+      #network
+      if(input$omnipath == "omni"){
+        net = list("net_complex" = input$net_complex, 
+                   "net_type" = input$net_type)
+      }else{net = input$upload_network}
+      
+      message(input$solverpath)
+      run_carnival(data = expr(), 
+                   net = net,
+                   ini_nodes = input$inputs_targets,
+                   dorothea = param_doro, 
+                   progeny = param_prog,
+                   solver = list(spath = solverpath,
+                                 solver = input$solver))
+      
+    })
+  }
+  
+})
+
+# Dynamic widgets / RenderUI ----------------------------------------------
+output$select_node = renderUI({
+  if (!is.null(C())) {
+    
+    choices = C()$nodesAttributes$Node %>%
+      stringr::str_sort(numeric = T)
+    pickerInput(inputId = "focus_node",
+                label = "Focus on node:",
+                choices = choices,
+                selected = choices[1])
+  }
+})
+
+
+# Plots ---------------------------------------------------
 output$network <- renderVisNetwork({
-  # carnival_result = readRDS("data/examples/carnival_result_celline_SIDM00194.rds")
+   carnival_result = C()
   # create color scale for nodes
   
   pal_red_blue = c(rev(RColorBrewer::brewer.pal(9, 'Reds')), 
@@ -52,12 +128,11 @@ output$network <- renderVisNetwork({
                           width = 0.1, position = "right", useGroups = FALSE)
 })
 
-# Reactive Computations ---------------------------------------------------
-
-observe({
-  visNetwork::visNetworkProxy("network") %>%
-    visNetwork::visFocus(id = input$Focus, scale = 4)
-})
+# observe({
+#   message(input$focus_node)
+#   visNetwork::visNetworkProxy("network") %>%
+#     visNetwork::visFocus(id = input$focus_node, scale = 4)
+# })
 
 observe({
   if(input$hierarchical){
