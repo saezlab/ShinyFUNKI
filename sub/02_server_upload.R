@@ -52,8 +52,15 @@ observeEvent(input$an_progeny, {
                     selected = "PROGENy")
 })
 
-# jump to visualise results
 observeEvent(input$run_carnival, {
   updateTabsetPanel(session, inputId = "menu",
                     selected = "CARNIVAL")
 })
+
+#get path for CARNIVAL solver
+volumes <- getVolumes()
+observe({
+  shinyFileChoose(input, 'solverPath', roots = volumes, session = session) 
+  solverpath <<- paste( unlist(unname(input$solverPath[1])), collapse = "/")
+})
+

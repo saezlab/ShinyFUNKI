@@ -107,13 +107,13 @@ tabPanel(
       fluidRow(
         column(3, align="center",
           selectInput(inputId = "inputs_targets", label = "Targets",
-                      choices = c("All posible from network" = "all_inputs",
+                      choices = c("All from given network" = "all_inputs",
                                   "Let CARNIVAL choose them" = "inverse", 
                                   "My own list of targets" = "up"),
                       selected = "inverse"),
           conditionalPanel(
             condition =  ("input.inputs_targets == 'up'"),
-            fileInput("upload_network", label = NULL))  
+            fileInput("upload_targets", label = NULL))  
         ),
         column(2, align="center",
                radioButtons("omnipath", label = "Network", 
@@ -157,7 +157,12 @@ tabPanel(
                             inline = TRUE),
                conditionalPanel(
                  condition = ("input.solver != 'lpSolve'"),
-                 fileInput("solverPath", label = "Select path to execute cbc/cplex file")),
+                 shinyFilesButton(id = 'solverPath', 
+                                label = 'Select path of cbc/cplex file', 
+                                title = NULL, 
+                                multiple = FALSE),
+                 # fileInput("solverPath", label = "Select path to execute cbc/cplex file")
+                 ),
                actionButton("run_carnival", "Run CARNIVAL")
                 )
       
