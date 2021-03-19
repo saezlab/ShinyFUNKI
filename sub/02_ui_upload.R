@@ -3,53 +3,60 @@ tabPanel(
   fluidRow(
     h3("Upload Data"),
     column(4, align="center",
-           
-      #load the example data by default
-      p("Example dataset taken from ",
-        a("Blackham et al, J Virol., 2010", 
-          href = "https://www.ncbi.nlm.nih.gov/pubmed/20200238",
-          target = "_blank"),
-        a("(GSE20948)",
-          href = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE20948",
-          target = "_blank")),
-      switchInput(inputId = "example_data", label = "Example data",
-                  onLabel = "Yes", offLabel = "No", value=TRUE),
 
-      #show the upload stage if the example is not selected
-      conditionalPanel(
-        condition = ("!input.example_data"),
-        
-        fileInput("upload_expr", 
-                  label = h5("Upload gene expression (.csv)",
-                             tags$style(type = "text/css", "#q2_data {vertical-align: top;}"),
-                             bsButton("q2_data", label = "", icon = icon("question"), style = "info", size = "extra-small")),
-                  accept = c("text/csv",
-                             "text/comma-separated-values,text/plain",
-                             ".csv")
-                  ),
-        bsPopover(id = "q2_data", title = "Upload data",
-                  content = "comma-separated-values with samples in columns and gene in rows.",
-                  placement = "right", 
-                  trigger = "click", 
-                  options = list(container = "body")
-                  ),
-        
-        # select organism
-        selectInput("select_organism", 
-                    label = h5("Select Organism",
-                               tags$style(type = "text/css", "#q2_organism {vertical-align: top;}"),
-                               bsButton("q2_organism", label = "", icon = icon("question"), style = "info", size = "extra-small")),
-                    choices = c("Homo sapiens" = "Human",
-                                "Mus musculus" = "Mouse"),
-                    selected = "Human"),
-        bsPopover(id = "q2_organism", title = "Select Organism",
-                  content = "The model organism. Currently available for Human or Mouse.",
-                  placement = "right", 
-                  trigger = "click", 
-                  options = list(container = "body")
+# show the upload stage if the example is not selected
+    fluidRow(
+        column(7, align="center",
+               # data upload
+               fileInput("upload_expr", 
+                         label = h5("Upload gene expression (.csv)",
+                                    tags$style(type = "text/css", "#q2_data {vertical-align: top;}"),
+                                    bsButton("q2_data", label = "", icon = icon("question"), style = "info", size = "extra-small")),
+                         accept = c("text/csv",
+                                    "text/comma-separated-values,text/plain",
+                                    ".csv")
+               ),
+               
+               bsPopover(id = "q2_data", title = "Upload data",
+                         content = "comma-separated-values with samples in columns and gene in rows.",
+                         placement = "right", 
+                         trigger = "click", 
+                         options = list(container = "body")
+               )
+               
         ),
-        
-      )
+        column(5, align="center",
+               # select organism
+               selectInput("select_organism", 
+                           label = h5("Select Organism",
+                                      tags$style(type = "text/css", "#q2_organism {vertical-align: top;}"),
+                                      bsButton("q2_organism", label = "", icon = icon("question"), style = "info", size = "extra-small")),
+                           choices = c("Homo sapiens" = "Human",
+                                       "Mus musculus" = "Mouse"),
+                           selected = "Human"),
+               bsPopover(id = "q2_organism", title = "Select Organism",
+                         content = "The model organism. Currently available for Human or Mouse.",
+                         placement = "right", 
+                         trigger = "click", 
+                         options = list(container = "body")
+               )
+               
+        )
+    ),
+
+# select example data
+materialSwitch(inputId = "example_data", 
+               label = "Load example", 
+               value = FALSE,
+               status = "default",
+               width = "100%"),
+p("Example dataset taken from ",
+  a("Blackham et al, J Virol., 2010", 
+    href = "https://www.ncbi.nlm.nih.gov/pubmed/20200238",
+    target = "_blank"),
+  a("(GSE20948)",
+    href = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE20948",
+    target = "_blank"))
     ),
     column(8,
       DT::dataTableOutput("expr")  

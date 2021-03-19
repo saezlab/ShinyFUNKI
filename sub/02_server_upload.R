@@ -16,7 +16,7 @@ expr = reactive({
     if (is.null(inFile)){
       return(NULL)
     } else{
-      expDATA = read_csv(inFile)
+      expDATA = read.csv(inFile, row.names = 1, header = TRUE)
     }
   }
   return(expDATA)
@@ -33,12 +33,16 @@ output$expr = DT::renderDataTable({
 observeEvent({
   input$upload_expr
   input$example_data}, {
-    toggleState("run_dorothea",
+    toggleState("select_organism",
                 input$example_data == T | !is.null(input$upload_expr))
-    toggleState("run_progeny",
+    toggleState("upload_expr",
+                input$example_data == T )
+    toggleState("an_dorothea",
+                input$example_data == T | !is.null(input$upload_expr))
+    toggleState("an_progeny",
                 input$example_data == T | !is.null(input$upload_expr))
     toggleState("run_carnival",
-                input$example_data == T | !is.null(input$upload_pprot))
+                input$example_data == T | !is.null(input$upload_expr))
   })
 
 # jump to visualise results
