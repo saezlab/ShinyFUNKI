@@ -10,7 +10,7 @@ P = eventReactive({
         
         if (input$example_data){
           organism = "Human"
-        }else {organism = input$organism}
+        }else {organism = input$select_organism}
         
         expr() %>%
           run_progeny(organism = organism, 
@@ -80,7 +80,7 @@ scatter_reactive = reactive({
     
     if (input$example_data){
       organism = "Human"
-    }else {organism = input$organism}
+    }else {organism = input$select_organism}
 
     prog_matrix <- progeny::getModel(organism = organism, top =  input$top) %>%
       tibble::rownames_to_column("GeneID") %>%

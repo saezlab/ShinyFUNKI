@@ -9,11 +9,14 @@ D = eventReactive({
   
   if (!is.null(input$selected_conf_level)) {
 
-    withProgress(message="Calculate TF activities...", value=1, {
+    withProgress(message = "Calculate TF activities...", value = 1, {
       
       if (input$example_data){
         organism = "Human"
-      }else {organism = input$organism}
+      }else {organism = input$select_organism}
+      
+      
+      message(organism)
 
       dorothea_result = run_dorothea(dorothea_matrix = expr(), 
                                      organism = organism, 

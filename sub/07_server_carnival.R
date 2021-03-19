@@ -22,7 +22,7 @@ C = eventReactive({
       
       if (input$example_data){
         organism = "Human"
-      }else {organism = input$organism}
+      }else {organism = input$select_organism}
       
       #dorthea
       if(input$dorothea == "doro"){
@@ -55,7 +55,7 @@ C = eventReactive({
                                  solver = input$solver))
       
     })
-  }
+  }else{ carnival_result = readRDS("data/examples/carnival_result_celline_SIDM00194.rds") }
   
 })
 
