@@ -420,7 +420,6 @@ plot_network = function(network, nodes, title) {
 }
 
 # Progeny -----------------------------------------------------------
-
 heatmap_scores = function(df) {
   paletteLength = 100
   myColor <-
@@ -547,4 +546,108 @@ scater_pathway = function (df, weight_matrix, title) {
   
 cowplot::plot_grid(scatterplot, histo, align = "hv", nrow = 1)
 
+}
+
+# CARNIVAL -----------------------------------------------------------
+barplot_pea <- function(pea, threshold_adjpval = 0.05, n_paths = 10){
+  ggdata = pea %>% 
+    dplyr::rename(pvalue = `p-value`, AdjPvalu = `Adjusted p-value`) %>%
+    dplyr::filter(AdjPvalu <= threshold_adjpval) %>% 
+    dplyr::group_by(pathway) %>% 
+    dplyr::arrange(AdjPvalu) %>%
+    dplyr::slice(1:n_paths)
+    
+    ggplot(ggdata, aes(y = reorder(pathway, AdjPvalu), x = -log10(AdjPvalu))) + 
+    geom_bar(stat = "identity") +
+    scale_x_continuous(
+      expand = c(0.01, 0.01),
+      limits = c(0, ceiling(max(-log10(ggdata$AdjPvalu)))),
+      breaks = seq(floor(min(-log10(ggdata$AdjPvalu))), ceiling(max(-log10(ggdata$AdjPvalu))), 1),
+      labels = scales::math_format(10^-.x)
+    ) +
+    annotation_logticks(sides = "bt") +
+    theme_bw() +
+    theme(axis.title = element_text(face = "bold", size = 12),
+          axis.text.y = element_text()) +
+    ylab("")
+}
+
+volcano_pea <- function(pea, nodAtt, threshold_adjpval = 0.05, n_paths = 10, n_genes = 4){
+  
+  ggdata = plyr::join_all(pea, by = "pathway") %>% 
+    dplyr::rename(pvalue = `p-value`, AdjPvalu = `Adjusted p-value`, Node = genesymbol) %>%
+    dplyr::inner_join(nodAtt, by = "Node") %>%
+    dplyr::mutate(across(c(ZeroAct, UpAct, DownAct, AvgAct), as.numeric))
+  
+  xlimAbs <- ceiling(max(abs(ggdata$AvgAct)))
+  ylimAbs <- ceiling(max(abs(log10(ggdata$AdjPvalu))))
+  
+  vAss <- 0.5
+  hAss <- threshold_adjpval
+  
+  xneg <- function(x) abs(hAss + 0.2 + x/(x + vAss))
+  xpos <- function(x) abs(hAss + 0.2 + x/(x - vAss))
+  
+  ggplot(ggdata, aes(x = AvgAct, y = -log10(AdjPvalu) )) + # , color = supra_pathway
+    geom_point(alpha = 0.7, na.rm = F, colour = "#918D8D") +
+    geom_point(data = get_labels(ggdata, ceiling(n_genes/2), n_paths, threshold_adjpval),
+               aes(x = AvgAct, y = -log10(AdjPvalu), color = pathway), 
+               alpha = 0.7, na.rm = F) +
+    stat_function(fun = xneg, xlim = c(-xlimAbs, -vAss),
+                  color = "black", alpha = 0.7) +
+    stat_function(fun = xpos, xlim = c(vAss, xlimAbs),
+                  color = "black", alpha = 0.7) +
+    ggrepel::geom_label_repel(data = get_labels(ggdata, ceiling(n_genes/2), n_paths, threshold_adjpval), 
+                              aes(x = AvgAct, y = -log10(AdjPvalu),
+                                  color = pathway, label = Node),
+                              show.legend = F, inherit.aes = F) +
+    scale_y_continuous(limits = c(0, ylimAbs), 
+                       expand = c(0.01, 0.01),
+                       breaks = seq(floor(min(-log10(ggdata$AdjPvalu))), ceiling(max(-log10(ggdata$AdjPvalu))), 1),
+                       labels = scales::math_format(10^-.x)
+    )+
+    annotation_logticks(sides = "lr") +
+    xlab("CARNIVAL's activity") + ylab("Adjusted Pvalue")  +
+    theme_bw(base_size = 13)
+  
+}
+
+# support functions ---------------------------------------------------
+#reverse function to allow a flip in the coord and be able to print the values in log scale
+reverselog_trans <- function(base = exp(1)) {
+  trans <- function(x) -log(x, base)
+  inv <- function(x) base^(-x)
+  trans_new(paste0("reverselog-", format(base)), trans, inv, 
+            log_breaks(base = base), 
+            domain = c(1e-100, Inf))
+}
+
+#get subset to add labels to
+get_labels <- function(df, nlabel, npaths, threshold){
+  pathways = df %>%
+    dplyr::select(pathway, AdjPvalu) %>%
+    unique.data.frame() %>%
+    dplyr::filter(AdjPvalu <= threshold) %>%
+    dplyr::arrange(AdjPvalu) %>%
+    dplyr::pull(var = pathway)
+  
+  if(length(pathways) > npaths){
+    pathways = pathways[1:npaths]
+  }  
+  
+  aux_up = df %>% 
+    dplyr::filter(AvgAct > 0, pathway %in% pathways) %>% 
+    dplyr::group_by(pathway) %>% 
+    dplyr::arrange(AdjPvalu, -AvgAct) %>%
+    dplyr::slice(1:nlabel)
+  
+  aux_dwn = df %>% 
+    dplyr::filter(AvgAct < 0, pathway %in% pathways) %>% 
+    dplyr::group_by(pathway) %>% 
+    dplyr::arrange(AdjPvalu, AvgAct) %>%
+    dplyr::slice(1:nlabel)
+  
+  lbls = rbind.data.frame(aux_up, aux_dwn)
+  
+  return(lbls)
 }
