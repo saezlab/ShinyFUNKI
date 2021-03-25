@@ -1,6 +1,7 @@
 library(shiny)
 library(shinyWidgets)
 library(shinyFiles)
+library(shinyBS)
 library(tidyverse)
 library(viper)
 library(ggrepel)
@@ -17,16 +18,20 @@ library(progeny)
 library(CARNIVAL)
 library(OmnipathR)
 library(visNetwork)
+library(promises)
+library(future)
+plan(multisession)
 
 # shiny options
 enableBookmarking(store = "server")
 options(shiny.maxRequestSize=30*1024^2)
 
 # load examples
-# carnival_result = readRDS("data/examples/carnival_result_celline_SIDM00194.rds")
-# carnival_result$nodesAttributes = as.data.frame(carnival_result$nodesAttributes)
-# carnival_result$weightedSIF = as.data.frame(carnival_result$weightedSIF)
-
+carnival_result = readRDS("data/examples/carnival_result_celline_SIDM00194.rds")
+carnival_result$nodesAttributes = as.data.frame(carnival_result$nodesAttributes)
+carnival_result$weightedSIF = as.data.frame(carnival_result$weightedSIF)
+# carnival_result$nodesAttributes = carnival_result$nodesAttributes %>%
+#   dplyr::filter(Node %in%union(carnival_result$weightedSIF$Node1,carnival_result$weightedSIF$Node2))
 # load data
 # rwth_colors_df = get(load("data/misc/rwth_colors.rda"))
 
@@ -273,6 +278,46 @@ generateTFList <- function (df = df, top = 50, access_idx = 1)
     returnList[[ colnames(df)[ctrl[ii]] ]] <- as.data.frame(t(currDF))
   }
   return(returnList)
+}
+
+pathEnreach <- function(nodeAtt, database, collection = NULL){
+  
+  annotations = OmnipathR::import_omnipath_annotations(
+    resources = database,
+    proteins = nodeAtt$Node,
+    wide = TRUE)
+  
+  if(database == 'MSigDB'){
+    value = "geneset"
+    
+    annotations = annotations %>%
+      ddplyr::filter(collection %in% collection)
+    
+  }else{
+    value = "pathway"
+  }
+  
+  gsea_sets = list(success = nodeAtt %>% 
+                     dplyr::filter(ZeroAct != 100) %>%
+                     dplyr::select(Node) %>%
+                     dplyr::pull(),
+                   bg = nodeAtt$Node,
+                   gs = annotations %>%
+                     dplyr::select(genesymbol, !!as.name(value)))
+  
+    gsea_analysis = piano::runGSAhyper(genes = gsea_sets$success,
+                                       universe = gsea_sets$bg,
+                                       gsc = piano::loadGSC(gsea_sets$gs))
+  
+  gsea_analysis_df = gsea_analysis$resTab %>%
+    as.data.frame() %>%
+    tibble::rownames_to_column(var = "pathway") %>%
+    dplyr::select(1:3) %>%
+    as.data.frame() %>% 
+    tibble::tibble() %>%
+    dplyr::arrange((!!as.name('Adjusted p-value'))) 
+  
+  return(list( annot = annotations, psa = gsea_analysis_df ))  
 }
 
 # PLOTS -------------------------------------------------------------
