@@ -32,11 +32,6 @@ carnival_result$nodesAttributes = as.data.frame(carnival_result$nodesAttributes)
 carnival_result$weightedSIF = as.data.frame(carnival_result$weightedSIF)
 # carnival_result$nodesAttributes = carnival_result$nodesAttributes %>%
 #   dplyr::filter(Node %in%union(carnival_result$weightedSIF$Node1,carnival_result$weightedSIF$Node2))
-# load data
-# rwth_colors_df = get(load("data/misc/rwth_colors.rda"))
-
-# kinact
-# kinact_regulon_human = readRDS("data/models/kinact_regulon_human.rds")
 
 
 # ANALYSIS -------------------------------------------------------------
@@ -291,7 +286,7 @@ pathEnreach <- function(nodeAtt, database, collection = NULL){
     value = "geneset"
     
     annotations = annotations %>%
-      ddplyr::filter(collection %in% collection)
+      dplyr::filter(collection %in% collection)
     
   }else{
     value = "pathway"
@@ -317,7 +312,7 @@ pathEnreach <- function(nodeAtt, database, collection = NULL){
     tibble::tibble() %>%
     dplyr::arrange((!!as.name('Adjusted p-value'))) 
   
-  return(list( annot = annotations, psa = gsea_analysis_df ))  
+  return(list( annot = annotations, pea = gsea_analysis_df ))  
 }
 
 # PLOTS -------------------------------------------------------------
@@ -553,7 +548,6 @@ barplot_pea <- function(pea, threshold_adjpval = 0.05, n_paths = 10){
   ggdata = pea %>% 
     dplyr::rename(pvalue = `p-value`, AdjPvalu = `Adjusted p-value`) %>%
     dplyr::filter(AdjPvalu <= threshold_adjpval) %>% 
-    dplyr::group_by(pathway) %>% 
     dplyr::arrange(AdjPvalu) %>%
     dplyr::slice(1:n_paths)
     
@@ -566,13 +560,16 @@ barplot_pea <- function(pea, threshold_adjpval = 0.05, n_paths = 10){
       labels = scales::math_format(10^-.x)
     ) +
     annotation_logticks(sides = "bt") +
-    theme_bw() +
-    theme(axis.title = element_text(face = "bold", size = 12),
+    theme_bw(base_size = 15) +
+    theme(axis.title = element_text(),
           axis.text.y = element_text()) +
-    ylab("")
+    xlab("Adjusted p-value") + ylab("")
+    
 }
 
 volcano_pea <- function(pea, nodAtt, threshold_adjpval = 0.05, n_paths = 10, n_genes = 4){
+  
+  if(any("geneset" %in% colnames(pea$annot))){pea$annot = pea$annot %>% dplyr::rename(pathway = geneset)}
   
   ggdata = plyr::join_all(pea, by = "pathway") %>% 
     dplyr::rename(pvalue = `p-value`, AdjPvalu = `Adjusted p-value`, Node = genesymbol) %>%
@@ -607,8 +604,8 @@ volcano_pea <- function(pea, nodAtt, threshold_adjpval = 0.05, n_paths = 10, n_g
                        labels = scales::math_format(10^-.x)
     )+
     annotation_logticks(sides = "lr") +
-    xlab("CARNIVAL's activity") + ylab("Adjusted Pvalue")  +
-    theme_bw(base_size = 13)
+    xlab("CARNIVAL's activity") + ylab("Adjusted p-value")  +
+    theme_bw(base_size = 15)
   
 }
 
