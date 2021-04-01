@@ -1,10 +1,6 @@
 # Reactive Computations ---------------------------------------------------
 D = eventReactive({
   input$run_dorothea
-  input$selected_conf_level
-  input$minsize
-  input$method
-  input$select_organism
 }, {
   
   if (!is.null(input$selected_conf_level)) {
@@ -97,7 +93,7 @@ output$select_top_n_hits = renderUI({
     max_tfs = nrow(D())
     sliderInput(
       "select_top_n_hits",
-      label = "Numer of Transcription Factors to display",
+      label = "Number of Transcription Factors to display",
       value = 25,
       min = 1,
       max = max_tfs,
