@@ -1,74 +1,87 @@
 tabPanel(
   title = "Data and Parameters",
   fluidRow(
-    h3("Upload Data"),
+           sidebarLayout(
+             sidebarPanel(
+               width = 12,
+               fluidRow(h3("Upload Data"))
+             ),
+             mainPanel(width = 0)
+           )
+  ),
+  fluidRow(
     column(4, align="center",
-
-# show the upload stage if the example is not selected
-    fluidRow(
-        column(7, align="center",
-               # data upload
-               fileInput("upload_expr", 
-                         label = h5("Upload gene expression (.csv)",
-                                    tags$style(type = "text/css", "#q2_data {vertical-align: top;}"),
-                                    bsButton("q2_data", label = "", icon = icon("question"), style = "info", size = "extra-small")),
-                         accept = c("text/csv",
-                                    "text/comma-separated-values,text/plain",
-                                    ".csv")
-               ),
-               
-               bsPopover(id = "q2_data", title = "Upload data",
-                         content = "comma-separated-values with samples in columns and gene in rows.",
-                         placement = "right", 
-                         trigger = "click", 
-                         options = list(container = "body")
-               )
-               
-        ),
-        column(5, align="center",
-               # select organism
-               selectInput("select_organism", 
-                           label = h5("Select Organism",
-                                      tags$style(type = "text/css", "#q2_organism {vertical-align: top;}"),
-                                      bsButton("q2_organism", label = "", icon = icon("question"), style = "info", size = "extra-small")),
-                           choices = c("Homo sapiens" = "Human",
-                                       "Mus musculus" = "Mouse"),
-                           selected = "Human"),
-               bsPopover(id = "q2_organism", title = "Select Organism",
-                         content = "The model organism. Currently available for Human or Mouse.",
-                         placement = "right", 
-                         trigger = "click", 
-                         options = list(container = "body")
-               )
-               
-        )
-    ),
-
-# select example data
-materialSwitch(inputId = "example_data", 
-               label = "Load example", 
-               value = FALSE,
-               status = "default",
-               width = "100%"),
-p("Example dataset taken from ",
-  a("Blackham et al, J Virol., 2010", 
-    href = "https://www.ncbi.nlm.nih.gov/pubmed/20200238",
-    target = "_blank"),
-  a("(GSE20948)",
-    href = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE20948",
-    target = "_blank"))
+           
+           # show the upload stage if the example is not selected
+           fluidRow(
+             column(7, align = "center",
+                    # data upload
+                    fileInput("upload_expr", 
+                              label = h5("Upload gene expression (.csv)",
+                                         tags$style(type = "text/css", "#q2_data {vertical-align: top;}"),
+                                         bsButton("q2_data", label = "", icon = icon("question"), style = "info", size = "extra-small")),
+                              accept = c("text/csv",
+                                         "text/comma-separated-values,text/plain",
+                                         ".csv")
+                    ),
+                    
+                    bsPopover(id = "q2_data", title = "Upload data",
+                              content = "comma-separated-values with samples in columns and gene (HGNC symbol) in rows.",
+                              placement = "right", 
+                              trigger = "click", 
+                              options = list(container = "body")
+                    )
+                    
+             ),
+             column(5, align = "center",
+                    # select organism
+                    selectInput("select_organism", 
+                                label = h5("Select Organism",
+                                           tags$style(type = "text/css", "#q2_organism {vertical-align: top;}"),
+                                           bsButton("q2_organism", label = "", icon = icon("question"), style = "info", size = "extra-small")),
+                                choices = c("Homo sapiens" = "Human",
+                                            "Mus musculus" = "Mouse"),
+                                selected = "Human"),
+                    bsPopover(id = "q2_organism", title = "Select Organism",
+                              content = "The model organism. Currently available for Human or Mouse.",
+                              placement = "right", 
+                              trigger = "click", 
+                              options = list(container = "body")
+                    )
+                    
+             )
+           ),
+           
+           # select example data
+           materialSwitch(inputId = "example_data", 
+                          label = "Load example", 
+                          value = FALSE,
+                          status = "default",
+                          width = "100%"),
+           p("Example dataset taken from ",
+             a("Blackham et al, J Virol., 2010", 
+               href = "https://www.ncbi.nlm.nih.gov/pubmed/20200238",
+               target = "_blank"),
+             a("(GSE20948)",
+               href = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE20948",
+               target = "_blank"))
     ),
     column(8,
-      DT::dataTableOutput("expr")  
+           DT::dataTableOutput("expr")  
     )  
   ),
-  
+        
 ### ANALYSIS ###
-
-  hr(),
   fluidRow(
-    h3("Select analysis and specific parameters"),
-    br(),
+    sidebarLayout(
+      sidebarPanel(
+        width = 12,
+        fluidRow(h3("Select analysis and specific parameters"))
+      ),
+      mainPanel(width = 0)
+    )
+  ),
+  fluidRow(
 
 #Dorothea ------------------
     column(1, align = "center", 
@@ -199,7 +212,7 @@ p("Example dataset taken from ",
                       selected = "inverse"),
           bsPopover(id = "q2c_inputs", 
                     title = "Targets",
-                    content = " Target(s) of perturbation. If a list of targets is provided, a comma-separated-values with HGNC symbols or uniprot ids is required.",
+                    content = " Target(s) of perturbation. If a list of targets is provided (My own list of targets), a comma-separated-value with HGNC symbols ids is required. The option: all from given network, will take all the most distant nodes of the provided network. The option: Let CARNIVAL choose them, runs inverseCARNIVAL, where the most suitable distant nodes will be selected automatically",
                     placement = "right", 
                     trigger = "click", 
                     options = list(container = "body")
@@ -208,7 +221,18 @@ p("Example dataset taken from ",
             condition =  ("input.inputs_targets == 'up'"),
             fileInput("upload_targets", 
                       label = NULL)
-            )  
+            ),
+          uiOutput("select_sample_carnival",
+                   label = h5("Select Sample or Contrast",
+                              tags$style(type = "text/css", "#q2c_sample {vertical-align: top;}"),
+                              bsButton("q2c_sample", label = "", icon = icon("question"), style = "info", size = "extra-small"))),
+          bsPopover(id = "q2c_sample", 
+                    title = "Select Sample or Contrast",
+                    content = "The selected sample will be used of the CARNIVAL analysis.",
+                    placement = "right", 
+                    trigger = "click", 
+                    options = list(container = "body")
+          )
         ),
         column(2, align="center",
                radioButtons("omnipath", 
@@ -220,7 +244,7 @@ p("Example dataset taken from ",
                             inline = TRUE),
                bsPopover(id = "q2c_network", 
                          title = "Network",
-                         content = "Generate a signed and directed network using Omnipath. If a network is upload, a tab-separated file with three headers (Source, Interaction, Target) is required. The network is based on genes, when it contains HGNC symbols, or proteins, when it contains uniprot ids.",
+                         content = "Generate a signed and directed network with HGNC symbols using Omnipath. If a network is upload, a tab-separated file with three columns (Source, Interaction, Target) is required. The file should contain HGNC symbols.",
                          placement = "right", 
                          trigger = "click", 
                          options = list(container = "body")
@@ -228,11 +252,11 @@ p("Example dataset taken from ",
                conditionalPanel(
                  condition = ("input.omnipath == 'up'"),
                  fileInput("upload_network", label = NULL)),
-               radioButtons("net_type", 
-                            label = NULL, 
-                            choices = c("Gene" = "gene", "Protein" = "protein"), 
-                            selected = "gene",
-                            inline = TRUE),
+               # radioButtons("net_type", 
+               #              label = NULL, 
+               #              choices = c("Gene" = "gene", "Protein" = "protein"), 
+               #              selected = "gene",
+               #              inline = TRUE),
                checkboxInput("net_complex", 
                             label = "Add complexes",
                             value = TRUE)

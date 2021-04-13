@@ -27,7 +27,7 @@ output$expr = DT::renderDataTable({
     DT::datatable(expr(), option = list(autoWidth = TRUE, pageLength = 5)) %>%
       formatSignif(which(map_lgl(expr(), is.numeric)))
   }
-})  
+})
 
 # if a file is uploaded, the calculation button in enabled
 observeEvent({
@@ -67,4 +67,19 @@ observe({
   shinyFileChoose(input, 'solverPath', roots = volumes, session = session) 
   solverpath <<- paste( unlist(unname(input$solverPath[1])), collapse = "/")
 })
+
+#Select sample for CARNIVAL analysis
+# select contrast/sample
+output$select_sample_carnival = renderUI({
+  if (!is.null(expr())) {
+    choices = colnames(expr()) 
+    
+    pickerInput(inputId = "select_sample_carnival",
+                label = "Select Sample/Contrast",
+                choices = choices,
+                selected = choices[1])
+  }
+})
+
+
 
