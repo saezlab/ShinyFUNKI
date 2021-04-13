@@ -3,18 +3,6 @@
 # CARNIVAL
 C = eventReactive({
   input$run_carnival
-  input$solver
-  input$progeny
-  input$dorothea
-  input$net_type
-  input$omnipath
-  input$inputs_targets
-  input$net_complex
-  input$upload_network
-  input$upload_targets
-  input$upload_tfs
-  input$upload_progeny
-  input$solverPath
 }, {
   
   if (!is.null(input$solver)) {
@@ -43,7 +31,7 @@ C = eventReactive({
       #network
       if(input$omnipath == "omni"){
         net = list("net_complex" = input$net_complex, 
-                   "net_type" = input$net_type)
+                   "net_type" = "gene")#input$net_type)
       }else{net = input$upload_network}
       
       carnival_results = future_promise({
@@ -63,16 +51,20 @@ C = eventReactive({
 # Pathway enrichment analysis
 PEA = eventReactive({
   input$run_PEA
-  input$pathEnrich_database
-  input$pathEnrich_collection
 }, {
-    
+
     if (input$pathEnrich_database == 'MSigDB'){
       cll = input$pathEnrich_collection
-    }else{ cll = NULL}
+    }
+    else if(input$pathEnrich_database == 'Custom'){
+      req(input$upload_custom)
+      validate(need(tools::file_ext(input$upload_custom$datapath) == "tsv", "Please upload a tsv file"))
+      cll = input$upload_custom$datapath}
+    else{ cll = NULL}
     
     # GSA
-    withProgress(message="Running Enrichment...", value = 1, {
+    withProgress(message = "Running Enrichment...", value = 1, {
+      message(input$upload_custom)
       pathEnreach(nodeAtt = carnival_result$nodesAttributes, 
                   database = input$pathEnrich_database,
                   collection = cll)
@@ -124,12 +116,20 @@ output$pathEnrich_msigDB_collection = renderUI({
       dplyr::select(collection) %>% 
       dplyr::pull() %>%
       unique()
+      
       pickerInput(inputId = "pathEnrich_collection",
                 label = "Select Specific collection from MSigDB",
                 choices = choices)
   }
 })
 
+output$pathEnrich_custom = renderUI({
+  if (input$pathEnrich_database == 'Custom') {
+    
+    fileInput("upload_custom", label = NULL, accept = ".tsv")
+
+  }
+})
 
 # Plots ---------------------------------------------------
 
@@ -183,24 +183,24 @@ output$network <- renderVisNetwork({
   
   
   # render network
-  visNetwork::visNetwork(nodes, edges) %>%
+  visNetwork::visNetwork(nodes, edges, height = "500px", width = "100%") %>%
+    visNetwork::visIgraphLayout() %>%
+    visEdges(arrows = 'to') %>%
     visNetwork::visLegend(addEdges = ledges, addNodes = lnodes,
                           width = 0.1, position = "right", useGroups = FALSE)
 })
 
-# observe({
-#   message(input$focus_node)
-#   visNetwork::visNetworkProxy("network") %>%
-#     visNetwork::visFocus(id = input$focus_node, scale = 4)
-# })
+observeEvent(input$focus_node,{
+  visNetwork::visNetworkProxy("network") %>%
+    visNetwork::visFocus(id = input$focus_node, scale = 4)
+})
 
-observe({
-  message(input$focus_tf)
+observeEvent(input$focus_tf,{
   visNetwork::visNetworkProxy("network") %>%
     visNetwork::visFit(nodes = c("ANGPT4", "RANBP17", "RGS1"))
 })
 
-observe({
+observeEvent(input$hierarchical,{
   if(input$hierarchical){
     visNetwork::visNetworkProxy("network") %>%
       visNetwork::visHierarchicalLayout(levelSeparation = 500,
@@ -216,7 +216,7 @@ observe({
 barplot_pea_reactive = reactive ({
   if ( !is.null(PEA()) ) {
     
-    p <- PEA()$psa %>%
+    p <- PEA()$pea %>%
       barplot_pea(threshold_adjpval = input$pea_thresbold,
                   n_paths = input$pea_nPaths)
   }
@@ -246,15 +246,19 @@ output$volcano_pea = renderPlot({
 
 # Render Tables -----------------------------------------------------------
 output$pea_table = DT::renderDataTable({
- 
-pea_result_matrix = DT::datatable(
-  cosa$psa %>%
-    tibble::column_to_rownames(var = "pathway") %>%
-    round(digits = 3) %>%
-    tibble::rownames_to_column(var = "Pathway/Signature"),
-    option = list(scrollX = TRUE, autoWidth = T),
-    filter = "top"
-  )
+ if(!is.null(PEA())){
+
+   pea_result_matrix = DT::datatable(
+     PEA()$pea %>%
+       data.frame() %>%
+       tibble::column_to_rownames(var = "pathway") %>%
+       round(digits = 3) %>%
+       tibble::rownames_to_column(var = "Pathway/Signature"),
+     option = list(scrollX = TRUE, autoWidth = T),
+     filter = "top"
+   )
+   
+ }
   
 })
 
@@ -278,11 +282,36 @@ output$download_pea_analysis = downloadHandler(
     
     ggsave(file.path(fdir, fnames[1]), barplot_pea_reactive(), device = "png")
     ggsave(file.path(fdir, fnames[2]), volcano_pea_reactive(), device = "png")
-    write.csv(cosa$psa,
-              file.path(fdir, "carnivalEA.csv"),
+    write.csv(PEA()$psa,
+              file.path(fdir, paste0("carnivalEA_", input$pathEnrich_database, ".csv")),
               quote = F)
     tar(x, files = fdir, compression = "gzip")
   }
 )
+
+output$download_carnival = downloadHandler(
+  filename = "footprint_carnival_saezLab.tar.gz",
+  content = function(x) {
+    fdir = "footprint_carnival_saezLab"
+    
+    if (dir.exists(fdir)) {
+      do.call(file.remove, list(list.files(fdir, full.names = TRUE)))
+    } else{
+      dir.create(fdir)
+    }
+    
+    saveRDS(carnival_result, file = paste0("carnival_results_", input$select_sample_carnival, ".rds"))
+    write.csv(carnival_result$weightedSIF,
+              file.path(fdir, paste0("carnival_network_", input$select_sample_carnival, ".csv")),
+              quote = F)
+    write.csv(carnival_result$nodesAttributes,
+              file.path(fdir, paste0("carnival_nodesAttributes_", input$select_sample_carnival, ".csv")),
+              quote = F)
+    tar(x, files = fdir, compression = "gzip")
+  }
+)
+
+
+
 
 
