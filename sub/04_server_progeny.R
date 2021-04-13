@@ -1,9 +1,6 @@
 # Reactive Computations ---------------------------------------------------
 P = eventReactive({
   input$an_progeny
-  input$select_organism
-  input$perm
-  input$top
   },{
     if(!is.null(input$an_progeny)){
       withProgress(message = "Calculate PROGENy matrix", value = 1, {
