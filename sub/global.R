@@ -86,7 +86,7 @@ run_dorothea <- function(dorothea_matrix, organism = "Human", confidence_level, 
 }
 
 get_network <- function(net_type = "gene", complx = T){
-  omniR = OmnipathR::import_Omnipath_Interactions()
+  omniR = OmnipathR::import_omnipath_interactions()
   
   #consensus sign and direction
   cNET <- omniR %>% 
@@ -277,19 +277,30 @@ generateTFList <- function (df = df, top = 50, access_idx = 1)
 
 pathEnreach <- function(nodeAtt, database, collection = NULL){
   
-  annotations = OmnipathR::import_omnipath_annotations(
-    resources = database,
-    proteins = nodeAtt$Node,
-    wide = TRUE)
-  
-  if(database == 'MSigDB'){
-    value = "geneset"
+  if(database == 'Custom'){
     
-    annotations = annotations %>%
-      dplyr::filter(collection %in% collection)
     
-  }else{
     value = "pathway"
+    
+    annotations = read_tsv(collection)
+    colnames(annotations) = c("genesymbol", "pathway")
+
+  }else{
+    
+    annotations = OmnipathR::import_omnipath_annotations(
+      resources = database,
+      proteins = nodeAtt$Node,
+      wide = TRUE)
+    
+    if(database == 'MSigDB'){
+      value = "geneset"
+      
+      annotations = annotations %>%
+        dplyr::filter(collection %in% collection)
+      
+      
+    }else{value = "pathway"}
+    
   }
   
   gsea_sets = list(success = nodeAtt %>% 
@@ -314,6 +325,27 @@ pathEnreach <- function(nodeAtt, database, collection = NULL){
   
   return(list( annot = annotations, pea = gsea_analysis_df ))  
 }
+
+#Calculate all pathways
+calculate_all_paths <- function(carnival_result){
+  # create digraph
+  DGs = igraph::graph_from_edgelist(carnival_result$weightedSIF %>% dplyr::select(Node1, Node2) %>% as.matrix(), directed = TRUE)
+  # get inicial nodes
+  iniciators = base::setdiff(carnival_result$weightedSIF$Node1, carnival_result$weightedSIF$Node2)
+  # get effectors
+  effectors = base::setdiff(carnival_result$weightedSIF$Node2, carnival_result$weightedSIF$Node1)
+  
+  paths = list()
+  for (i in iniciators){
+    for (j in effectors){
+      aux = igraph::all_simple_paths(DGs, i, j)
+      paths[[paste0(i,"_",j)]] = do.call(c, lapply(aux, igraph::as_ids))
+    }
+  }
+  
+  return(paths)
+}
+
 
 # PLOTS -------------------------------------------------------------
 
@@ -556,7 +588,8 @@ barplot_pea <- function(pea, threshold_adjpval = 0.05, n_paths = 10){
     scale_x_continuous(
       expand = c(0.01, 0.01),
       limits = c(0, ceiling(max(-log10(ggdata$AdjPvalu)))),
-      breaks = seq(floor(min(-log10(ggdata$AdjPvalu))), ceiling(max(-log10(ggdata$AdjPvalu))), 1),
+      breaks = seq(floor(min(-log10(ggdata$AdjPvalu))), 
+                   ceiling(max(-log10(ggdata$AdjPvalu))), 1),
       labels = scales::math_format(10^-.x)
     ) +
     annotation_logticks(sides = "bt") +
