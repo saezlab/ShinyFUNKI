@@ -156,13 +156,7 @@ output$download_progeny_analysis = downloadHandler(
     
     fnames = c(
       paste0("barplot_progeny_", input$select_contrast_progeny, ".png"),
-      paste0(
-        "scatter_density_progeny_",
-        input$select_contrast,
-        "_",
-        input$select_pathway,
-        ".png"
-      ),
+      paste0("scatter_density_progeny_", input$select_contrast_progeny, "_", input$select_pathway, ".png"),
       "heatmap_progeny.png"
     )
     
