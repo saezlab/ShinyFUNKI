@@ -27,10 +27,10 @@ enableBookmarking(store = "server")
 options(shiny.maxRequestSize=30*1024^2)
 
 # load examples
-carnival_result = readRDS("data/examples/carnival_result_celline_SIDM00194.rds")
-carnival_result$nodesAttributes = as.data.frame(carnival_result$nodesAttributes)
-carnival_result$weightedSIF = as.data.frame(carnival_result$weightedSIF)
-# carnival_result$nodesAttributes = carnival_result$nodesAttributes %>%
+# carnival_result = readRDS("data/examples/carnival_result_celline_SIDM00194.rds")
+# carnival_result$nodesAttributes = as.data.frame(carnival_result$nodesAttributes)
+# carnival_result$weightedSIF = as.data.frame(carnival_result$weightedSIF)
+# # carnival_result$nodesAttributes = carnival_result$nodesAttributes %>%
 #   dplyr::filter(Node %in%union(carnival_result$weightedSIF$Node1,carnival_result$weightedSIF$Node2))
 
 
