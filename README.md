@@ -10,5 +10,5 @@ FUNKI is still under development, and the following approaches are implemented o
 #### PROGENy
 [PROGENy](https://saezlab.github.io/progeny/) is a linear model to infer pathway activity from gene expression data. Pathway activities are calculated based on consensus gene signatures obtained from perturbation experiments, that is, the footprint of pathway on gene expression. More coming soon...
 
-#### KinAct
-[KinAct](http://saezlab.github.io/kinact/) is a network linking kinases to phosphorylation sites. This resource allows the estimation of kinase activities from phosphoproteomics data. More coming soon...
+#### CARNIVAL
+[CARNIVAL](https://saezlab.github.io/CARNIVAL/) (CAusal Reasoning for Network identification using Integer VALue programming) is a method for the identification of upstream reguatory signalling pathways from downstream gene expression data. The aim of the CARNIVAL pipeline is to identify a subset of interactions from a prior knowledge network that represent potential regulated pathways linking known or potential targets of perturbation towards active transcription factors derived from expression data.
