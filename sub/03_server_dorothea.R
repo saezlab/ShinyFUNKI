@@ -1,6 +1,6 @@
 # Reactive Computations ---------------------------------------------------
 D = eventReactive({
-  input$run_dorothea
+  input$an_dorothea
 }, {
   
   if (!is.null(input$selected_conf_level)) {
@@ -11,9 +11,6 @@ D = eventReactive({
         organism = "Human"
       }else {organism = input$select_organism}
       
-      
-      message(organism)
-
       dorothea_result = run_dorothea(dorothea_matrix = expr(), 
                                      organism = organism, 
                                      confidence_level = input$selected_conf_level, 
@@ -251,15 +248,9 @@ output$download_dorothea_analysis = downloadHandler(
     }
     
     fnames = c(
-      paste0("barplot_tfs_", input$select_contrast_dorothea, ".png"),
+      paste0("barplot_tfs_", input$select_contrast, ".png"),
       paste0("barplot_samples_", input$select_tf, ".png"),
-      paste0(
-        "network_",
-        input$select_contrast_dorothea,
-        "_",
-        input$select_tf,
-        ".png"
-      )
+      paste0("network_", input$select_contrast, "_", input$select_tf, ".png")
     )
     
     ggsave(file.path(fdir, fnames[1]), barplot_nes_reactive_dorothea(), device = "png")
