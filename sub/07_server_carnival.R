@@ -34,15 +34,13 @@ C = eventReactive({
                    "net_type" = "gene")#input$net_type)
       }else{net = input$upload_network}
       
-      carnival_results = future_promise({
-        run_carnival(data = expr(),
+      carnival_results = run_carnival(data = expr(),
                      net = net,
                      ini_nodes = input$inputs_targets,
                      dorothea = param_doro,
                      progeny = param_prog,
                      solver = list(spath = solverpath,
                                    solver = input$solver))
-        })
     })
   }
   
@@ -65,7 +63,7 @@ PEA = eventReactive({
     # GSA
     withProgress(message = "Running Enrichment...", value = 1, {
       message(input$upload_custom)
-      pathEnreach(nodeAtt = carnival_result$nodesAttributes, 
+      pathEnreach(nodeAtt = C()$nodesAttributes, 
                   database = input$pathEnrich_database,
                   collection = cll)
 
@@ -73,11 +71,51 @@ PEA = eventReactive({
   
 })
 
+#objects for visualisation
+edges <- reactive(if (!all(is.na(C()))){
+  # edges and node information for visnetwork
+  edges <- C()$weightedSIF %>%
+    dplyr::rename(from = Node1, to = Node2, value = Weight) %>%
+    tibble::rowid_to_column(var = "id") %>%
+    dplyr::mutate(color = dplyr::case_when(Sign == 1 ~ plotly::toRGB('#0578F0', alpha = 1),
+                                           Sign == -1 ~ plotly::toRGB('#F20404', alpha = 1),
+                                           Sign == 0 ~ plotly::toRGB('#777777', alpha = 1)))
+  
+})
+
+nodes_carnival <- reactive(if (!all(is.na(C()))){
+    # create color scale for nodes
+    pal_red_blue = c(rev(RColorBrewer::brewer.pal(9, 'Reds')),
+                     "#FFFFFF",
+                     RColorBrewer::brewer.pal(9, 'Blues'))
+    pal = colorRampPalette(pal_red_blue)(100)
+    
+    #nodes
+    nodes <- C()$nodesAttributes %>%
+      dplyr::filter(ZeroAct != 100) %>%
+      dplyr::filter(Node %in% c(union(edges()$from, edges()$to))) %>%
+      dplyr::rename(id = Node) %>%
+      dplyr::mutate(label = id) %>%
+      dplyr::mutate(shape = dplyr::case_when(NodeType == "T" ~ "triangle",
+                                             NodeType == "S" ~ "diamond",
+                                             TRUE ~ "circle")) %>%
+      dplyr::mutate(title = paste0("<p><b>", label, "</b><br> (", AvgAct, ")</p>")) %>%
+      dplyr::mutate(color = findInterval(AvgAct, seq(from = -100, to = 100, length.out = 100))) %>%
+      dplyr::mutate(color = pal[color]) %>%
+      dplyr::mutate(color = plotly::toRGB(color, alpha = 1))
+    
+    
+  })
+
+paths <- reactive(if (!all(is.na(C()))){
+  paths = calculate_all_paths(C())
+})
+
 # Dynamic widgets / RenderUI ----------------------------------------------
 output$select_node = renderUI({
-  # if (!is.null(C())) {
+  if (!is.null(C())) {
 
-    choices = carnival_result$nodesAttributes %>% #C()$nodesAttributes$Node %>%
+    choices = C()$nodesAttributes %>% #C()$nodesAttributes$Node %>%
       dplyr::filter(ZeroAct != 100) %>%
       dplyr::select(Node) %>%
       dplyr::pull() %>%
@@ -90,20 +128,20 @@ output$select_node = renderUI({
                 options = list("live-search" = TRUE),
                 selected = NULL)
 
-  # }
+  }
 })
 
 output$select_tf_carnival = renderUI({
-  # if (!is.null(C())) {
+  if (!is.null(C())) {
 
-  choices = base::setdiff(carnival_result$weightedSIF$Node2,
-                          carnival_result$weightedSIF$Node1) #C()$nodesAttributes$Node %>%
-  pickerInput(inputId = "focus_tf",
+  choices = base::setdiff(C()$weightedSIF$Node2,
+                          C()$weightedSIF$Node1) # C()$nodesAttributes$Node %>%
+  pickerInput(inputId = "select_tf_carnival",
               label = "Path to TF:",
               choices = choices,
               options = list("live-search" = TRUE),
               selected = NULL)
-  # }
+  }
 })
 
 output$pathEnrich_msigDB_collection = renderUI({
@@ -111,7 +149,7 @@ output$pathEnrich_msigDB_collection = renderUI({
 
     choices = OmnipathR::import_omnipath_annotations(
       resources = 'MSigDB',
-      proteins = carnival_result$nodesAttributes %>% dplyr::filter(ZeroAct != 100) %>% dplyr::select(Node) %>% dplyr::pull(),
+      proteins = C()$nodesAttributes %>% dplyr::filter(ZeroAct != 100) %>% dplyr::select(Node) %>% dplyr::pull(),
       wide = TRUE) %>%
       dplyr::select(collection) %>% 
       dplyr::pull() %>%
@@ -135,41 +173,6 @@ output$pathEnrich_custom = renderUI({
 
 # network visualisation
 output$network <- renderVisNetwork({
-  # carnival_result = C()
-  # create color scale for nodes
-  
-  pal_red_blue = c(rev(RColorBrewer::brewer.pal(9, 'Reds')), 
-                   "#FFFFFF", 
-                   RColorBrewer::brewer.pal(9, 'Blues'))
-  pal = colorRampPalette(pal_red_blue)(100)
-  
-  # edges and node information for visnetwork
-  edges <- carnival_result$weightedSIF %>%
-    dplyr::rename(from = Node1, to = Node2, value = Weight) %>%
-    dplyr::mutate(color = dplyr::case_when(Sign == 1 ~ '#0578F0',
-                                           Sign == -1 ~ '#F20404',
-                                           Sign == 0 ~ '#777777'))
-  
-  intermediate_nodes = carnival_result$nodesAttributes %>%
-    dplyr::filter(NodeType == "" & ZeroAct != 100) %>%
-    dplyr::filter(Node %in% c(union(edges$from, edges$to))) %>%
-    nrow()
-
-  nodes <- carnival_result$nodesAttributes %>%
-    dplyr::filter(ZeroAct != 100) %>%
-    dplyr::filter(Node %in% c(union(edges$from, edges$to))) %>%
-    dplyr::rename(id = Node) %>%
-    dplyr::mutate(label = id) %>%
-    dplyr::mutate(shape = dplyr::case_when(NodeType == "T" ~ "triangle",
-                                           NodeType == "S" ~ "diamond",
-                                           TRUE ~ "ellipse")) %>%
-    dplyr::mutate(title = paste0("<p><b>", label, "</b><br> (", AvgAct, ")</p>")) %>%
-    dplyr::mutate(color = findInterval(AvgAct, seq(from = -100, to = 100, length.out = 100))) %>%
-    dplyr::mutate(color = pal[color]) # %>%
-    # dplyr::mutate(level = dplyr::case_when(NodeType == "S" ~ 1,
-    #                                        NodeType == "T" ~ 10,
-    #                                        NodeType == "" ~ floor(runif( nodes %>% nrow(), 
-    #                                                           min = 2, max = 9))))
   
   ## legends
   ledges <- data.frame(color = c("#0578F0", "#F20404", "#777777"),
@@ -179,11 +182,10 @@ output$network <- renderVisNetwork({
   
   lnodes <- data.frame(label = c("TF", "Perturbed", "Intermediate"),
                        color = c("gray"),
-                       shape = c("triangle", "diamond", "ellipse"))
-  
+                       shape = c("triangle", "diamond", "circle"))
   
   # render network
-  visNetwork::visNetwork(nodes, edges, height = "500px", width = "100%") %>%
+  visNetwork::visNetwork(nodes_carnival(), edges(), height = "500px", width = "100%") %>%
     visNetwork::visIgraphLayout() %>%
     visEdges(arrows = 'to') %>%
     visNetwork::visLegend(addEdges = ledges, addNodes = lnodes,
@@ -195,9 +197,37 @@ observeEvent(input$focus_node,{
     visNetwork::visFocus(id = input$focus_node, scale = 4)
 })
 
-observeEvent(input$focus_tf,{
+observeEvent(input$select_tf_carnival,{
+
+  pat = paste0("_", input$select_tf_carnival, "$")
+  
+  selected_nodes = do.call(c,paths()[grep(pat, names(paths()))]) %>% unique()
+  background_nodes = nodes_carnival() %>%
+    apply(1, function(r, x){
+      if( !r["id"] %in% x ){
+        r["color"] = sub(",1)", ",0.3)", r["color"], fixed=T)};
+      return(r)}, selected_nodes) %>% 
+    t() %>% 
+    data.frame()
+  
+  background_edges = edges() %>%
+    apply(1, function(r, x){
+      if( !(r["from"] %in% x) & !(r["to"] %in% x) ){
+        r["color"] = sub(",1)", ",0.3)", r["color"], fixed=T)};
+      return(r)}, selected_nodes) %>% 
+    t() %>% 
+    data.frame()
+  
+  selected_edges = background_edges %>%
+    dplyr::filter(grepl(",1)", color, fixed = T)) %>%
+    dplyr::pull(id)
+
   visNetwork::visNetworkProxy("network") %>%
-    visNetwork::visFit(nodes = c("ANGPT4", "RANBP17", "RGS1"))
+    visNetwork::visUpdateNodes(nodes = background_nodes) %>%
+    visNetwork::visUpdateEdges(edges = background_edges) %>%
+    visNetwork::visSetSelection(nodesId = selected_nodes, 
+                                edgesId = selected_edges)
+    
 })
 
 observeEvent(input$hierarchical,{
@@ -210,6 +240,7 @@ observeEvent(input$hierarchical,{
       visNetwork::visPhysics(hierarchicalRepulsion = list(nodeDistance = 300))
   }
 })
+
 
 # enritchment analysis
 
@@ -231,7 +262,7 @@ volcano_pea_reactive = reactive ({
   if ( !is.null(PEA()) ) {
     
     volcano_pea(PEA(), 
-                carnival_result$nodesAttributes,
+                C()$nodesAttributes,
                 threshold_adjpval = input$pea_thresbold,
                 n_paths = input$pea_nPaths,
                 n_genes = input$pea_nGenes)
@@ -300,18 +331,13 @@ output$download_carnival = downloadHandler(
       dir.create(fdir)
     }
     
-    saveRDS(carnival_result, file = paste0("carnival_results_", input$select_sample_carnival, ".rds"))
-    write.csv(carnival_result$weightedSIF,
+    saveRDS(C(), file = paste0("carnival_results_", input$select_sample_carnival, ".rds"))
+    write.csv(C()$weightedSIF,
               file.path(fdir, paste0("carnival_network_", input$select_sample_carnival, ".csv")),
               quote = F)
-    write.csv(carnival_result$nodesAttributes,
+    write.csv(C()$nodesAttributes,
               file.path(fdir, paste0("carnival_nodesAttributes_", input$select_sample_carnival, ".csv")),
               quote = F)
     tar(x, files = fdir, compression = "gzip")
   }
 )
-
-
-
-
-
