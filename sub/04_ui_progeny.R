@@ -25,15 +25,16 @@ tabPanel(
   
   hr(),
   
+  # Row showing plots
+  fluidRow(column(6, plotOutput("scatter")),
+           column(6, plotOutput("barplot_progeny"))
+  ),
+  
+  hr(),
+  
   # Row with static heatmap
   fluidRow(plotOutput("heatmap_scores")),
   
-  hr(),
-  # 
-  # # Row showing plots
-  fluidRow(column(6, plotOutput("scatter")),
-           column(6, plotOutput("barplot_progeny"))
-           ),
   hr(),
   
   # Table visualization
