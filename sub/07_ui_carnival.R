@@ -22,7 +22,7 @@ tabPanel(
   ),
   hr(),
   fluidRow(#align = "center",
-           h3("Pathway Enritchment Analysis"),
+           h3("Pathway Enrichment Analysis"),
            hr(),
            sidebarLayout(
              sidebarPanel(width = 12,

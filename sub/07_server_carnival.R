@@ -34,6 +34,11 @@ C = eventReactive({
                    "net_type" = "gene")#input$net_type)
       }else{net = input$upload_network}
       
+      # CARNIVAL parameters
+      if (input$solver == "lpSolve"){
+        solverpath = NULL
+      }
+      
       carnival_results = run_carnival(data = expr(),
                      net = net,
                      ini_nodes = input$inputs_targets,
