@@ -15,7 +15,6 @@ P = eventReactive({
                       perm = input$top)
       })
     }
-    
 })
 
 # Dynamic widgets / RenderUI ----------------------------------------------
@@ -61,7 +60,8 @@ output$select_pathway = renderUI({
 # Bar plot with the TFs for a condition------------------------------------
 
 barplot_nes_reactive_progeny = reactive ({
-  if (!is.null(input$select_contrast_progeny)) {
+  if (!is.null(input$select_contrast_progeny) & 
+      !is.null(P())) {
     p <- P() %>%
       t() %>%
       as.data.frame() %>%
@@ -73,7 +73,8 @@ barplot_nes_reactive_progeny = reactive ({
 
 scatter_reactive = reactive({
   if (!is.null(input$select_contrast_progeny) &
-      !is.null(input$select_pathway)) {
+      !is.null(input$select_pathway) &
+      !is.null(P())) {
     
     if (input$example_data){
       organism = "Human"
@@ -89,9 +90,9 @@ scatter_reactive = reactive({
       tibble::rownames_to_column("GeneID")
     
     title = paste0(
-      "weights of ",    
+      "Weights of ",    
       input$select_pathway,
-      " for sample/contrast ",
+      " for ",
       input$select_contrast_progeny
     )
     
@@ -105,22 +106,26 @@ scatter_reactive = reactive({
 # Render Tables -----------------------------------------------------------
 # TF-activities
 output$progeny_table = DT::renderDataTable({
-  # DT::datatable(P())
-  results_progeny = P() %>%
-    t() %>%
-    as.data.frame() %>%
-    round(digits = 3) %>%
-    rownames_to_column(var = "Pathways")
   
-  result_matrix = DT::datatable(
-    results_progeny,
-    option = list(
-      scrollX = TRUE,
-      autoWidth = T,
-      pageLength = 14
-    ),
-    filter = "top"
-  )
+  if( !is.null(P()) ){
+    results_progeny = P() %>%
+      t() %>%
+      as.data.frame() %>%
+      round(digits = 3) %>%
+      rownames_to_column(var = "Pathways")
+    
+    result_matrix = DT::datatable(
+      results_progeny,
+      option = list(
+        scrollX = TRUE,
+        autoWidth = T,
+        pageLength = 14
+      ),
+      filter = "top"
+    )
+  }
+  
+
 })
 
 # Render Plots ------------------------------------------------------------
