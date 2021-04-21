@@ -370,13 +370,13 @@ barplot_nes_dorothea = function(df, smpl, nHits) {
     ) +
     theme_minimal() +
     theme(
-      axis.title = element_text(face = "bold", size = 12),
+      axis.title = element_text(face = "bold"),
       axis.text.x = element_text(
         hjust = 1,
         size = 15,
         face = "bold"
       ),
-      axis.text.y = element_text(size = 15, face = "bold")
+      axis.text.y = element_text(face = "bold")
     ) +
     ylab("Transcription Factors") +
     xlab("Normalized Enrichment scores (NES)") +
@@ -398,13 +398,13 @@ barplot_tf = function(df, selTF) {
     theme_minimal() +
     theme(
       legend.position = "none",
-      axis.title = element_text(face = "bold", size = 12),
+      axis.title = element_text(face = "bold"),
       axis.text.x = element_text(
         hjust = 1,
         size = 15,
         face = "bold"
       ),
-      axis.text.y = element_text(size = 15, face = "bold")
+      axis.text.y = element_text(face = "bold")
     ) +
     scale_fill_manual(values = c("#99004C", "#0859A2"),
                       drop = F) +
@@ -493,13 +493,13 @@ barplot_nes_progeny = function(df, smpl) {
     ) +
     theme_minimal() +
     theme(
-      axis.title = element_text(face = "bold", size = 12),
+      axis.title = element_text(face = "bold"),
       axis.text.x = element_text(
         hjust = 1,
         size = 15,
         face = "bold"
       ),
-      axis.text.y = element_text(size = 15, face = "bold")
+      axis.text.y = element_text(size = 10, face = "bold")
     ) +
     ylab("Pathways") +
     xlab("z-scores") +
@@ -534,13 +534,13 @@ scater_pathway = function (df, weight_matrix, title) {
     geom_label_repel(aes(label = ID)) +
     theme_light() +
     theme(
-      axis.title = element_text(face = "bold", size = 12),
+      axis.title = element_text(face = "bold", size = 15),
       axis.text.x = element_text(
         hjust = 1,
-        size = 15,
+        size = 12,
         face = "bold"
       ),
-      axis.text.y = element_text(size = 15, face = "bold"),
+      axis.text.y = element_text(face = "bold", size = 15),
       legend.position = "none"
     ) +
     xlab("Progeny weights") +
@@ -569,7 +569,7 @@ scater_pathway = function (df, weight_matrix, title) {
       panel.grid.major = element_blank(),
       panel.grid.minor = element_blank(),
       panel.border = element_blank(),
-      axis.title = element_text(face = "bold", size = 12)
+      axis.title = element_text(face = "bold", size = 15)
     )
   
   #create density with weights
@@ -589,14 +589,16 @@ scater_pathway = function (df, weight_matrix, title) {
       panel.grid.major = element_blank(),
       panel.grid.minor = element_blank(),
       panel.border = element_blank(),
-      axis.title = element_text(face = "bold", size = 12) 
+      axis.title = element_text(face = "bold", size = 15) 
     )  +
     ggtitle(title)
   
-  density_prog + patchwork::plot_spacer() + scatterplot + density_gene + 
+  density_prog + 
+    patchwork::plot_spacer() + 
+    scatterplot + 
+    density_gene + 
     patchwork::plot_layout(ncol = 2, nrow = 2, widths = c(4, 1), heights = c(1, 4))
 }
-
 
 # CARNIVAL -----------------------------------------------------------
 barplot_pea <- function(pea, threshold_adjpval = 0.05, n_paths = 10){
