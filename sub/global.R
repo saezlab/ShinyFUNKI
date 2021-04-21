@@ -527,7 +527,6 @@ scater_pathway = function (df, weight_matrix, title) {
   sub_df[(percentile(sub_df$stat) < 0.95 &
             percentile(sub_df$stat) > 0.05), 1] <- NA
   
-  
   scatterplot <-
     ggplot(sub_df, aes(x = weight, y = stat, color = color)) +
     geom_point() +
@@ -544,15 +543,16 @@ scater_pathway = function (df, weight_matrix, title) {
       axis.text.y = element_text(size = 15, face = "bold"),
       legend.position = "none"
     ) +
+    xlab("Progeny weights") +
+    ylab("Gene measurement") +
     expand_limits(x = 0, y = 0) +
     geom_vline(xintercept = 0, linetype = "dotted") +
     geom_hline(yintercept = 0, linetype = "dotted") +
     scale_y_continuous(breaks = scales::extended_breaks()) +
-    scale_x_continuous(breaks = scales::extended_breaks()) +
-    ggtitle(title)
+    scale_x_continuous(breaks = scales::extended_breaks())
   
-  #create Histogram with input data
-  histo <- ggplot(df, aes(x = stat, fill = "")) +
+  #create density with input data
+  density_gene <- ggplot(df, aes(x = stat)) +
     geom_density() +
     coord_flip() +
     scale_fill_manual(values = c("#dbdcdb")) +
@@ -563,6 +563,7 @@ scater_pathway = function (df, weight_matrix, title) {
       axis.text.x = element_blank(),
       axis.ticks.x = element_blank(),
       axis.title.y = element_blank(),
+      axis.title.x = element_blank(),
       axis.text.y = element_blank(),
       axis.ticks.y = element_blank(),
       panel.grid.major = element_blank(),
@@ -571,9 +572,31 @@ scater_pathway = function (df, weight_matrix, title) {
       axis.title = element_text(face = "bold", size = 12)
     )
   
-cowplot::plot_grid(scatterplot, histo, align = "hv", nrow = 1)
-
+  #create density with weights
+  density_prog <- ggplot(weight_matrix, aes(x = weight)) +
+    geom_density() +
+    # scale_fill_manual(values = c("#dbdcdb")) +
+    xlim(layer_scales(scatterplot)$x$range$range) +
+    theme_void() +
+    theme(
+      legend.position = "none",
+      axis.text.x = element_blank(),
+      axis.ticks.x = element_blank(),
+      axis.title.y = element_blank(),
+      axis.title.x = element_blank(),
+      axis.text.y = element_blank(),
+      axis.ticks.y = element_blank(),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      panel.border = element_blank(),
+      axis.title = element_text(face = "bold", size = 12) 
+    )  +
+    ggtitle(title)
+  
+  density_prog + patchwork::plot_spacer() + scatterplot + density_gene + 
+    patchwork::plot_layout(ncol = 2, nrow = 2, widths = c(4, 1), heights = c(1, 4))
 }
+
 
 # CARNIVAL -----------------------------------------------------------
 barplot_pea <- function(pea, threshold_adjpval = 0.05, n_paths = 10){
