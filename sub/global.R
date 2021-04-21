@@ -27,6 +27,8 @@ enableBookmarking(store = "server")
 options(shiny.maxRequestSize=30*1024^2)
 
 # load examples
+kinact_regulon_human = readRDS("data/models/kinact_regulon_human.rds")
+ppomics = read_csv("data/phospho_clean.csv") 
 # carnival_result = readRDS("data/examples/carnival_result_celline_SIDM00194.rds")
 # carnival_result$nodesAttributes = as.data.frame(carnival_result$nodesAttributes)
 # carnival_result$weightedSIF = as.data.frame(carnival_result$weightedSIF)
@@ -665,6 +667,48 @@ volcano_pea <- function(pea, nodAtt, threshold_adjpval = 0.05, n_paths = 10, n_g
     xlab("CARNIVAL's activity") + ylab("Adjusted p-value")  +
     theme_bw(base_size = 15)
   
+}
+
+# KinAct ---------------------------------------------------
+plot_lollipop = function(df, top_n_hits, var, var_label) {
+  var = enquo(var)
+  title = paste("Contrast:", unique(df$contrast))
+  df %>% 
+    arrange(activity) %>%
+    mutate(!!var := as_factor(!!var),
+           effect = factor(sign(activity)),
+           abs_activity = abs(activity)) %>%
+    group_by(effect) %>%
+    top_n(top_n_hits, abs_activity) %>%
+    ungroup() %>%
+    ggplot(aes(x=!!var, y=activity, color=effect)) +
+    geom_segment(aes(x=!!var, xend=!!var, y=0, yend=activity), color="grey") +
+    geom_point(size=4) +
+    coord_flip() +
+    theme_light() +
+    theme(
+      panel.grid.major.y = element_blank(),
+      panel.border = element_blank(),
+      axis.ticks.y = element_blank()
+    ) +
+    labs(x = var_label, y="Activity (z-score)") +
+    scale_color_manual(values = rwth_color(c("magenta", "green"))) +
+    theme(legend.position = "none") +
+    theme(aspect.ratio = c(1)) + 
+    ggtitle(title)
+}
+
+plot_heatmap = function(df, var="tf") {
+  mat = df %>%
+    select(!!var, contrast, activity) %>% 
+    spread(contrast, activity) %>%
+    data.frame(row.names = var, check.names = F)
+  
+  if (ncol(mat) > 1) {
+    pheatmap(mat, show_rownames = F)
+  } else if (ncol(mat) == 1) {
+    pheatmap(mat, cluster_rows = F, cluster_cols = F, show_rownames = F)
+  }
 }
 
 # support functions ---------------------------------------------------

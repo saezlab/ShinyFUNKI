@@ -14,6 +14,19 @@ K = eventReactive(input$run_kinact, {
 })
 
 
+extended_ppomics = reactive({
+  if (!is.null(kinact_selected_padj_cutoff())) {
+    res = ppomics() %>%
+      mutate(effect = case_when(adj.p.value <= kinact_selected_padj_cutoff() & logFC > 0 ~ "upregulated",
+                                adj.p.value <= kinact_selected_padj_cutoff() & logFC < 0 ~ "downregulated",
+                                TRUE ~ "not regulated"),
+             importance = abs(logFC * -log10(adj.p.value)))
+    print(res)
+    return(res)
+  }
+})
+
+
 
 kinact_selected_top_n_hits = eventReactive(input$kinact_selected_top_n_hits, {
   input$kinact_selected_top_n_hits
