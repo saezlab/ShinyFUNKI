@@ -192,19 +192,27 @@ network_tf_reactive = reactive({
 # Render Plots ------------------------------------------------------------
 
 # Bar plot with the TFs for a condition
-output$barplot_nes_dorothea = renderPlot({
-  print(barplot_nes_reactive_dorothea())
+output$barplot_nes_dorothea = plotly::renderPlotly({
+  barplot_nes_reactive_dorothea()
 })
 
 # Bar plot of activity for all conditions for a TF
-output$tf_bar = renderPlot({
-  print(barplot_tf_reactive())
+output$tf_bar = plotly::renderPlotly({
+  barplot_tf_reactive()
 })
 
 # Network of a TF with it's targets
 output$tf_network = renderPlot({
   print(network_tf_reactive())
 })
+
+
+# Heatmap of samples vs TFs
+output$heatmap_dorothea = renderPlot({
+  D() %>% t() %>% data.frame() %>%
+  heatmap_scores()
+})
+
 
 # Render Tables -----------------------------------------------------------
 # TF-activities

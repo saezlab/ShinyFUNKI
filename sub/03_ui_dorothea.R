@@ -32,10 +32,15 @@ tabPanel(
   hr(),
   
   fluidRow(
-    column(4, plotOutput("tf_bar")),
-    column(4, plotOutput("barplot_nes_dorothea")),
+    column(4, plotly::plotlyOutput("tf_bar")),
+    column(4, plotly::plotlyOutput("barplot_nes_dorothea")),
     column(4, plotOutput("tf_network"))
   ),
+  
+  hr(),
+  
+  # Row with static heatmap
+  fluidRow(plotOutput("heatmap_dorothea")),
   
   hr(),
   
