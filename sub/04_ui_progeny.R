@@ -27,13 +27,13 @@ tabPanel(
   
   # Row showing plots
   fluidRow(column(6, plotOutput("scatter")),
-           column(6, plotOutput("barplot_progeny"))
+           column(6, plotly::plotlyOutput("barplot_progeny"))
   ),
   
   hr(),
   
   # Row with static heatmap
-  fluidRow(plotOutput("heatmap_scores")),
+  fluidRow(plotOutput("heatmap_progeny")),
   
   hr(),
   

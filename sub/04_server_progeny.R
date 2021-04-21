@@ -131,18 +131,19 @@ output$progeny_table = DT::renderDataTable({
 # Render Plots ------------------------------------------------------------
 
 # Bar plot with the TFs for a condition
-output$barplot_progeny = renderPlot({
-  print(barplot_nes_reactive_progeny())
+output$barplot_progeny = plotly::renderPlotly({
+  barplot_nes_reactive_progeny()
 })
 
 # Bar plot of activity for all conditions for a TF
 output$scatter = renderPlot({
-  plot(scatter_reactive())
+  print(scatter_reactive())
 })
 
 # Heatmap for all samples and pathways
-output$heatmap_scores = renderPlot({
-  heatmap_scores(df = P())
+output$heatmap_progeny = renderPlot({
+  P() %>%
+    heatmap_scores()
 })
 
 # Download Handler --------------------------------------------------------
