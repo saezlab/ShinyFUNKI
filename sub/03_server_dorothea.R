@@ -209,8 +209,10 @@ output$tf_network = renderPlot({
 
 # Heatmap of samples vs TFs
 output$heatmap_dorothea = renderPlot({
-  D() %>% t() %>% data.frame() %>%
-  heatmap_scores()
+  if(!is.null(D())){
+    D() %>% t() %>% data.frame() %>%
+      heatmap_scores()
+  }
 })
 
 
