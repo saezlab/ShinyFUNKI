@@ -1,70 +1,50 @@
 tabPanel(
-  title="KinAct",
+  title="KinAct", value = "KinAct",
   fluidRow(
-    column(
-      12, align="center",
-      actionButton("run_kinact", label="Run KinAct"),
-      img(src="logo_kinact.png", align = "right", height=75, width=75)
-    )
     
-  ),
-  hr(),
-  fluidRow(
-    column(
-      6, align="center", uiOutput("kinact_select_contrast")
+    column(6, align = "center",
+           sidebarLayout(
+             sidebarPanel(
+               width = 12,
+               uiOutput("select_contrast_kinact"),
+               uiOutput("select_kinase"),
+               downloadButton(
+                 "download_kinact_analysis",
+                 "Download Kinact scores and figures"
+               ),
+             ),
+             mainPanel(width = 0)
+           )
     ),
-    column(
-      6, align="center", uiOutput("select_kinase")
-    )
-  ),
-  fluidRow(
-    column(3),
-    column(
-      3, uiOutput("kinact_select_top_n_hits")
-    ),
-    column(
-      3,  
-      sliderInput(inputId = "kinact_padj_cutoff", 
-                       label = "Choose cutoff for adjusted p-value", 
-                       min=0.001, max=1, value = 0.05)
-    ),
-    column(
-      3, uiOutput("kinact_select_top_n_labels")
-    )
-  ),
-  hr(),
-  fluidRow(
-    column(
-      4, plotOutput("kinact_lollipop")
-    ),
-    column(
-      4, plotOutput("kinase_volcano")
-    ),
-    column(
-      4, plotOutput("kinact_network")
-    )
-  ),
-  hr(),
-  fluidRow(
-    column(
-      6, plotOutput("kinact_heatmap")
-    ),
-    column(
-      6, plotOutput("kinase_bar")
-    )
-  ),
-  hr(),
-  DT::dataTableOutput("kinact_result"),
-  hr(),
-  fluidRow(
+    
     column(
       6,
-      downloadButton("kinact_download_displayed_network", "Download network file (.sif)")
-    ),
-    column(
-      6, 
-      downloadButton("download_kinact_scores", "Download Kinase-activities")
+      sidebarLayout(
+        sidebarPanel(
+          width = 12,
+          uiOutput("select_top_kinases"),
+          uiOutput("select_top_targets")
+        ),
+        mainPanel(width = 0)
+      )
     )
   ),
-  hr()
+  hr(),
+
+  fluidRow(
+    column(4, plotly::plotlyOutput("kinase_bar")),
+    column(4, plotly::plotlyOutput("barplot_nes_kinase")),
+    column(4, plotOutput("kinase_network"))
+  ),
+
+  hr(),
+
+  # Row with static heatmap
+  fluidRow(plotly::plotlyOutput("heatmap_kinase")),
+
+  hr(),
+
+  # Table visualization
+  DT::dataTableOutput("kinase_table")
+
 )
