@@ -41,8 +41,11 @@ observeEvent({
                 input$example_data == T | !is.null(input$upload_expr))
     toggleState("an_progeny",
                 input$example_data == T | !is.null(input$upload_expr))
-    toggleState("run_carnival",
+    toggleState("an_carnival",
                 input$example_data == T | !is.null(input$upload_expr))
+    toggleState("an_kinact",
+                input$example_data == T | !is.null(input$upload_expr))
+    
   })
 
 # jump to visualise results
@@ -56,9 +59,14 @@ observeEvent(input$an_progeny, {
                     selected = "PROGENy")
 })
 
-observeEvent(input$run_carnival, {
+observeEvent(input$an_carnival, {
   updateTabsetPanel(session, inputId = "menu",
                     selected = "CARNIVAL")
+})
+
+observeEvent(input$an_kinact, {
+  updateTabsetPanel(session, inputId = "menu",
+                    selected = "KinAct")
 })
 
 #get path for CARNIVAL solver
@@ -80,6 +88,3 @@ output$select_sample_carnival = renderUI({
                 selected = choices[1])
   }
 })
-
-
-
