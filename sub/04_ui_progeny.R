@@ -33,7 +33,7 @@ tabPanel(
   hr(),
   
   # Row with static heatmap
-  fluidRow(plotOutput("heatmap_progeny")),
+  fluidRow(plotly::plotlyOutput("heatmap_progeny")),
   
   hr(),
   

@@ -206,9 +206,8 @@ output$tf_network = renderPlot({
   print(network_tf_reactive())
 })
 
-
 # Heatmap of samples vs TFs
-output$heatmap_dorothea = renderPlot({
+output$heatmap_dorothea = plotly::renderPlotly({
   if(!is.null(D())){
     D() %>% t() %>% data.frame() %>%
       heatmap_scores()

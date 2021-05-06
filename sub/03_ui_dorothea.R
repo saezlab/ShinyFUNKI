@@ -40,7 +40,7 @@ tabPanel(
   hr(),
   
   # Row with static heatmap
-  fluidRow(plotOutput("heatmap_dorothea")),
+  fluidRow(plotly::plotlyOutput("heatmap_dorothea")),
   
   hr(),
   

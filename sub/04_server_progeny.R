@@ -104,7 +104,7 @@ scatter_reactive = reactive({
 })
 
 # Render Tables -----------------------------------------------------------
-# TF-activities
+# Progent-activities
 output$progeny_table = DT::renderDataTable({
   
   if( !is.null(P()) ){
@@ -141,7 +141,7 @@ output$scatter = renderPlot({
 })
 
 # Heatmap for all samples and pathways
-output$heatmap_progeny = renderPlot({
+output$heatmap_progeny = plotly::renderPlotly({
   P() %>%
     heatmap_scores()
 })
