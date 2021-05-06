@@ -26,6 +26,9 @@ plan(multisession)
 enableBookmarking(store = "server")
 options(shiny.maxRequestSize=30*1024^2)
 
+# Load models
+kinact_regulon_human = readRDS("data/models/kinact_regulon_human.rds")
+
 # load examples
 # ppomics = read_csv("data/examples/phospho_clean.csv") 
 # carnival_result = readRDS("data/examples/carnival_result_celline_SIDM00194.rds")
@@ -365,7 +368,34 @@ calculate_all_paths <- function(carnival_result){
 
 
 # PLOTS -------------------------------------------------------------
-
+heatmap_scores = function(df) {
+  paletteLength = 100
+  myColor <-
+    colorRampPalette(c("#99004C", "whitesmoke", "#0859A2"))(paletteLength)
+  
+  # Breaks <- c(
+  #   seq(min(as.vector(df)), 0,
+  #       length.out = ceiling(paletteLength / 2) + 1),
+  #   seq(
+  #     max(as.vector(df)) / paletteLength,
+  #     max(as.vector(df)),
+  #     length.out = floor(paletteLength / 2)
+  #   )
+  # )
+  # 
+  # pheatmap(
+  #   df,
+  #   fontsize = 14,
+  #   fontsize_row = 10,
+  #   fontsize_col = 10,
+  #   color = myColor,
+  #   breaks = Breaks,
+  #   angle_col = 45,
+  #   treeheight_col = 0,
+  #   border_color = NA
+  # )
+  heatmaply::heatmaply(df, colors = myColor)
+}
 # Dorothea ----------------------------------------------------------
 barplot_nes_dorothea = function(df, smpl, nHits) {
   df = df[, c("GeneID", smpl)] %>%
@@ -464,33 +494,6 @@ plot_network = function(network, nodes, title) {
 }
 
 # Progeny -----------------------------------------------------------
-heatmap_scores = function(df) {
-  paletteLength = 100
-  myColor <-
-    colorRampPalette(c("#99004C", "whitesmoke", "#0859A2"))(paletteLength)
-  
-  progenyBreaks <- c(
-    seq(min(as.vector(df)), 0,
-        length.out = ceiling(paletteLength / 2) + 1),
-    seq(
-      max(as.vector(df)) / paletteLength,
-      max(as.vector(df)),
-      length.out = floor(paletteLength / 2)
-    )
-  )
-  
-  pheatmap(
-    df,
-    fontsize = 14,
-    fontsize_row = 10,
-    fontsize_col = 10,
-    color = myColor,
-    breaks = progenyBreaks,
-    angle_col = 45,
-    treeheight_col = 0,
-    border_color = NA
-  )
-}
 
 barplot_nes_progeny = function(df, smpl) {
   df = df[, c("pathways", smpl)] %>%
@@ -685,46 +688,46 @@ volcano_pea <- function(pea, nodAtt, threshold_adjpval = 0.05, n_paths = 10, n_g
 }
 
 # KinAct ---------------------------------------------------
-plot_lollipop = function(df, top_n_hits, var, var_label) {
-  var = enquo(var)
-  title = paste("Contrast:", unique(df$contrast))
-  df %>% 
-    arrange(activity) %>%
-    mutate(!!var := as_factor(!!var),
-           effect = factor(sign(activity)),
-           abs_activity = abs(activity)) %>%
-    group_by(effect) %>%
-    top_n(top_n_hits, abs_activity) %>%
-    ungroup() %>%
-    ggplot(aes(x=!!var, y=activity, color=effect)) +
-    geom_segment(aes(x=!!var, xend=!!var, y=0, yend=activity), color="grey") +
-    geom_point(size=4) +
-    coord_flip() +
-    theme_light() +
-    theme(
-      panel.grid.major.y = element_blank(),
-      panel.border = element_blank(),
-      axis.ticks.y = element_blank()
-    ) +
-    labs(x = var_label, y="Activity (z-score)") +
-    scale_color_manual(values = rwth_color(c("magenta", "green"))) +
-    theme(legend.position = "none") +
-    theme(aspect.ratio = c(1)) + 
-    ggtitle(title)
-}
-
-plot_heatmap = function(df, var="tf") {
-  mat = df %>%
-    select(!!var, contrast, activity) %>% 
-    spread(contrast, activity) %>%
-    data.frame(row.names = var, check.names = F)
-  
-  if (ncol(mat) > 1) {
-    pheatmap(mat, show_rownames = F)
-  } else if (ncol(mat) == 1) {
-    pheatmap(mat, cluster_rows = F, cluster_cols = F, show_rownames = F)
-  }
-}
+# plot_lollipop = function(df, top_n_hits, var, var_label) {
+#   var = enquo(var)
+#   title = paste("Contrast:", unique(df$contrast))
+#   df %>% 
+#     arrange(activity) %>%
+#     mutate(!!var := as_factor(!!var),
+#            effect = factor(sign(activity)),
+#            abs_activity = abs(activity)) %>%
+#     group_by(effect) %>%
+#     top_n(top_n_hits, abs_activity) %>%
+#     ungroup() %>%
+#     ggplot(aes(x=!!var, y=activity, color=effect)) +
+#     geom_segment(aes(x=!!var, xend=!!var, y=0, yend=activity), color="grey") +
+#     geom_point(size=4) +
+#     coord_flip() +
+#     theme_light() +
+#     theme(
+#       panel.grid.major.y = element_blank(),
+#       panel.border = element_blank(),
+#       axis.ticks.y = element_blank()
+#     ) +
+#     labs(x = var_label, y="Activity (z-score)") +
+#     scale_color_manual(values = rwth_color(c("magenta", "green"))) +
+#     theme(legend.position = "none") +
+#     theme(aspect.ratio = c(1)) + 
+#     ggtitle(title)
+# }
+# 
+# plot_heatmap = function(df, var="tf") {
+#   mat = df %>%
+#     select(!!var, contrast, activity) %>% 
+#     spread(contrast, activity) %>%
+#     data.frame(row.names = var, check.names = F)
+#   
+#   if (ncol(mat) > 1) {
+#     pheatmap(mat, show_rownames = F)
+#   } else if (ncol(mat) == 1) {
+#     pheatmap(mat, cluster_rows = F, cluster_cols = F, show_rownames = F)
+#   }
+# }
 
 # support functions ---------------------------------------------------
 #reverse function to allow a flip in the coord and be able to print the values in log scale
@@ -737,31 +740,31 @@ reverselog_trans <- function(base = exp(1)) {
 }
 
 #get subset to add labels to
-get_labels <- function(df, nlabel, npaths, threshold){
-  pathways = df %>%
-    dplyr::select(pathway, AdjPvalu) %>%
-    unique.data.frame() %>%
-    dplyr::filter(AdjPvalu <= threshold) %>%
-    dplyr::arrange(AdjPvalu) %>%
-    dplyr::pull(var = pathway)
-  
-  if(length(pathways) > npaths){
-    pathways = pathways[1:npaths]
-  }  
-  
-  aux_up = df %>% 
-    dplyr::filter(AvgAct > 0, pathway %in% pathways) %>% 
-    dplyr::group_by(pathway) %>% 
-    dplyr::arrange(AdjPvalu, -AvgAct) %>%
-    dplyr::slice(1:nlabel)
-  
-  aux_dwn = df %>% 
-    dplyr::filter(AvgAct < 0, pathway %in% pathways) %>% 
-    dplyr::group_by(pathway) %>% 
-    dplyr::arrange(AdjPvalu, AvgAct) %>%
-    dplyr::slice(1:nlabel)
-  
-  lbls = rbind.data.frame(aux_up, aux_dwn)
-  
-  return(lbls)
-}
+# get_labels <- function(df, nlabel, npaths, threshold){
+#   pathways = df %>%
+#     dplyr::select(pathway, AdjPvalu) %>%
+#     unique.data.frame() %>%
+#     dplyr::filter(AdjPvalu <= threshold) %>%
+#     dplyr::arrange(AdjPvalu) %>%
+#     dplyr::pull(var = pathway)
+#   
+#   if(length(pathways) > npaths){
+#     pathways = pathways[1:npaths]
+#   }  
+#   
+#   aux_up = df %>% 
+#     dplyr::filter(AvgAct > 0, pathway %in% pathways) %>% 
+#     dplyr::group_by(pathway) %>% 
+#     dplyr::arrange(AdjPvalu, -AvgAct) %>%
+#     dplyr::slice(1:nlabel)
+#   
+#   aux_dwn = df %>% 
+#     dplyr::filter(AvgAct < 0, pathway %in% pathways) %>% 
+#     dplyr::group_by(pathway) %>% 
+#     dplyr::arrange(AdjPvalu, AvgAct) %>%
+#     dplyr::slice(1:nlabel)
+#   
+#   lbls = rbind.data.frame(aux_up, aux_dwn)
+#   
+#   return(lbls)
+# }
