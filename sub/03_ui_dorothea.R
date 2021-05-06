@@ -45,7 +45,6 @@ tabPanel(
   hr(),
   
   # Table visualization
-  DT::dataTableOutput("dorothea_table"),
-  hr()
+  DT::dataTableOutput("dorothea_table")
 )
     
