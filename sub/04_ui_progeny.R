@@ -38,8 +38,6 @@ tabPanel(
   hr(),
   
   # Table visualization
-  DT::dataTableOutput("progeny_table"),
-  
-  hr()
+  DT::dataTableOutput("progeny_table")
   
 )

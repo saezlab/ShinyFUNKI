@@ -27,12 +27,11 @@ enableBookmarking(store = "server")
 options(shiny.maxRequestSize=30*1024^2)
 
 # load examples
-kinact_regulon_human = readRDS("data/models/kinact_regulon_human.rds")
-ppomics = read_csv("data/examples/phospho_clean.csv") 
+# ppomics = read_csv("data/examples/phospho_clean.csv") 
 # carnival_result = readRDS("data/examples/carnival_result_celline_SIDM00194.rds")
 # carnival_result$nodesAttributes = as.data.frame(carnival_result$nodesAttributes)
 # carnival_result$weightedSIF = as.data.frame(carnival_result$weightedSIF)
-# # carnival_result$nodesAttributes = carnival_result$nodesAttributes %>%
+# carnival_result$nodesAttributes = carnival_result$nodesAttributes %>%
 #   dplyr::filter(Node %in%union(carnival_result$weightedSIF$Node1,carnival_result$weightedSIF$Node2))
 
 
@@ -85,6 +84,22 @@ run_dorothea <- function(dorothea_matrix, organism = "Human", confidence_level, 
                                                          nes = TRUE))
   
   return(activity_scores)
+}
+
+run_kinact <- function(data, organism = "Human", minsize = 5, method = 'none', ...){
+  # based on organism, we load the correct dataset
+    kinact_regulon_human = readRDS("data/models/kinact_regulon_human.rds")
+    
+  #run viper
+  kinase_scores <- dorothea::run_viper(data, kinact_regulon_human,
+                                         options =  list(minsize = minsize,
+                                                         method = method,
+                                                         eset.filter = FALSE,
+                                                         cores = 1,
+                                                         verbose = FALSE, 
+                                                         nes = TRUE))
+  
+  return(kinase_scores)
 }
 
 get_network <- function(net_type = "gene", complx = T){
