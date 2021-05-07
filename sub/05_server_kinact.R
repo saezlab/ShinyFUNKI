@@ -31,12 +31,12 @@ output$select_kinase = renderUI({
       data.frame() %>%
       tibble::rownames_to_column(var = "Kinase") %>%
       dplyr::select(Kinase, !!as.name(input$select_contrast_kinact)) %>%
-      dplyr::filter(!!as.name(input$select_contrast) == max(abs(!!as.name(input$select_contrast_kinact)))) %>%
+      dplyr::filter(!!as.name(input$select_contrast_kinact) == max(abs(!!as.name(input$select_contrast_kinact)))) %>%
       dplyr::select(Kinase) %>%
       dplyr::pull()
     
     pickerInput(
-      inputId = "select_tf",
+      inputId = "select_kinase",
       label = "Select Kinase",
       choices = choices,
       options = list("live-search" = TRUE),
@@ -53,7 +53,7 @@ output$select_top_targets = renderUI({
     targets = kinact_regulon_human %>%
       dplyr::filter(kinase == input$select_kinase) %>%
       dplyr::select(target) %>%
-      dplyr::filter(target %in% rownames(K())) %>%
+      dplyr::filter(target %in% rownames(expr())) %>%
       nrow()
     
     sliderInput(
@@ -84,7 +84,7 @@ output$select_top_kinases = renderUI({
 
 # Bar plot with the TFs for a condition---------------------------------------------------
 barplot_nes_reactive_kinact = reactive ({
-  if (!is.null(input$select_contrast) &
+  if (!is.null(input$select_contrast_kinact) &
       !is.null(input$select_top_kinases)) {
     p <- K() %>%
       as.data.frame() %>%
@@ -109,57 +109,15 @@ network_kinase_reactive = reactive({
   
   if (!is.null(input$select_kinase) &
       !is.null(input$select_contrast_kinact)) {
-    aux = kinact_regulon_human %>%
-      dplyr::filter(kinase == input$select_kinase)
-    
-    nodes = merge.data.frame(
-      aux %>%
-        dplyr::select(target),
-      K() %>%
-        as.data.frame() %>%
-        dplyr::select(input$select_contrast_kinact) %>%
-        tibble::rownames_to_column("target"),
-      by = "target"
-    )
-    
-    nodes = nodes[order(abs(nodes[, input$select_contrast_kinact]), decreasing = T), ]
-    
-    if (input$select_top_targets <= nrow(nodes)) {
-      nodes = nodes[1:input$select_top_targets, ]
-    }
-    
-    nodes = tibble(
-      rbind.data.frame(
-        nodes,
-        K() %>%
-          data.frame() %>%
-          tibble::rownames_to_column("target") %>%
-          dplyr::filter(target == input$select_kinase) %>%
-          dplyr::select(target, input$select_contrast_kinact)
-      )
-    )
-    
-    nodes$regulation = nodes[, input$select_contrast_kinact]
-    
-    nodes = nodes %>%
-      mutate(
-        regulation = dplyr::case_when(
-          regulation >= 0 ~ "upregulated",
-          regulation < 0 ~ "downregulated"
-        )
-      )
-    
-    gtitle = paste0("Sample/Contrast: ",
-                    input$select_contrast_kinact,
-                    "; Kinase: ",
-                    input$select_kinase)
     
     plot_network(
-      network = aux %>% dplyr::select(tf, mor, target),
-      nodes = nodes,
-      title = gtitle
+      data = expr(), 
+      footprint_result = K(),
+      regulon = kinact_regulon_human,
+      sample = input$select_contrast_kinact,
+      selected_hub = input$select_kinase,
+      number_targets = input$select_top_targets
     )
-    
   }
   
 })
@@ -177,12 +135,12 @@ output$kinase_bar = plotly::renderPlotly({
 })
 
 # Network of a TF with it's targets
-output$kinase_network = renderPlot({
-  print(barplot_kinase_reactive())
+output$kinase_network = renderVisNetwork({
+  network_kinase_reactive()
 })
 
 # Heatmap of samples vs TFs
-output$heatmap_kinase = renderPlot({
+output$heatmap_kinase =  plotly::renderPlotly({
   if(!is.null(K())){
     K() %>% t() %>% data.frame() %>%
       heatmap_scores()

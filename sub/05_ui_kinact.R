@@ -34,7 +34,7 @@ tabPanel(
   fluidRow(
     column(4, plotly::plotlyOutput("kinase_bar")),
     column(4, plotly::plotlyOutput("barplot_nes_kinase")),
-    column(4, plotOutput("kinase_network"))
+    column(4, visNetworkOutput("kinase_network"))
   ),
 
   hr(),
