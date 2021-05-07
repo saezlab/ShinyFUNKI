@@ -62,7 +62,7 @@ run_progeny <- function(data, organism = "Human", top = 100, perm = 100, ...){
   return(progeny_scores)
 }
 
-run_dorothea <- function(dorothea_matrix, organism = "Human", confidence_level, minsize = 5, method = 'none', ...){
+run_dorothea <- function(dorothea_matrix, organism = "Human", confidence_level = c("A", "B", "C"), minsize = 5, method = 'none', ...){
   # based on organism, we load the correct dataset
   if(organism == "Human"){
     
@@ -91,7 +91,8 @@ run_dorothea <- function(dorothea_matrix, organism = "Human", confidence_level, 
 
 run_kinact <- function(data, organism = "Human", minsize = 5, method = 'none', ...){
   # based on organism, we load the correct dataset
-    kinact_regulon_human = readRDS("data/models/kinact_regulon_human.rds")
+    kinact_regulon_human = readRDS("data/models/kinact_regulon_human.rds") %>%
+      dplyr::rename(tf = kinase)
     
   #run viper
   kinase_scores <- dorothea::run_viper(data, kinact_regulon_human,
@@ -366,37 +367,9 @@ calculate_all_paths <- function(carnival_result){
   return(paths)
 }
 
-
 # PLOTS -------------------------------------------------------------
-heatmap_scores = function(df) {
-  paletteLength = 100
-  myColor <-
-    colorRampPalette(c("#99004C", "whitesmoke", "#0859A2"))(paletteLength)
-  
-  # Breaks <- c(
-  #   seq(min(as.vector(df)), 0,
-  #       length.out = ceiling(paletteLength / 2) + 1),
-  #   seq(
-  #     max(as.vector(df)) / paletteLength,
-  #     max(as.vector(df)),
-  #     length.out = floor(paletteLength / 2)
-  #   )
-  # )
-  # 
-  # pheatmap(
-  #   df,
-  #   fontsize = 14,
-  #   fontsize_row = 10,
-  #   fontsize_col = 10,
-  #   color = myColor,
-  #   breaks = Breaks,
-  #   angle_col = 45,
-  #   treeheight_col = 0,
-  #   border_color = NA
-  # )
-  heatmaply::heatmaply(df, colors = myColor)
-}
-# Dorothea ----------------------------------------------------------
+
+# Dorothea and KinAct ----------------------------------------------------------
 barplot_nes_dorothea = function(df, smpl, nHits) {
   df = df[, c("GeneID", smpl)] %>%
     dplyr::rename(NES = smpl) %>%
@@ -460,37 +433,74 @@ barplot_tf = function(df, selTF) {
   
 }
 
-plot_network = function(network, nodes, title) {
-  edges = network %>%
-    dplyr::filter(target %in% unique(nodes$target))
-  colnames(edges) = c("from", "sign", "to")
+plot_network = function(data, footprint_result, regulon, sample, selected_hub, number_targets){
+  colnames(regulon)[1] = "hub"
   
-  labels_edge = c("-1" = "inhibition", "1" = "activation")
+  #select only targets of the hub
+  targets_of_hub = regulon %>% 
+    dplyr::filter(hub == selected_hub) %>%
+    dplyr::pull(target) %>%
+    unique()
   
-  tbl_graph(nodes = nodes, edges = edges) %>%
-    ggraph(layout = "nicely") +
-    geom_edge_link(arrow = arrow(), aes(edge_colour = as.factor(sign))) +
-    geom_node_point(aes(color = regulation), size = 10, alpha = 0.7) +
-    geom_node_text(aes(label = target), vjust = 0.4) + ##colour = "#C8D1E0"
-    theme_graph() +
-    scale_color_manual(
-      name = "",
-      values = c("downregulated" = "#99004C",
-                 "upregulated" = "#0859A2"),
-      drop = F
-    ) +
-    scale_edge_color_manual(
-      name = "Regulation",
-      values = c("-1" = "#99004C",
-                 "1" = "#0859A2"),
-      breaks = unique(edges$sign),
-      labels = labels_edge[names(labels_edge) %in% unique(edges$sign)],
-      drop = F
-    ) +
-    scale_shape_manual(values = c(16, 15)) +
-    theme(aspect.ratio = c(1),
-          plot.title = element_text(size = 14, face = "plain")) +
-    ggtitle(title)
+  # the activity of the hub from the footprint result
+  hub_activity = footprint_result %>%
+    as.data.frame() %>%
+    tibble::rownames_to_column(var = "hub") %>%
+    dplyr::filter(hub == selected_hub) %>%
+    dplyr::pull(!!as.name(sample))
+  
+  # get the activity of the targets from the data 
+  nodes = data %>%
+    tibble::rownames_to_column(var = "target") %>%
+    dplyr::filter(target %in% targets_of_hub) %>%
+    dplyr::select(target, !!as.name(sample)) %>%
+    dplyr::rename(id = target) %>%
+    dplyr::arrange(desc(abs(!!as.name(sample)))) %>%
+    dplyr::slice(1:number_targets) %>%
+    rbind(c(selected_hub, hub_activity)) %>%
+    dplyr::mutate(
+      color = dplyr::case_when(
+        !!as.name(sample) >= 0 ~ "#0859A2",
+        !!as.name(sample) < 0 ~ "#99004C",
+      )) %>%
+    dplyr::mutate(label = id)
+  
+  # get the network from the regulon
+  edges = regulon %>%
+    dplyr::filter(target %in% nodes$id & hub == selected_hub) %>%
+    dplyr::select(hub, mor, target) %>%
+    dplyr::rename(from = hub, sign = mor, to = target) %>%
+    dplyr::mutate(color = dplyr::case_when(sign == 1 ~ '#0578F0',
+                                           sign == -1 ~ '#F20404',
+                                           sign == 0 ~ '#777777'))
+  
+  # network aesthetics
+  title = paste0("Sample/Contrast: ",
+                 sample,
+                 "; Hub: ",
+                 selected_hub)
+  
+  # legends
+  ledges <- data.frame(color = c("#0578F0", "#F20404"),
+                       label = c("activation", "inhibition"), 
+                       arrows = c("to", "to"),
+                       font.align = "top")
+  
+  lnodes <- data.frame(label = c("Upregulated", "Downregulated"),
+                       color = c("#0859A2", "#99004C"),
+                       shape = c("circle", "circle"))
+  # network  
+  visNetwork::visNetwork(nodes, edges, mmain = title) %>% 
+    visEdges(arrows = "to")
+}
+
+heatmap_scores = function(df) {
+  paletteLength = 100
+  myColor <-
+    colorRampPalette(c("#99004C", "whitesmoke", "#0859A2"))(paletteLength)
+  
+  if(nrow(df) < 2){dendrogram = "column"} else{dendrogram = "both"}
+  heatmaply::heatmaply(df, colors = myColor, dendrogram = dendrogram)
 }
 
 # Progeny -----------------------------------------------------------
@@ -687,48 +697,6 @@ volcano_pea <- function(pea, nodAtt, threshold_adjpval = 0.05, n_paths = 10, n_g
   
 }
 
-# KinAct ---------------------------------------------------
-# plot_lollipop = function(df, top_n_hits, var, var_label) {
-#   var = enquo(var)
-#   title = paste("Contrast:", unique(df$contrast))
-#   df %>% 
-#     arrange(activity) %>%
-#     mutate(!!var := as_factor(!!var),
-#            effect = factor(sign(activity)),
-#            abs_activity = abs(activity)) %>%
-#     group_by(effect) %>%
-#     top_n(top_n_hits, abs_activity) %>%
-#     ungroup() %>%
-#     ggplot(aes(x=!!var, y=activity, color=effect)) +
-#     geom_segment(aes(x=!!var, xend=!!var, y=0, yend=activity), color="grey") +
-#     geom_point(size=4) +
-#     coord_flip() +
-#     theme_light() +
-#     theme(
-#       panel.grid.major.y = element_blank(),
-#       panel.border = element_blank(),
-#       axis.ticks.y = element_blank()
-#     ) +
-#     labs(x = var_label, y="Activity (z-score)") +
-#     scale_color_manual(values = rwth_color(c("magenta", "green"))) +
-#     theme(legend.position = "none") +
-#     theme(aspect.ratio = c(1)) + 
-#     ggtitle(title)
-# }
-# 
-# plot_heatmap = function(df, var="tf") {
-#   mat = df %>%
-#     select(!!var, contrast, activity) %>% 
-#     spread(contrast, activity) %>%
-#     data.frame(row.names = var, check.names = F)
-#   
-#   if (ncol(mat) > 1) {
-#     pheatmap(mat, show_rownames = F)
-#   } else if (ncol(mat) == 1) {
-#     pheatmap(mat, cluster_rows = F, cluster_cols = F, show_rownames = F)
-#   }
-# }
-
 # support functions ---------------------------------------------------
 #reverse function to allow a flip in the coord and be able to print the values in log scale
 reverselog_trans <- function(base = exp(1)) {
@@ -739,32 +707,3 @@ reverselog_trans <- function(base = exp(1)) {
             domain = c(1e-100, Inf))
 }
 
-#get subset to add labels to
-# get_labels <- function(df, nlabel, npaths, threshold){
-#   pathways = df %>%
-#     dplyr::select(pathway, AdjPvalu) %>%
-#     unique.data.frame() %>%
-#     dplyr::filter(AdjPvalu <= threshold) %>%
-#     dplyr::arrange(AdjPvalu) %>%
-#     dplyr::pull(var = pathway)
-#   
-#   if(length(pathways) > npaths){
-#     pathways = pathways[1:npaths]
-#   }  
-#   
-#   aux_up = df %>% 
-#     dplyr::filter(AvgAct > 0, pathway %in% pathways) %>% 
-#     dplyr::group_by(pathway) %>% 
-#     dplyr::arrange(AdjPvalu, -AvgAct) %>%
-#     dplyr::slice(1:nlabel)
-#   
-#   aux_dwn = df %>% 
-#     dplyr::filter(AvgAct < 0, pathway %in% pathways) %>% 
-#     dplyr::group_by(pathway) %>% 
-#     dplyr::arrange(AdjPvalu, AvgAct) %>%
-#     dplyr::slice(1:nlabel)
-#   
-#   lbls = rbind.data.frame(aux_up, aux_dwn)
-#   
-#   return(lbls)
-# }
