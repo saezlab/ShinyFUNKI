@@ -2,7 +2,7 @@
 
 # CARNIVAL
 C = eventReactive({
-  input$run_carnival
+  input$an_carnival
 }, {
   
   if (!is.null(input$solver)) {
@@ -77,7 +77,7 @@ PEA = eventReactive({
 })
 
 #objects for visualisation
-edges <- reactive(if (!all(is.na(C()))){
+edges <- reactive(if (!all(is.na( C() ))){
   # edges and node information for visnetwork
   edges <- C()$weightedSIF %>%
     dplyr::rename(from = Node1, to = Node2, value = Weight) %>%
