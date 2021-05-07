@@ -133,59 +133,19 @@ network_tf_reactive = reactive({
   if (!is.null(input$select_tf) &
       !is.null(input$select_contrast)) {
     aux = aux %>%
-      dplyr::filter(tf == input$select_tf &
-                      confidence %in% input$selected_conf_level)
+      dplyr::filter(confidence %in% input$selected_conf_level)
     
-    nodes = merge.data.frame(
-      aux %>%
-        dplyr::select(target),
-      D() %>%
-      as.data.frame() %>%
-        dplyr::select(input$select_contrast) %>%
-        tibble::rownames_to_column("target"),
-      by = "target"
-    )
-    
-    nodes = nodes[order(abs(nodes[, input$select_contrast]), decreasing = T), ]
-    
-    if (input$select_top_n_labels <= nrow(nodes)) {
-      nodes = nodes[1:input$select_top_n_labels, ]
-    }
-    
-    nodes = tibble(
-      rbind.data.frame(
-        nodes,
-        D() %>%
-          data.frame() %>%
-          tibble::rownames_to_column("target") %>%
-          dplyr::filter(target == input$select_tf) %>%
-          dplyr::select(target, input$select_contrast)
-      )
-    )
-    
-    nodes$regulation = nodes[, input$select_contrast]
-    
-    nodes = nodes %>%
-      mutate(
-        regulation = dplyr::case_when(
-          regulation >= 0 ~ "upregulated",
-          regulation < 0 ~ "downregulated"
-        )
-      )
-    
-    gtitle = paste0("Sample/Contrast: ",
-                    input$select_contrast,
-                    "; TF: ",
-                    input$select_tf)
     
     plot_network(
-      network = aux %>% dplyr::select(tf, mor, target),
-      nodes = nodes,
-      title = gtitle
+      data = expr(), 
+      footprint_result = D(),
+      regulon = aux,
+      sample = input$select_contrast,
+      selected_hub = input$select_tf,
+      number_targets = input$select_top_n_labels
     )
     
   }
-  
   
 })
 
@@ -202,8 +162,8 @@ output$tf_bar = plotly::renderPlotly({
 })
 
 # Network of a TF with it's targets
-output$tf_network = renderPlot({
-  print(network_tf_reactive())
+output$tf_network = renderVisNetwork({
+  network_tf_reactive()
 })
 
 # Heatmap of samples vs TFs
