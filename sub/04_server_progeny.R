@@ -142,8 +142,11 @@ output$scatter = renderPlot({
 
 # Heatmap for all samples and pathways
 output$heatmap_progeny = plotly::renderPlotly({
-  P() %>%
-    heatmap_scores()
+  if(!is.null(P())){
+    P() %>%
+      heatmap_scores()
+  }
+
 })
 
 # Download Handler --------------------------------------------------------
