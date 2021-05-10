@@ -54,7 +54,7 @@ tabPanel(
            
            # select example data
            materialSwitch(inputId = "example_data", 
-                          label = "Load example", 
+                          label = "Load Expression example", 
                           value = FALSE,
                           status = "default",
                           width = "100%"),
@@ -64,7 +64,12 @@ tabPanel(
                target = "_blank"),
              a("(GSE20948)",
                href = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE20948",
-               target = "_blank"))
+               target = "_blank")),
+           materialSwitch(inputId = "phospho_data", 
+                          label = "Load Phosphodata example", 
+                          value = FALSE,
+                          status = "default",
+                          width = "100%")
     ),
     column(8,
            DT::dataTableOutput("expr")  

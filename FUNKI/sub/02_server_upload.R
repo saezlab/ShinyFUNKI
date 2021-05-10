@@ -1,13 +1,19 @@
 # Show expression data 
 expr = reactive({
-  if (input$example_data) {
+  if (any(input$example_data | input$phospho_data)){
     shinyjs::disable("upload_expr")
     shinyjs::disable("select_organism")
-    expDATA = read_csv("data/examples/example_data.csv") %>% 
-      dplyr::select(contrast, gene, logFC) %>% 
-      tidyr::pivot_wider(names_from = contrast, values_from = logFC) %>%
-      data.frame() %>%
-      tibble::column_to_rownames(var = "gene")
+    if(input$example_data){
+      expDATA = read_csv("data/examples/example_data.csv") %>% 
+        dplyr::select(contrast, gene, logFC) %>% 
+        tidyr::pivot_wider(names_from = contrast, values_from = logFC) %>%
+        data.frame() %>%
+        tibble::column_to_rownames(var = "gene")
+      
+    }
+    if(input$phospho_data){
+      expDATA = read.csv("data/examples/phospho_data.csv", row.names = 1, header = TRUE)
+    }
   } else {
     shinyjs::enable("upload_expr")
     shinyjs::enable("select_organism")
@@ -32,7 +38,8 @@ output$expr = DT::renderDataTable({
 # if a file is uploaded, the calculation button in enabled
 observeEvent({
   input$upload_expr
-  input$example_data}, {
+  input$example_data
+  input$phospho_data}, {
     toggleState("select_organism",
                 input$example_data == T | !is.null(input$upload_expr))
     toggleState("upload_expr",
@@ -44,7 +51,7 @@ observeEvent({
     toggleState("an_carnival",
                 input$example_data == T | !is.null(input$upload_expr))
     toggleState("an_kinact",
-                input$example_data == T | !is.null(input$upload_expr))
+                input$phospho_data == T | !is.null(input$upload_expr))
     
   })
 
