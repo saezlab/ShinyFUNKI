@@ -707,3 +707,33 @@ reverselog_trans <- function(base = exp(1)) {
             domain = c(1e-100, Inf))
 }
 
+#get subset to add labels to
+get_labels <- function(df, nlabel, npaths, threshold){
+  pathways = df %>%
+    dplyr::select(pathway, AdjPvalu) %>%
+    unique.data.frame() %>%
+    dplyr::filter(AdjPvalu <= threshold) %>%
+    dplyr::arrange(AdjPvalu) %>%
+    dplyr::pull(var = pathway)
+  
+  if(length(pathways) > npaths){
+    pathways = pathways[1:npaths]
+  }  
+  
+  aux_up = df %>% 
+    dplyr::filter(AvgAct > 0, pathway %in% pathways) %>% 
+    dplyr::group_by(pathway) %>% 
+    dplyr::arrange(AdjPvalu, -AvgAct) %>%
+    dplyr::slice(1:nlabel)
+  
+  aux_dwn = df %>% 
+    dplyr::filter(AvgAct < 0, pathway %in% pathways) %>% 
+    dplyr::group_by(pathway) %>% 
+    dplyr::arrange(AdjPvalu, AvgAct) %>%
+    dplyr::slice(1:nlabel)
+  
+  lbls = rbind.data.frame(aux_up, aux_dwn)
+  
+  return(lbls)
+} 
+
