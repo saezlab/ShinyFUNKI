@@ -250,7 +250,7 @@ observeEvent(input$hierarchical,{
 # enritchment analysis
 
 barplot_pea_reactive = reactive ({
-  if ( !is.null(PEA()) ) {
+  if ( !is.null(PEA()) & input$pea_thresbold != 0) {
     
     p <- PEA()$pea %>%
       barplot_pea(threshold_adjpval = input$pea_thresbold,
