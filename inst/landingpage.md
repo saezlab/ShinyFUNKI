@@ -13,4 +13,5 @@ FUNKI has currently implemented the following approaches
 #### CARNIVAL
 <a href="https://saezlab.github.io/CARNIVAL/" target="_blank">CARNIVAL</a> (CAusal Reasoning for Network identification using Integer VALue programming) is a method for the identification of upstream reguatory signalling pathways from downstream gene expression data. The aim of the CARNIVAL pipeline is to identify a subset of interactions from a prior knowledge network that represent potential regulated pathways linking known or potential targets of perturbation towards active transcription factors derived from expression data.
 
-
+#### KinAct
+<a href="http://saezlab.github.io/kinact/" target="_blank">KinAct</a> is a network linking kinases to phosphorylation sites. In a simmilar way as DoRothEA works, this resource allows the estimation of kinase activities from phosphoproteomics data using prior knowledge about kinase-substrate interactions.

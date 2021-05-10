@@ -1,13 +1,4 @@
 ## Help page of the FUNKI application.
-Dear User,
-
-if your data files are sensitive or confidential we highly encourage you to run this app locally by typing 
-
-```shiny::runGithub("ShinyFUNKI", "saezlab")``` 
-
-in an R session. **Please note that this feature will be enabled as soon as this App is published.**
-
----
 
 ### Upload Data
 
@@ -16,8 +7,7 @@ All tools can be either applied on mouse or human data and require, independentl
 DoRothEA and PROGENy can compute the respective activities for multiple contrast/samples in a single run. However, CARNIVAL only takes the first element of the matrix.
 
 Details of each of the required parameters can be found by clicking in the **?** symbol.
-Click on `Run DoRothEA`, `Run PROGENy` or `Run CARNIVAL`to start the computation.
-
+Click on `Run DoRothEA`, `Run PROGENy`, `Run CARNIVAL` or `Run KinAct` to start the computation.
 
 ---
 
@@ -33,7 +23,7 @@ Click on `Run DoRothEA`, `Run PROGENy` or `Run CARNIVAL`to start the computation
 #### Figures
 * **Bar TF:** The plot shows the activity of the selected TF for all given contrasts.
 * **Bar Sample/Contrast:** The plot shows the top *n* regulated TFs for a given sample/contrast. Sample/contrast and number of shown TFs can be adjusted with corresponding widgets.
-* **Network:** The plot shows the TF-target interactions of the selected TF and the selected sample/contrast in a network. Green nodes indicate that the target is over-expressed and red nodes indicate that the target is down-regulated. The color of the edges represent the effect of the TF on its target (either activation or repression). The number of shown nodes can be changed by the corresponding widget.
+* **Network:** The plot shows the TF-target interactions of the selected TF and the selected sample/contrast in a network. Blue nodes indicate that the target is over-expressed and red nodes indicate that the target is down-regulated. The color of the edges represent the effect of the TF on its target (either activation or repression). The number of shown nodes can be changed by the corresponding widget.
 
 #### Datatables
 Table of TF-activities.
@@ -83,4 +73,28 @@ Table of the geneset/pathway enritchment analysis.
 #### Download
 * **Download EA/Figures**: Download the gene set/pathway enritchment analysis in a comma separated format and the volcano and bar plots that are showed.
 * **Download carnival results** Download CARNIVAL results in and .rds format. The networks is also provided in a .sif format and the nodes attributes in a comma separated format. The last to files can be used to visualize the network in <a href="https://cytoscape.org" target="_blank">Cytoscape</a>.
+
+---
+
+### KinAct
+
+#### Control Widgets
+
+* **Number of Kinases to display:** Show the top *n* activated and inhibited kinases (Default: 25).
+* **Number of targets to display:** Show the top *n* targets of a selected kinase (Default: 5) 
+* **Select Sample/Contrast:** Select contrast of interest.
+* **Select Kinase:** Select kinase of interest. (Default: kinase with the highest activity).
+
+#### Figures
+* **Bar Kinase:** The plot shows the activity of the selected kinase for all given contrasts.
+* **Bar Sample/Contrast:** The plot shows the top *n* regulated kinases for a given sample/contrast. Sample/contrast and number of shown kinases can be adjusted with corresponding widgets.
+* **Network:** The plot shows the interactions of the selected kinases with the phosphosite's targets for the selected sample/contrast in a network. Blue nodes indicate over-expression, and red nodes indicate down-regulation. The color of the edges represent the effect of the kinase on its target (either activation or repression). The number of shown nodes can be changed by the corresponding widget.
+
+#### Datatables
+Table of kinase activities.
+
+#### Download
+* **Download KinAct scores and figures**: Download of kinase activities in comma separated format and the figures that are currently showed.
+
+---
 
