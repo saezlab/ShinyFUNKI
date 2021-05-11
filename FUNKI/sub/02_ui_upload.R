@@ -314,7 +314,7 @@ tabPanel(
                                  inline = TRUE),
                     bsPopover(id = "q2c_solver", 
                               title = "Solver",
-                              content = "Select solver to run the optimization. When cbc/cplex is selected, a path to the execubable file is requiered.",
+                              content = "Select solver to run the optimization. When cbc/cplex is selected, a path to the executable file is requiered.",
                               placement = "right", 
                               trigger = "click", 
                               options = list(container = "body")
