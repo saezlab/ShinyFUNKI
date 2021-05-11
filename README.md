@@ -3,10 +3,46 @@ FUNKI is a multi-omic functional integration and analysis platform. It provides 
 
 ## Installation and use
 
-```shiny::runGitHsub("ShinyFUNKI", "saezlab")``` 
+FUNKI has beed developed to run locally.
+Thus, there are different options to use this server to fit all possible users: 
 
-in an R session. **Please note that this feature will be enabled as soon as this App is published.**
+1. Run FUNKI directly from GitHub
 
+In an R session, run the line below to download and launch FUNKI:
+
+```shiny::runGitHub(repo = "ShinyFUNKI", username = "saezlab", subdir = "FUNKI")``` 
+
+Note: Make sure all required packages are installed beforfehand.
+The ```renv.lock``` lockfile (```renv``` packaged) has recorded the state of this project’s private library.
+It can be used to restore the state of that library as required by calling ```renv::restore()```.
+
+2. Download the repository and run FUNKI
+
+In an R session, run the line below to download and launch FUNKI:
+
+```shiny::runApp()```
+
+As in case 1, all required packages must be installed beforehand.
+The ```renv.lock``` lockfile can be used to resore the library by calling ```renv::restore()```.
+
+3. Create a docker for FUNKI
+
+The docker file is provided to create a docker imagine. 
+
+To build the docker image:
+
+  * Download ```Dockerfile```  and ```FUNKI/renv.lock``` in the directory the imagine is going to be created.
+  * In the console (where the ```Dockerfile``` is located), run: ```docker build -t funki .``` 
+
+This process takes some time (~ 2400s).
+
+To create a container just run:
+
+  * docker ```docker run --rm -p 3838:3838 funki```
+
+And there it is, running on ```localhost:3838```
+
+Note: To use CARNIVAL with *cplex* or *cbc*, the software should be installed within the imagine.
 
 ## Implemented Approaches
 
