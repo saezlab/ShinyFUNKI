@@ -4,16 +4,18 @@ FROM rocker/shiny-verse:latest
 # system libraries of general use
 ## install debian packages
 RUN apt-get update -qq && apt-get -y --no-install-recommends install \
-    curl \
     libxml2-dev \
+    libsqlite3-dev \
+    libpq-dev \
     libssh2-1-dev \
+    unixodbc-dev \
     libcurl4-openssl-dev \
     libssl-dev
 
 ## update system libraries
 RUN apt-get update && \
     apt-get upgrade -y && \
-    apt-get clean 
+    apt-get clean
 
 # copy renv.lock to install dependencies
 COPY renv.lock .
@@ -27,5 +29,4 @@ RUN Rscript -e 'renv::restore()'
 EXPOSE 3838
 
 # run app on container start
-CMD ["R", "-e", "shiny::runGitHub('ShinyFUNKI', 'saezlab', ref = 'develop', subdir = "FUNKI", host = '0.0.0.0', port = 3838)"]
-
+CMD ["R", "-e", "shiny::runGitHub('ShinyFUNKI', 'saezlab', ref = 'master', subdir = 'FUNKI', host = '0.0.0.0', port = 3838)"]
