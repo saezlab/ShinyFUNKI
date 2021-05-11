@@ -7,7 +7,7 @@ ui = function(request) {
     tags$head(includeScript("google-analytics.js")),
     navbarPage(
       id = "menu", title="FUNKI",collapsible=T,
-      footer = column(12, align="center", "FUNKI-App 2021 (version: 0.1)"),
+      footer = column(12, align="center", "FUNKI-App 2021 (v1.0.0-beta)"),
       source("sub/01_ui_welcome.R")$value,
       source("sub/02_ui_upload.R")$value,
       source("sub/03_ui_dorothea.R")$value,
