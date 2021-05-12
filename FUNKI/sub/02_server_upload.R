@@ -39,7 +39,8 @@ output$expr = DT::renderDataTable({
 observeEvent({
   input$upload_expr
   input$example_data
-  input$phospho_data}, {
+  input$phospho_data
+  input$upload_tfs}, {
     toggleState("select_organism",
                 input$example_data == T | !is.null(input$upload_expr))
     toggleState("upload_expr",
