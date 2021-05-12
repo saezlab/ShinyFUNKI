@@ -27,7 +27,7 @@ enableBookmarking(store = "server")
 options(shiny.maxRequestSize=30*1024^2)
 
 # Load models
-kinact_regulon_human = readRDS("data/models/kinact_regulon_human.rds")
+kinact_regulon_human = readRDS("data/models/kinact_regulon_human_symbol.rds")
 
 # load examples
 # ppomics = read_csv("data/examples/phospho_clean.csv") 
