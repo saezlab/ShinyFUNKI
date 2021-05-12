@@ -1,3 +1,6 @@
+#omnipath
+FUNKI/omnipathr-log/
+
 packrat/lib*/
 .Rproj.user
 .Rproj
@@ -43,3 +46,9 @@ rsconnect/
 data/ignore/
 packrat/
 sub/debugging.R
+
+# mac
+.DS_Store
+data/.DS_Store
+sub/.DS_Store
+www/.DS_Store
