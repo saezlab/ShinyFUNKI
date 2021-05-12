@@ -132,7 +132,7 @@ network_tf_reactive = reactive({
   
   if (!is.null(input$select_tf) &
       !is.null(input$select_contrast) &
-      input$select_top_targets > 0) {
+      input$select_top_n_hits > 0) {
     aux = aux %>%
       dplyr::filter(confidence %in% input$selected_conf_level)
     
