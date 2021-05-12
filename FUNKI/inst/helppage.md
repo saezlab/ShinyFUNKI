@@ -2,9 +2,13 @@
 
 ### Upload Data
 
-All tools can be either applied on mouse or human data and require, independently of the omics technology, a gene expression object with HGNC/MGI symbols in rows and samples in columns. The output of a differential expression analysis can also be used.
+DoRothEA, PROGENy and CARNIVAL can be either applied on mouse or human data. 
+Independently of the omics technology, they all require a gene expression object with HGNC/MGI symbols in rows and samples in columns.
+KinAct can only be applied to human data, and it requires a phosphoproteomic object with HGNC/MGI symbols and the phosphorilated site in rows, and samples in columns.
 
-DoRothEA and PROGENy can compute the respective activities for multiple contrast/samples in a single run. However, CARNIVAL only takes the first element of the matrix.
+DoRothEA, KinAct and PROGENy can compute the respective activities for multiple contrast/samples in a single run. 
+However, CARNIVAL is run on the selected sample. 
+For this analysis, the time to find an optimal solution is set to 1h.
 
 Details of each of the required parameters can be found by clicking in the **?** symbol.
 Click on `Run DoRothEA`, `Run PROGENy`, `Run CARNIVAL` or `Run KinAct` to start the computation.
