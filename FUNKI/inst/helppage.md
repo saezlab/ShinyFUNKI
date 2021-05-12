@@ -4,7 +4,7 @@
 
 DoRothEA, PROGENy and CARNIVAL can be either applied on mouse or human data. 
 Independently of the omics technology, they all require a gene expression object with HGNC/MGI symbols in rows and samples in columns.
-KinAct can only be applied to human data, and it requires a phosphoproteomic object with HGNC/MGI symbols and the phosphorilated site in rows, and samples in columns.
+KinAct can only be applied to human data, and it requires a phosphoproteomic object with HGNC symbols and the phosphorilated site in rows, and samples in columns.
 
 DoRothEA, KinAct and PROGENy can compute the respective activities for multiple contrast/samples in a single run. 
 However, CARNIVAL is run on the selected sample. 
