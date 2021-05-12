@@ -108,16 +108,18 @@ barplot_kinase_reactive = reactive({
 network_kinase_reactive = reactive({
   
   if (!is.null(input$select_kinase) &
-      !is.null(input$select_contrast_kinact)) {
-    
-    plot_network(
-      data = expr(), 
-      footprint_result = K(),
-      regulon = kinact_regulon_human,
-      sample = input$select_contrast_kinact,
-      selected_hub = input$select_kinase,
-      number_targets = input$select_top_targets
-    )
+      !is.null(input$select_contrast_kinact) &
+      input$select_top_targets > 0) {
+
+      plot_network(
+        data = expr(), 
+        footprint_result = K(),
+        regulon = kinact_regulon_human,
+        sample = input$select_contrast_kinact,
+        selected_hub = input$select_kinase,
+        number_targets = input$select_top_targets
+      )
+      
   }
   
 })
@@ -184,9 +186,13 @@ output$download_kinact_analysis = downloadHandler(
       paste0("network_", input$select_contrast_kinact, "_", input$select_kinase, ".png")
     )
     
-    ggsave(file.path(fdir, fnames[1]), barplot_nes_reactive_dorothea(), device = "png")
+    ggsave(file.path(fdir, fnames[1]), barplot_nes_reactive_kinact(), device = "png")
     ggsave(file.path(fdir, fnames[2]), barplot_kinase_reactive(), device = "png")
-    ggsave(file.path(fdir, fnames[3]), network_kinase_reactive(), device = "png")
+    
+    visSave(network_kinase_reactive(), "temp.html")
+    webshot::webshot("temp.html", zoom = 2, file = file.path(fdir, fnames[3]))
+    file.remove("temp.html")
+
     write.csv(K(),
               file.path(fdir, "kinasesActivities_nes.csv"),
               quote = F)

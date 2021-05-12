@@ -131,7 +131,8 @@ network_tf_reactive = reactive({
   }
   
   if (!is.null(input$select_tf) &
-      !is.null(input$select_contrast)) {
+      !is.null(input$select_contrast) &
+      input$select_top_targets > 0) {
     aux = aux %>%
       dplyr::filter(confidence %in% input$selected_conf_level)
     
@@ -224,7 +225,11 @@ output$download_dorothea_analysis = downloadHandler(
     
     ggsave(file.path(fdir, fnames[1]), barplot_nes_reactive_dorothea(), device = "png")
     ggsave(file.path(fdir, fnames[2]), barplot_tf_reactive(), device = "png")
-    ggsave(file.path(fdir, fnames[3]), network_tf_reactive(), device = "png")
+    
+    visSave(network_tf_reactive(), "temp.html")
+    webshot::webshot("temp.html", zoom = 2, file = file.path(fdir, fnames[3]))
+    file.remove("temp.html")
+    
     write.csv(D(),
               file.path(fdir, "TFactivities_nes.csv"),
               quote = F)
