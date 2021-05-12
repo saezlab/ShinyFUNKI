@@ -49,7 +49,7 @@ observeEvent({
     toggleState("an_progeny",
                 all(input$example_data == T & input$phospho_data == F) | !is.null(input$upload_expr))
     toggleState("an_carnival",
-                all(input$example_data == T & input$phospho_data == F) | !is.null(input$upload_expr) | input$dorothea == "up")
+                all(input$example_data == T & input$phospho_data == F) | !is.null(input$upload_expr) | !is.null(input$upload_tfs))
     toggleState("an_kinact",
                 all(input$example_data == F & input$phospho_data == T) | !is.null(input$upload_expr))
     
