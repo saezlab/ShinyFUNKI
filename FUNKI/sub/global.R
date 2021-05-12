@@ -30,7 +30,6 @@ options(shiny.maxRequestSize=30*1024^2)
 kinact_regulon_human = readRDS("data/models/kinact_regulon_human_symbol.rds")
 
 # load examples
-# ppomics = read_csv("data/examples/phospho_clean.csv") 
 # carnival_result = readRDS("data/examples/carnival_result_celline_SIDM00194.rds")
 # carnival_result$nodesAttributes = as.data.frame(carnival_result$nodesAttributes)
 # carnival_result$weightedSIF = as.data.frame(carnival_result$weightedSIF)
@@ -392,7 +391,7 @@ barplot_nes_dorothea = function(df, smpl, nHits) {
       axis.title = element_text(face = "bold"),
       axis.text.x = element_text(
         hjust = 1,
-        size = 15,
+        size = 10,
         face = "bold"
       ),
       axis.text.y = element_text(face = "bold")
@@ -420,7 +419,7 @@ barplot_tf = function(df, selTF) {
       axis.title = element_text(face = "bold"),
       axis.text.x = element_text(
         hjust = 1,
-        size = 15,
+        size = 10,
         face = "bold"
       ),
       axis.text.y = element_text(face = "bold")
