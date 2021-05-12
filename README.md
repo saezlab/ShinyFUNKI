@@ -18,7 +18,7 @@ It can be used to restore the state of that library as required by calling ```re
 
 2. Download the repository and run FUNKI
 
-In an R session, run the line below to download and launch FUNKI:
+In an R session, run the line below to launch FUNKI once this repo has been downloaded/cloned:
 
 ```shiny::runApp()```
 
