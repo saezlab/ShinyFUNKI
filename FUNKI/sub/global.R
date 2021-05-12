@@ -384,7 +384,6 @@ barplot_nes_dorothea = function(df, smpl, nHits) {
     scale_fill_gradient2(
       low = "#99004C",
       high = "#0859A2",
-      #"darkblue", "indianred"
       mid = "whitesmoke",
       midpoint = 0
     ) +
@@ -398,7 +397,7 @@ barplot_nes_dorothea = function(df, smpl, nHits) {
       ),
       axis.text.y = element_text(face = "bold")
     ) +
-    ylab("Transcription Factors") +
+    ylab("") +
     xlab("Normalized Enrichment scores (NES)") +
     ggtitle(title)
 }
@@ -429,7 +428,7 @@ barplot_tf = function(df, selTF) {
     scale_fill_manual(values = c("#99004C", "#0859A2"),
                       drop = F) +
     theme(aspect.ratio = c(1)) +
-    ggtitle(paste0("TF: ", selTF))
+    ggtitle(selTF)
   
 }
 
@@ -475,10 +474,7 @@ plot_network = function(data, footprint_result, regulon, sample, selected_hub, n
                                            sign == 0 ~ '#777777'))
   
   # network aesthetics
-  title = paste0("Sample/Contrast: ",
-                 sample,
-                 "; Hub: ",
-                 selected_hub)
+  title = paste0(selected_hub, " for ", sample)
   
   # legends
   ledges <- data.frame(color = c("#0578F0", "#F20404"),
@@ -490,7 +486,7 @@ plot_network = function(data, footprint_result, regulon, sample, selected_hub, n
                        color = c("#0859A2", "#99004C"),
                        shape = c("circle", "circle"))
   # network  
-  visNetwork::visNetwork(nodes, edges, mmain = title) %>% 
+  visNetwork::visNetwork(nodes, edges, main = title) %>% 
     visEdges(arrows = "to")
 }
 
