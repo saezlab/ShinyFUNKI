@@ -45,13 +45,13 @@ observeEvent({
     toggleState("upload_expr",
                 input$example_data == T )
     toggleState("an_dorothea",
-                input$example_data == T | !is.null(input$upload_expr))
+                all(input$example_data == T & input$phospho_data == F) | !is.null(input$upload_expr))
     toggleState("an_progeny",
-                input$example_data == T | !is.null(input$upload_expr))
+                all(input$example_data == T & input$phospho_data == F) | !is.null(input$upload_expr))
     toggleState("an_carnival",
-                input$example_data == T | !is.null(input$upload_expr))
+                all(input$example_data == T & input$phospho_data == F) | !is.null(input$upload_expr))
     toggleState("an_kinact",
-                input$phospho_data == T | !is.null(input$upload_expr))
+                all(input$example_data == F & input$phospho_data == T) | !is.null(input$upload_expr))
     
   })
 

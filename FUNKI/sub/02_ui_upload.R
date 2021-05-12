@@ -53,12 +53,12 @@ tabPanel(
            ),
            
            # select example data
-           materialSwitch(inputId = "example_data", 
-                          label = "Load Expression example", 
+           materialSwitch(inputId = "example_data",
+                          label = "Load Expression example",
                           value = FALSE,
                           status = "default",
                           width = "100%"),
-           p("Example dataset taken from ",
+           p("Expression dataset taken from ",
              a("Blackham et al, J Virol., 2010", 
                href = "https://www.ncbi.nlm.nih.gov/pubmed/20200238",
                target = "_blank"),
@@ -69,7 +69,11 @@ tabPanel(
                           label = "Load Phosphodata example", 
                           value = FALSE,
                           status = "default",
-                          width = "100%")
+                          width = "100%"),
+           p("Phospho dataset taken from ",
+             a("Gonçalves et al, Met Eng, 2018", 
+               href = "https://pubmed.ncbi.nlm.nih.gov/29191787/",
+               target = "_blank"))
     ),
     column(8,
            DT::dataTableOutput("expr")  
