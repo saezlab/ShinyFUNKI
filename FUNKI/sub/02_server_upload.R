@@ -1,22 +1,24 @@
 # Show expression data 
 expr = reactive({
-  if (any(input$example_data | input$phospho_data)){
-    shinyjs::disable("upload_expr")
-    shinyjs::disable("select_organism")
-    if(input$example_data){
+  toggleState("upload_expr", 
+              !input$example_data & !input$phospho_data)
+  toggleState("select_organism", 
+              !input$example_data & !input$phospho_data)
+  toggleState("phospho_data", 
+              !input$example_data)
+  toggleState("example_data", 
+              !input$phospho_data)
+  
+  if(input$example_data){
       expDATA = read_csv("data/examples/example_data.csv") %>% 
         dplyr::select(contrast, gene, logFC) %>% 
         tidyr::pivot_wider(names_from = contrast, values_from = logFC) %>%
         data.frame() %>%
         tibble::column_to_rownames(var = "gene")
       
-    }
-    if(input$phospho_data){
+  }else if(input$phospho_data){
       expDATA = read.csv("data/examples/phospho_data.csv", row.names = 1, header = TRUE)
-    }
-  } else {
-    shinyjs::enable("upload_expr")
-    shinyjs::enable("select_organism")
+  }else {
     inFile = input$upload_expr$datapath
     
     if (is.null(inFile)){
@@ -29,10 +31,9 @@ expr = reactive({
 })
 
 output$expr = DT::renderDataTable({
-  if(!is.null(expr())){
-    DT::datatable(expr(), option = list(autoWidth = TRUE, pageLength = 5)) %>%
+  shiny::req(expr())
+  DT::datatable(expr(), option = list(autoWidth = TRUE, pageLength = 5)) %>%
       formatSignif(which(map_lgl(expr(), is.numeric)))
-  }
 })
 
 # if a file is uploaded, the calculation button in enabled
@@ -40,19 +41,15 @@ observeEvent({
   input$upload_expr
   input$example_data
   input$phospho_data
-  input$upload_tfs}, {
-    toggleState("select_organism",
-                input$example_data == T | !is.null(input$upload_expr))
-    toggleState("upload_expr",
-                input$example_data == T )
+  input$dorothea}, {
     toggleState("an_dorothea",
-                all(input$example_data == T & input$phospho_data == F) | !is.null(input$upload_expr))
+                all(input$example_data & !input$phospho_data) | !is.null(input$upload_expr))
     toggleState("an_progeny",
-                all(input$example_data == T & input$phospho_data == F) | !is.null(input$upload_expr))
+                all(input$example_data & !input$phospho_data) | !is.null(input$upload_expr))
     toggleState("an_carnival",
-                all(input$example_data == T & input$phospho_data == F) | !is.null(input$upload_expr) | !is.null(input$upload_tfs))
+                all(input$example_data & !input$phospho_data) | !is.null(input$upload_expr) | input$dorothea == "up")
     toggleState("an_kinact",
-                all(input$example_data == F & input$phospho_data == T) | !is.null(input$upload_expr))
+                all(!input$example_data & input$phospho_data) | !is.null(input$upload_expr))
     
   })
 

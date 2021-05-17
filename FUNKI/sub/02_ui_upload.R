@@ -208,6 +208,7 @@ tabPanel(
     column(1, align="center", 
            img(src="logo_CARNIVAL.png", align = "right", height=75, width=75)
     ),
+    ## targets -----------
     column(11,
            fluidRow(
              column(3, align="center",
@@ -229,8 +230,9 @@ tabPanel(
                     conditionalPanel(
                       condition =  ("input.inputs_targets == 'up'"),
                       fileInput("upload_targets", 
-                                label = NULL)
+                                label = NULL, accept = ".csv")
                     ),
+                    ## sample -----------
                     uiOutput("select_sample_carnival",
                              label = h5("Select Sample or Contrast",
                                         tags$style(type = "text/css", "#q2c_sample {vertical-align: top;}"),
@@ -243,6 +245,7 @@ tabPanel(
                               options = list(container = "body")
                     )
              ),
+             ## network -----------
              column(2, align="center",
                     radioButtons("omnipath", 
                                  label = h5("Network", 
@@ -253,14 +256,14 @@ tabPanel(
                                  inline = TRUE),
                     bsPopover(id = "q2c_network", 
                               title = "Network",
-                              content = "Generate a signed and directed network with HGNC symbols using Omnipath. If a network is upload, a tab-separated file with three columns (Source, Interaction, Target) is required. The file should contain HGNC symbols.",
+                              content = "Generate a signed and directed network with HGNC symbols using Omnipath. If a network is upload, a comma-separated file with three columns (Source, Interaction, Target) is required. The file should contain HGNC symbols.",
                               placement = "right", 
                               trigger = "click", 
                               options = list(container = "body")
                     ),
                     conditionalPanel(
                       condition = ("input.omnipath == 'up'"),
-                      fileInput("upload_network", label = NULL)),
+                      fileInput("upload_network", label = NULL, accept = ".csv")),
                     # radioButtons("net_type", 
                     #              label = NULL, 
                     #              choices = c("Gene" = "gene", "Protein" = "protein"), 
@@ -270,6 +273,7 @@ tabPanel(
                                   label = "Add complexes",
                                   value = TRUE)
              ),
+             ## dorothea -----------
              column(2, align="center",
                     radioButtons("dorothea", 
                                  label = h5("TF's activities", 
@@ -280,34 +284,36 @@ tabPanel(
                                  inline = TRUE),
                     bsPopover(id = "q2c_doro", 
                               title = "Activities of transcription factors",
-                              content = "Calculate DoRothEA normalised enrichment scores based on the above selected parameters. Alternatively, a file with tab-separeted activites is requiered.",
+                              content = "Calculate DoRothEA normalised enrichment scores based on the above selected parameters. Alternatively, a file with comma-separeted activites is requiered.",
                               placement = "right", 
                               trigger = "click", 
                               options = list(container = "body")
                     ),
                     conditionalPanel(
                       condition = ("input.dorothea == 'up'"),
-                      fileInput("upload_tfs", label = "Upload TF's activities")),
+                      fileInput("upload_tfs", label = NULL, accept = ".csv")),
              ),
+             ## progeny -----------
              column(2, align="center",
                     radioButtons("progeny", 
-                                 label = h5("Measurments", 
+                                 label = h5("Weights", 
                                             tags$style(type = "text/css", "#q2c_proge {vertical-align: top;}"),
                                             bsButton("q2c_proge", label = "", icon = icon("question"), style = "info", size = "extra-small")),
                                  choices = c("PROGENy" = "prog", "Upload" = "up"), 
-                                 selected = "prog",
+                                 selected = character(0),
                                  inline = TRUE),
                     bsPopover(id = "q2c_proge", 
-                              title = "Measurments",
-                              content = "Calculate PROGENy scores based on the above selected parameters. Alternatively, a file with tab-separeted scores (ranged between -1 and 1) per gene is requiered.",
+                              title = "Weights",
+                              content = "Calculate PROGENy scores based on the above selected parameters. Alternatively, a file with comma-separeted scores (ranged between -1 and 1) per gene is requiered.",
                               placement = "right", 
                               trigger = "click", 
                               options = list(container = "body")
                     ),
                     conditionalPanel(
                       condition = ("input.progeny == 'up'"),
-                      fileInput("upload_progeny", label = "Upload measurments"))
+                      fileInput("upload_progeny", label = NULL, accept = ".csv"))
              ),
+             ## solver -----------
              column(3, align="center",
                     radioButtons("solver", 
                                  label = h5("Solver", 
