@@ -4,50 +4,68 @@
 C = eventReactive({
   input$an_carnival
 }, {
+
+  shiny::req(input$solver)
   
-  if (!is.null(input$solver)) {
-    
-    withProgress(message="Running CARNIVAL", value=1, {
+  withProgress(message = "Running CARNIVAL...", value = 1, {
       
-      if (input$example_data){
+  if (input$example_data){
         organism = "Human"
-      }else {organism = input$select_organism}
+  }else {organism = input$select_organism}
       
       #dorthea
-      if(input$dorothea == "doro"){
+  if(input$dorothea == "doro"){
+        data = NULL
         param_doro = list("organism" = organism,
                           "confidence_level" = input$selected_conf_level,
                           "minsize" = input$minsize, 
-                          "method" = input$method)
-      }else{param_doro = input$upload_tfs}
+                          "method" = input$method,
+                          "sample" = input$select_sample_carnival)
+  }else{
+        data = expr()
+        param_doro = input$upload_tfs$datapath
+  }
       
       #progeny
-      if(input$progeny == "prog"){
-        param_prog = list("organism" = organism, 
-                          "top" = input$top, 
-                          "perm" = input$perm)
-      }else{param_prog = input$upload_progeny}
+  if(!is.null(input$progeny)){
+    if(input$progeny == "prog"){
+      param_prog = list("organism" = organism, 
+                        "top" = input$top, 
+                        "perm" = input$perm,
+                        "sample" = input$select_sample_carnival)
+    }else if(input$progeny == "up"){
+      param_prog = input$upload_progeny$datapath
+    }
+  }else{param_prog = NULL}
       
       #network
-      if(input$omnipath == "omni"){
+  if(input$omnipath == "omni"){
         net = list("net_complex" = input$net_complex, 
                    "net_type" = "gene")#input$net_type)
-      }else{net = input$upload_network}
-      
+  }else{net = input$upload_network$datapath}
+      #targets
+  if( input$inputs_targets == "up"){
+        targets = input$upload_targets$datapath
+  }else{targets = input$inputs_targets}
+
       # CARNIVAL parameters
-      if (input$solver == "lpSolve"){
+  if (input$solver == "lpSolve"){
         solverpath = NULL
-      }
+  }
       
-      carnival_results = run_carnival(data = expr(),
+  carnival_results = run_carnival(data = data,
                      net = net,
-                     ini_nodes = input$inputs_targets,
+                     ini_nodes = targets,
                      dorothea = param_doro,
                      progeny = param_prog,
                      solver = list(spath = solverpath,
                                    solver = input$solver))
+  
+  validate(
+    need(!is.null(carnival_results), "No network was found")
+  )
+  
     })
-  }
   
 })
 
@@ -179,22 +197,26 @@ output$pathEnrich_custom = renderUI({
 # network visualisation
 output$network <- renderVisNetwork({
   
-  ## legends
-  ledges <- data.frame(color = c("#0578F0", "#F20404", "#777777"),
-                       label = c("activation", "inhibition", "involved"), 
-                       arrows = c("to", "to", "to"),
-                       font.align = "top")
-  
-  lnodes <- data.frame(label = c("TF", "Perturbed", "Intermediate"),
-                       color = c("gray"),
-                       shape = c("triangle", "diamond", "circle"))
-  
-  # render network
-  visNetwork::visNetwork(nodes_carnival(), edges(), height = "500px", width = "100%") %>%
-    visNetwork::visIgraphLayout() %>%
-    visEdges(arrows = 'to') %>%
-    visNetwork::visLegend(addEdges = ledges, addNodes = lnodes,
-                          width = 0.1, position = "right", useGroups = FALSE)
+  if(is.list(C())){
+    ## legends
+    ledges <- data.frame(color = c("#0578F0", "#F20404", "#777777"),
+                         label = c("activation", "inhibition", "involved"), 
+                         arrows = c("to", "to", "to"),
+                         font.align = "top")
+    
+    lnodes <- data.frame(label = c("TF", "Perturbed", "Intermediate"),
+                         color = c("gray"),
+                         shape = c("triangle", "diamond", "circle"))
+    
+    # render network
+    visNetwork::visNetwork(nodes_carnival(), edges(), height = "500px", width = "100%") %>%
+      visNetwork::visIgraphLayout() %>%
+      visEdges(arrows = 'to') %>%
+      visNetwork::visLegend(addEdges = ledges, addNodes = lnodes,
+                            width = 0.1, position = "right", useGroups = FALSE)
+    
+  }
+
 })
 
 observeEvent(input$focus_node,{
@@ -245,7 +267,6 @@ observeEvent(input$hierarchical,{
       visNetwork::visPhysics(hierarchicalRepulsion = list(nodeDistance = 300))
   }
 })
-
 
 # enritchment analysis
 
