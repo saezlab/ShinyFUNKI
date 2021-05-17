@@ -152,78 +152,82 @@ run_carnival <- function(data, net = NULL, dorothea = NULL, progeny = NULL,
   if( is.list(net) ){
     cNET = get_network(net_type = net$net_type, complx = net$net_complex)
   }else{
-    cNET = read.delim(net, sep = "\t")
+    cNET = read.delim(net, sep = ",")
     colnames(cNET) = c('source', 'interaction', 'target')
   }
   
   # load dorothea
   if( is.list(dorothea) ){
       
-    tf_activities = run_dorothea(dorothea_matrix = data, 
+    tf_activities = run_dorothea(dorothea_matrix = data %>% dplyr::select(!!as.name(dorothea$sample)), 
                                  organism = dorothea$organism, 
                                  confidence_level = dorothea$confidence_level, 
                                  minsize = dorothea$minsize, 
                                  method = dorothea$method)
+    #dorothea
+    tfList = generateTFList(tf_activities, top = 50, access_idx = 1:ncol(tf_activities))
+    
   }else{
-    tf_activities = read.delim(dorothea, sep = "\t")
+    tfList = read.delim(dorothea, sep = ",")
   }
 
   # load progeny
   if( is.list(progeny) ){
     
-    progeny_scores = run_progeny(data, 
+    #progeny
+    load(file = system.file("progenyMembers.RData",package="CARNIVAL"))
+    
+    progeny_scores = run_progeny(data %>% dplyr::select(!!as.name(progeny$sample)), 
                                  organism = progeny$organism, 
                                  top = progeny$top, 
                                  perm = progeny$perm)
-  }else{
-    progeny_scores = read.delim(progeny, sep = "\t")
-  }
-  
-  #dorothea
-  tfList = generateTFList(tf_activities, top = 50, access_idx = 1:ncol(tf_activities))
-  
-  #progeny
-  load(file = system.file("progenyMembers.RData",package="CARNIVAL"))
-  
-  progenylist = assignPROGENyScores(progeny_scores,
-                                    progenyMembers = progenyMembers, 
-                                    id = "gene",
-                                    access_idx = 1:nrow(progeny_scores))
-
-  # initial nodes
-  if( ini_nodes != "inverse" ){
     
-    if(ini_nodes == "all_inputs"){
-      ini_nodes = base::setdiff(cNET$source, cNET$target)
-    }else if(ini_nodes == "up"){
-      ini_nodes = read.delim(ini_nodes, sep = "\t")
-    }
-      
+    progenylist = assignPROGENyScores(progeny_scores,
+                                      progenyMembers = progenyMembers, 
+                                      id = "gene",
+                                      access_idx = 1:nrow(progeny_scores))
+    
+  }else if (is.character(progeny)){
+    progenylist = read.delim(progeny, sep = "\t")
+  }else{progenylist = NULL}
+  
+  # initial nodes
+  if( ini_nodes == "inverse" ){ 
+    
+    iniciators = NULL
+    
+  }else if(ini_nodes == "all_inputs"){
+    
+    ini_nodes = base::setdiff(cNET$source, cNET$target)
     iniciators = base::data.frame(base::matrix(data = NaN, nrow = 1, ncol = length(ini_nodes)), stringsAsFactors = F)
     colnames(iniciators) = ini_nodes
       
-  }else{iniciators = NULL}
+  }else{
+    iniciators = read.delim(ini_nodes, sep = ",")
+  }
 
   # run CARNIVAL
   carnival_result = runCARNIVAL( inputObj = iniciators,
-                                 measObj = tfList[[1]], 
+                                 measObj = tfList, 
                                  netObj = cNET, 
-                                 weightObj = progenylist[[1]], 
+                                 weightObj = progenylist, 
                                  solverPath = solver$spath, 
                                  solver = solver$solver,
                                  timelimit = 7200,
                                  mipGAP = 0,
                                  poolrelGAP = 0 )
   
-  carnival_result$weightedSIF = carnival_result$weightedSIF %>%
-    as.data.frame() %>% 
-    tibble::tibble() %>%
-    dplyr::mutate(across(c(Sign, Weight), as.numeric))
+  if(!is.null(carnival_result)){
+    carnival_result$weightedSIF = carnival_result$weightedSIF %>%
+      as.data.frame() %>% 
+      tibble::tibble() %>%
+      dplyr::mutate(across(c(Sign, Weight), as.numeric))
     
-  carnival_result$nodesAttributes = carnival_result$nodesAttributes %>%
-    as.data.frame() %>% 
-    tibble::tibble() %>%
-    dplyr::mutate(across(c(ZeroAct, UpAct, DownAct, AvgAct), as.numeric))
+    carnival_result$nodesAttributes = carnival_result$nodesAttributes %>%
+      as.data.frame() %>% 
+      tibble::tibble() %>%
+      dplyr::mutate(across(c(ZeroAct, UpAct, DownAct, AvgAct), as.numeric))
+  }
   
   return(carnival_result)
   
