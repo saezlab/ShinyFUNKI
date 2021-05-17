@@ -107,6 +107,8 @@ barplot_kinase_reactive = reactive({
 
 network_kinase_reactive = reactive({
   
+  req(K())
+  
   if (!is.null(input$select_kinase) &
       !is.null(input$select_contrast_kinact) &
       input$select_top_targets > 0) {

@@ -124,6 +124,8 @@ barplot_tf_reactive = reactive({
 
 network_tf_reactive = reactive({
   
+  req(D())
+  
   if(input$select_organism == "Human"){
     aux = dorothea_hs
   }else{
