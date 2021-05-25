@@ -15,15 +15,14 @@ C = eventReactive({
       
       #dorthea
   if(input$dorothea == "doro"){
-        data = NULL
+    data = expr() %>% dplyr::select(!!as.name(input$select_sample_carnival))
         param_doro = list("organism" = organism,
                           "confidence_level" = input$selected_conf_level,
                           "minsize" = input$minsize, 
-                          "method" = input$method,
-                          "sample" = input$select_sample_carnival)
+                          "method" = input$method)
   }else{
-        data = expr()
-        param_doro = input$upload_tfs$datapath
+    data = NULL
+    param_doro = input$upload_tfs$datapath
   }
       
       #progeny
@@ -31,8 +30,7 @@ C = eventReactive({
     if(input$progeny == "prog"){
       param_prog = list("organism" = organism, 
                         "top" = input$top, 
-                        "perm" = input$perm,
-                        "sample" = input$select_sample_carnival)
+                        "perm" = input$perm)
     }else if(input$progeny == "up"){
       param_prog = input$upload_progeny$datapath
     }
@@ -52,19 +50,14 @@ C = eventReactive({
   if (input$solver == "lpSolve"){
         solverpath = NULL
   }
-      
-  carnival_results = run_carnival(data = data,
-                     net = net,
-                     ini_nodes = targets,
-                     dorothea = param_doro,
-                     progeny = param_prog,
-                     solver = list(spath = solverpath,
-                                   solver = input$solver))
   
-  validate(
-    need(!is.null(carnival_results), "No network was found")
-  )
-  
+  carnival_results = run_carnival( data = data,
+                                   net = net,
+                                   ini_nodes = targets,
+                                   dorothea = param_doro,
+                                   progeny = param_prog,
+                                   solver = list(spath = solverpath,
+                                                 solver = input$solver))
     })
   
 })
@@ -95,7 +88,8 @@ PEA = eventReactive({
 })
 
 #objects for visualisation
-edges <- reactive(if (!all(is.na( C() ))){
+edges <- reactive({
+  # req(C())
   # edges and node information for visnetwork
   edges <- C()$weightedSIF %>%
     dplyr::rename(from = Node1, to = Node2, value = Weight) %>%
@@ -106,7 +100,8 @@ edges <- reactive(if (!all(is.na( C() ))){
   
 })
 
-nodes_carnival <- reactive(if (!all(is.na(C()))){
+nodes_carnival <- reactive({
+  # req(C())
     # create color scale for nodes
     pal_red_blue = c(rev(RColorBrewer::brewer.pal(9, 'Reds')),
                      "#FFFFFF",
@@ -130,15 +125,17 @@ nodes_carnival <- reactive(if (!all(is.na(C()))){
     
   })
 
-paths <- reactive(if (!all(is.na(C()))){
+paths <- reactive({
+  # req(C())
   paths = calculate_all_paths(C())
 })
 
 # Dynamic widgets / RenderUI ----------------------------------------------
 output$select_node = renderUI({
+  
   if (!is.null(C())) {
 
-    choices = C()$nodesAttributes %>% #C()$nodesAttributes$Node %>%
+    choices = C()$nodesAttributes %>%
       dplyr::filter(ZeroAct != 100) %>%
       dplyr::select(Node) %>%
       dplyr::pull() %>%
@@ -155,7 +152,7 @@ output$select_node = renderUI({
 })
 
 output$select_tf_carnival = renderUI({
-  if (!is.null(C())) {
+  # if (!is.null(C())) {
 
   choices = base::setdiff(C()$weightedSIF$Node2,
                           C()$weightedSIF$Node1) # C()$nodesAttributes$Node %>%
@@ -164,7 +161,7 @@ output$select_tf_carnival = renderUI({
               choices = choices,
               options = list("live-search" = TRUE),
               selected = NULL)
-  }
+  # }
 })
 
 output$pathEnrich_msigDB_collection = renderUI({
@@ -197,7 +194,12 @@ output$pathEnrich_custom = renderUI({
 # network visualisation
 output$network <- renderVisNetwork({
   
-  if(is.list(C())){
+  validate(
+    need(!is.null(C()), "No network was found")
+  )
+  
+  
+  # req(C())
     ## legends
     ledges <- data.frame(color = c("#0578F0", "#F20404", "#777777"),
                          label = c("activation", "inhibition", "involved"), 
@@ -214,8 +216,6 @@ output$network <- renderVisNetwork({
       visEdges(arrows = 'to') %>%
       visNetwork::visLegend(addEdges = ledges, addNodes = lnodes,
                             width = 0.1, position = "right", useGroups = FALSE)
-    
-  }
 
 })
 
@@ -271,12 +271,13 @@ observeEvent(input$hierarchical,{
 # enritchment analysis
 
 barplot_pea_reactive = reactive ({
-  if ( !is.null(PEA()) & input$pea_thresbold != 0) {
+  req(PEA(), input$pea_thresbold)
+  # if ( !is.null(PEA()) & input$pea_thresbold != 0) {
     
     p <- PEA()$pea %>%
       barplot_pea(threshold_adjpval = input$pea_thresbold,
                   n_paths = input$pea_nPaths)
-  }
+  # }
   
 })
 
@@ -303,7 +304,8 @@ output$volcano_pea = renderPlot({
 
 # Render Tables -----------------------------------------------------------
 output$pea_table = DT::renderDataTable({
- if(!is.null(PEA())){
+  req(PEA())
+ # if(!is.null(PEA())){
 
    pea_result_matrix = DT::datatable(
      PEA()$pea %>%
@@ -315,7 +317,7 @@ output$pea_table = DT::renderDataTable({
      filter = "top"
    )
    
- }
+ # }
   
 })
 

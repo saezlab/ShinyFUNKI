@@ -148,6 +148,7 @@ get_network <- function(net_type = "gene", complx = T){
 run_carnival <- function(data, net = NULL, dorothea = NULL, progeny = NULL,
                          ini_nodes = "all_inputs", 
                          solver =  list(spath = NULL , solver = "lpSolve"), ...){
+
   # load network
   if( is.list(net) ){
     cNET = get_network(net_type = net$net_type, complx = net$net_complex)
@@ -155,17 +156,17 @@ run_carnival <- function(data, net = NULL, dorothea = NULL, progeny = NULL,
     cNET = read.delim(net, sep = ",")
     colnames(cNET) = c('source', 'interaction', 'target')
   }
-  
+
   # load dorothea
   if( is.list(dorothea) ){
       
-    tf_activities = run_dorothea(dorothea_matrix = data %>% dplyr::select(!!as.name(dorothea$sample)), 
+    tf_activities = run_dorothea(dorothea_matrix = data, 
                                  organism = dorothea$organism, 
                                  confidence_level = dorothea$confidence_level, 
                                  minsize = dorothea$minsize, 
                                  method = dorothea$method)
     #dorothea
-    tfList = generateTFList(tf_activities, top = 50, access_idx = 1:ncol(tf_activities))
+    tfList = generateTFList(tf_activities, top = 50, access_idx = 1:ncol(tf_activities))[[1]]
     
   }else{
     tfList = read.delim(dorothea, sep = ",")
@@ -175,9 +176,9 @@ run_carnival <- function(data, net = NULL, dorothea = NULL, progeny = NULL,
   if( is.list(progeny) ){
     
     #progeny
-    load(file = system.file("progenyMembers.RData",package="CARNIVAL"))
+    load(file = system.file("progenyMembers.RData", package = "CARNIVAL"))
     
-    progeny_scores = run_progeny(data %>% dplyr::select(!!as.name(progeny$sample)), 
+    progeny_scores = run_progeny(data, 
                                  organism = progeny$organism, 
                                  top = progeny$top, 
                                  perm = progeny$perm)
@@ -185,7 +186,7 @@ run_carnival <- function(data, net = NULL, dorothea = NULL, progeny = NULL,
     progenylist = assignPROGENyScores(progeny_scores,
                                       progenyMembers = progenyMembers, 
                                       id = "gene",
-                                      access_idx = 1:nrow(progeny_scores))
+                                      access_idx = 1:nrow(progeny_scores))[[1]]
     
   }else if (is.character(progeny)){
     progenylist = read.delim(progeny, sep = "\t")
