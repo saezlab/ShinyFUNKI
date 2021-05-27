@@ -8,7 +8,7 @@ Thus, there are different options to use this server to fit all possible users:
 
 1. Run FUNKI directly from GitHub
 
-In an R session, run the line below to download and launch FUNKI:
+In an R session, run the line below to launch FUNKI:
 
 ```shiny::runGitHub(repo = "ShinyFUNKI", username = "saezlab", subdir = "FUNKI")``` 
 
