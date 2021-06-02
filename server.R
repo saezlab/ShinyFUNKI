@@ -1,5 +1,22 @@
 # SERVER
 server = function(input, output, session) {
+  
+  # Load data from VRE
+  query <- parseQueryString( isolate( session$clientData$url_search ) )
+  
+  # input for dorothea
+  inputDorothea <- read.csv( query$file1, row.names = 1)
+  
+  # dorothea results
+  dorothea_result = read.csv( query$file2, row.names = 1) # from VRE
+  data(dorothea_hs, package = "dorothea")
+  
+  #get confidence levels
+  confidence_level = unlist(strsplit(gsub(".csv", "", query$file2, fixed = T) , split =
+                                       "_"))
+  confidence_level = unlist(strsplit(confidence_level[length(confidence_level)] , split =
+                                       ""))
+  
   # Dynamic widgets / RenderUI ----------------------------------------------
   
   # select contrast/sample
