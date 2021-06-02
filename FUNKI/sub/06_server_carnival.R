@@ -81,7 +81,7 @@ PEA = eventReactive({
       message(input$upload_custom)
       pathEnreach(nodeAtt = C()$nodesAttributes, 
                   database = input$pathEnrich_database,
-                  collection = cll)
+                  select_collection = cll)
 
   })
   
@@ -198,7 +198,6 @@ output$network <- renderVisNetwork({
     need(!is.null(C()), "No network was found")
   )
   
-  
   # req(C())
     ## legends
     ledges <- data.frame(color = c("#0578F0", "#F20404", "#777777"),
@@ -313,8 +312,17 @@ output$pea_table = DT::renderDataTable({
        tibble::column_to_rownames(var = "pathway") %>%
        round(digits = 3) %>%
        tibble::rownames_to_column(var = "Pathway/Signature"),
-     option = list(scrollX = TRUE, autoWidth = T),
-     filter = "top"
+     filter = "top",
+     extensions = "Buttons",
+     options = list(
+       paging = TRUE,
+       searching = TRUE,
+       fixedColumns = TRUE,
+       autoWidth = TRUE,
+       ordering = TRUE,
+       dom = 'tB',
+       buttons = c('csv', 'excel'))
+   
    )
    
  # }

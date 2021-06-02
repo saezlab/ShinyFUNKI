@@ -75,7 +75,7 @@ output$select_top_n_labels = renderUI({
     
     sliderInput(
       "select_top_n_labels",
-      label = "Number of targets to display",
+      label = "Number of TF's target genes to display",
       value = dplyr::case_when(targets > 10 ~ 10, targets <= 10 ~ round(targets * (2 / 3))),
       min = 1,
       max = targets,
@@ -124,7 +124,11 @@ barplot_tf_reactive = reactive({
 
 network_tf_reactive = reactive({
   
-  req(D())
+  req(D(), expr(),
+      input$select_tf,
+      input$select_contrast,
+      input$select_top_n_labels,
+      input$selected_conf_level)
   
   if(input$select_organism == "Human"){
     aux = dorothea_hs
@@ -132,24 +136,19 @@ network_tf_reactive = reactive({
     aux = dorothea_mm
   }
   
-  if (!is.null(input$select_tf) &
-      !is.null(input$select_contrast) &
-      input$select_top_n_hits > 0) {
-    aux = aux %>%
-      dplyr::filter(confidence %in% input$selected_conf_level)
+  aux = aux %>%
+    dplyr::filter(confidence %in% input$selected_conf_level)
     
     
-    plot_network(
-      data = expr(), 
-      footprint_result = D(),
-      regulon = aux,
-      sample = input$select_contrast,
-      selected_hub = input$select_tf,
-      number_targets = input$select_top_n_labels
-    )
+  plot_network(
+    data = expr(), 
+    footprint_result = D(),
+    regulon = aux,
+    sample = input$select_contrast,
+    selected_hub = input$select_tf,
+    number_targets = input$select_top_n_labels
+  )
     
-  }
-  
 })
 
 # Render Plots ------------------------------------------------------------
@@ -171,12 +170,10 @@ output$tf_network = renderVisNetwork({
 
 # Heatmap of samples vs TFs
 output$heatmap_dorothea = plotly::renderPlotly({
-  if(!is.null(D())){
+  req(D())
     D() %>% t() %>% data.frame() %>%
       heatmap_scores()
-  }
 })
-
 
 # Render Tables -----------------------------------------------------------
 # TF-activities
@@ -199,8 +196,17 @@ output$dorothea_table = DT::renderDataTable({
   colnames(results_confidence)[colnames(results_confidence) == "tf"] = "Transcription Factor"
   dorothea_result_matrix = DT::datatable(
     results_confidence,
-    option = list(scrollX = TRUE, autoWidth = T),
-    filter = "top"
+    # option = list(scrollX = TRUE, autoWidth = T),
+    filter = "top",
+    extensions = "Buttons",
+    options = list(
+      paging = TRUE,
+      searching = TRUE,
+      fixedColumns = TRUE,
+      autoWidth = TRUE,
+      ordering = TRUE,
+      dom = 'tB',
+      buttons = c('csv', 'excel'))
   )
   
 })

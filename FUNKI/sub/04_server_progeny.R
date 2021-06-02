@@ -107,7 +107,8 @@ scatter_reactive = reactive({
 # Progent-activities
 output$progeny_table = DT::renderDataTable({
   
-  if( !is.null(P()) ){
+  req(P())
+  
     results_progeny = P() %>%
       t() %>%
       as.data.frame() %>%
@@ -116,15 +117,18 @@ output$progeny_table = DT::renderDataTable({
     
     result_matrix = DT::datatable(
       results_progeny,
-      option = list(
-        scrollX = TRUE,
-        autoWidth = T,
-        pageLength = 14
-      ),
-      filter = "top"
+      extensions = "Buttons",
+      filter = "top",
+      options = list(
+        paging = TRUE,
+        searching = TRUE,
+        fixedColumns = TRUE,
+        autoWidth = TRUE,
+        ordering = TRUE,
+        pageLength = 14,
+        dom = 'tB',
+        buttons = c('csv', 'excel'))
     )
-  }
-  
 
 })
 
