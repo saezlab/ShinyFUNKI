@@ -2,13 +2,12 @@ library(shiny)
 library(shinyWidgets)
 library(shinyFiles)
 library(shinyBS)
+library(shinyjs)
 library(tidyverse)
 library(viper)
 library(ggrepel)
 library(DT)
 library(furrr)
-library(pheatmap)
-library(shinyjs)
 library(ggExtra)
 library(tidygraph)
 library(ggraph)
@@ -18,8 +17,6 @@ library(progeny)
 library(CARNIVAL)
 library(OmnipathR)
 library(visNetwork)
-library(promises)
-library(future)
 plan(multisession)
 
 # shiny options
@@ -300,7 +297,7 @@ generateTFList <- function (df = df, top = 50, access_idx = 1)
   return(returnList)
 }
 
-pathEnreach <- function(nodeAtt, database, collection = NULL){
+pathEnreach <- function(nodeAtt, database, select_collection = NULL){
   
   if(database == 'Custom'){
     
@@ -321,7 +318,7 @@ pathEnreach <- function(nodeAtt, database, collection = NULL){
       value = "geneset"
       
       annotations = annotations %>%
-        dplyr::filter(collection %in% collection)
+        dplyr::filter(collection %in% select_collection)
       
       
     }else{value = "pathway"}
