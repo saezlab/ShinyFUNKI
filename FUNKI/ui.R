@@ -1,5 +1,7 @@
 # UI
-source("sub/global.R")
+source("sub/global_analysis.R")
+source("sub/global_plots.R")
+source("sub/global_sup.R")
 ui = function(request) {
   fluidPage(
     
@@ -13,7 +15,8 @@ ui = function(request) {
       source("sub/03_ui_dorothea.R")$value,
       source("sub/04_ui_progeny.R")$value,
       source("sub/05_ui_kinact.R")$value,
-      source("sub/06_ui_carnival.R")$value
+      source("sub/06_ui_carnival.R")$value,
+      source("sub/07_ui_cosmos.R")$value
       ,source("sub/ui_help.R")$value
       ,source("sub/ui_contact.R")$value
       ,hr()
