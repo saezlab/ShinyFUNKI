@@ -17,23 +17,6 @@ library(plotly)
 enableBookmarking(store = "server")
 options(shiny.maxRequestSize = 30 * 1024 ^ 2)
 
-# Load data
-
-# input for dorothea
-inputDorothea <-
-  read.csv("data/examples/data_test.csv", row.names = 1)
-
-# dorothea results
-d_file = "data/examples/dorothea_scores_ABC.csv"
-dorothea_result = read.csv(d_file, row.names = 1) # from VRE
-data(dorothea_hs, package = "dorothea")
-
-#get confidence levels
-confidence_level = unlist(strsplit(gsub(".csv", "", d_file, fixed = T) , split =
-                                     "_"))
-confidence_level = unlist(strsplit(confidence_level[length(confidence_level)] , split =
-                                     ""))
-
 # PLOTS -------------------------------------------------------------
 
 barplot_nes = function(df, smpl, nHits) {
