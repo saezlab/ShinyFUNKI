@@ -429,7 +429,7 @@ fluidRow(
                               tags$style(type = "text/css", "#q3c_layer2 {vertical-align: top;}"),
                               bsButton("q3c_layer2", label = "", icon = icon("question"), style = "info", size = "extra-small")),
                    choices = c("Example Metabolomics" = "l2", "Upload" = "up"), 
-                   selected = "l1",
+                   selected = "l2",
                    inline = TRUE),
          bsPopover(id = "q3c_layer2",
                    title = "Activities of Layer 2",
