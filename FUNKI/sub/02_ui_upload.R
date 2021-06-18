@@ -10,7 +10,7 @@ tabPanel(
     )
   ),
   fluidRow(
-    column(4, align="center",
+    column(4, align="left",
            
            # show the upload stage if the example is not selected
            fluidRow(
@@ -53,24 +53,47 @@ tabPanel(
            ),
            
            # select example data
-           materialSwitch(inputId = "example_data",
-                          label = "Load Expression example",
+           h4("Load Examples"),
+           h5("Expression"),
+           fluidRow(
+             column(6, align = "center",
+                    materialSwitch(inputId = "example_data",
+                                   label = "Multiple conditions",
+                                   value = FALSE,
+                                   status = "default",
+                                   width = "100%"),
+                    p("Dataset taken from ",
+                      a("Blackham et al, J Virol., 2010", 
+                        href = "https://www.ncbi.nlm.nih.gov/pubmed/20200238",
+                        target = "_blank"),
+                      a("(GSE20948)",
+                        href = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE20948",
+                        target = "_blank"))
+                    
+                    ),
+             column(6, align = "center",
+                    materialSwitch(inputId = "contrast_data",
+                                   label = "Constrast",
+                                   value = FALSE,
+                                   status = "default",
+                                   width = "100%"),
+                    p("Dataset taken from ",
+                      a("Blackham et al, J Virol., 2010", 
+                        href = "https://www.ncbi.nlm.nih.gov/pubmed/20200238",
+                        target = "_blank"),
+                      a("(GSE20948)",
+                        href = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE20948",
+                        target = "_blank")),
+                    
+             )
+           ),
+          h5("Phosphoproteomics"),
+          materialSwitch(inputId = "phospho_data", 
+                          label = "Phosphodata", 
                           value = FALSE,
                           status = "default",
                           width = "100%"),
-           p("Expression dataset taken from ",
-             a("Blackham et al, J Virol., 2010", 
-               href = "https://www.ncbi.nlm.nih.gov/pubmed/20200238",
-               target = "_blank"),
-             a("(GSE20948)",
-               href = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE20948",
-               target = "_blank")),
-           materialSwitch(inputId = "phospho_data", 
-                          label = "Load Phosphodata example", 
-                          value = FALSE,
-                          status = "default",
-                          width = "100%"),
-           p("Phospho dataset taken from ",
+           p("Dataset taken from ",
              a("Gonçalves et al, Met Eng, 2018", 
                href = "https://pubmed.ncbi.nlm.nih.gov/29191787/",
                target = "_blank"))
@@ -233,16 +256,20 @@ tabPanel(
                                 label = NULL, accept = ".csv")
                     ),
                     ## sample -----------
-                    uiOutput("select_sample_carnival",
-                             label = h5("Select Sample or Contrast",
-                                        tags$style(type = "text/css", "#q2c_sample {vertical-align: top;}"),
-                                        bsButton("q2c_sample", label = "", icon = icon("question"), style = "info", size = "extra-small"))),
-                    bsPopover(id = "q2c_sample", 
-                              title = "Select Sample or Contrast",
-                              content = "The selected sample will be used of the CARNIVAL analysis.",
-                              placement = "right", 
-                              trigger = "click", 
-                              options = list(container = "body")
+                    conditionalPanel(
+                      condition = ("input.example_data"),
+                      uiOutput("select_sample_carnival",
+                               label = h5("Select Sample or Contrast",
+                                          tags$style(type = "text/css", "#q2c_sample {vertical-align: top;}"),
+                                          bsButton("q2c_sample", label = "", icon = icon("question"), style = "info", size = "extra-small"))),
+                      bsPopover(id = "q2c_sample", 
+                                title = "Select Sample or Contrast",
+                                content = "The selected sample will be used of the CARNIVAL analysis.",
+                                placement = "right", 
+                                trigger = "click", 
+                                options = list(container = "body")
+                      ),
+                    
                     )
              ),
              ## network -----------
@@ -377,30 +404,43 @@ fluidRow(
            fileInput("upload_cosnet", label = NULL)),
   ),
   column(2, align="center",
-         fileInput(inputId = "upload_layer1",
+         radioButtons(inputId = "layer1",
                    label = h5("Layer 1",
                               tags$style(type = "text/css", "#q2c_layer1 {vertical-align: top;}"),
-                              bsButton("q2c_layer1", label = "", icon = icon("question"), style = "info", size = "extra-small"))),
+                              bsButton("q2c_layer1", label = "", icon = icon("question"), style = "info", size = "extra-small")),
+                   choices = c("Example Phosphoproteomics" = "l1", "Upload" = "up"), 
+                   selected = "l1",
+                   inline = TRUE),
          bsPopover(id = "q2c_layer1",
                    title = "Activities of Layer 1",
                    content = "Numerical vector, where names are nodes identifiers as in the network and values are from 1, 0, -1. Continuous data will be discretized using the sign function.",
                    placement = "right",
                    trigger = "click",
                    options = list(container = "body")
-         )
+         ),
+         conditionalPanel(
+           condition = ("input.layer1 == 'up'"),
+           fileInput("upload_layer1", label = NULL, accept = ".csv"))
   ),
+  
   column(2, align="center",
-         fileInput(inputId = "upload_layer2",
+         radioButtons(inputId = "layer2",
                    label = h5("Layer 2",
                               tags$style(type = "text/css", "#q3c_layer2 {vertical-align: top;}"),
-                              bsButton("q3c_layer2", label = "", icon = icon("question"), style = "info", size = "extra-small"))),
+                              bsButton("q3c_layer2", label = "", icon = icon("question"), style = "info", size = "extra-small")),
+                   choices = c("Example Metabolomics" = "l2", "Upload" = "up"), 
+                   selected = "l1",
+                   inline = TRUE),
          bsPopover(id = "q3c_layer2",
                    title = "Activities of Layer 2",
                    content = "Numerical vector, where names are nodes identifiers as in the network and values are from 1, 0, -1. Continuous data will be discretized using the sign function.",
                    placement = "right",
                    trigger = "click",
                    options = list(container = "body")
-         )
+         ),
+         conditionalPanel(
+           condition = ("input.layer2 == 'up'"),
+           fileInput("upload_layer2", label = NULL, accept = ".csv"))
   ),
   column(3, align="center",
          radioButtons("solver_cosmos",

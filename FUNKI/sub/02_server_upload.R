@@ -1,6 +1,6 @@
 # Show expression data 
 expr = reactive({
-  if (any(input$example_data | input$phospho_data)){
+  if (any(input$example_data | input$phospho_data | input$contrast_data)){
     shinyjs::disable("upload_expr")
     shinyjs::disable("select_organism")
     if(input$example_data){
@@ -13,6 +13,10 @@ expr = reactive({
     }
     if(input$phospho_data){
       expDATA = read.csv("data/examples/phospho_data.csv", row.names = 1, header = TRUE)
+    }
+    if(input$contrast_data){
+      expDATA = as.data.frame(read_csv("data/examples/RNA_ttop_tumorvshealthy.csv")) %>%
+        dplyr::mutate(ID = as.character(ID))
     }
   } else {
     shinyjs::enable("upload_expr")
@@ -39,19 +43,28 @@ output$expr = DT::renderDataTable({
 observeEvent({
   input$upload_expr
   input$example_data
+  input$contrast_data
   input$phospho_data}, {
     toggleState("select_organism",
                 input$example_data == T | !is.null(input$upload_expr))
     toggleState("upload_expr",
                 input$example_data == T )
+    toggleState("example_data",
+                all(input$contrast_data == F & input$phospho_data == F) )
+    toggleState("contrast_data",
+                all(input$example_data == F & input$phospho_data == F) )
+    toggleState("phospho_data",
+                all(input$example_data == F & input$contrast_data == F) )
     toggleState("an_dorothea",
-                all(input$example_data == T & input$phospho_data == F) | !is.null(input$upload_expr))
+                input$example_data | input$contrast_data | !is.null(input$upload_expr))
     toggleState("an_progeny",
-                all(input$example_data == T & input$phospho_data == F) | !is.null(input$upload_expr))
+                input$example_data | input$contrast_data | !is.null(input$upload_expr))
     toggleState("an_carnival",
-                all(input$example_data == T & input$phospho_data == F) | !is.null(input$upload_expr))
+                input$example_data | input$contrast_data | !is.null(input$upload_expr))
+    toggleState("an_cosmos",
+                input$contrast_data | !is.null(input$upload_expr))
     toggleState("an_kinact",
-                all(input$example_data == F & input$phospho_data == T) | !is.null(input$upload_expr))
+                input$phospho_data | !is.null(input$upload_expr))
     
   })
 
@@ -76,6 +89,11 @@ observeEvent(input$an_kinact, {
                     selected = "KinAct")
 })
 
+observeEvent(input$an_kinact, {
+  updateTabsetPanel(session, inputId = "menu",
+                    selected = "COSMOS")
+})
+
 #get path for CARNIVAL solver
 volumes <- getVolumes()
 observe({
@@ -86,12 +104,11 @@ observe({
 #Select sample for CARNIVAL analysis
 # select contrast/sample
 output$select_sample_carnival = renderUI({
-  if (!is.null(expr())) {
+  req(expr(),  input$example_data)
     choices = colnames(expr()) 
     
     pickerInput(inputId = "select_sample_carnival",
                 label = "Select Sample/Contrast",
                 choices = choices,
                 selected = choices[1])
-  }
 })
