@@ -14,10 +14,10 @@ tabPanel(
                )
       ),
       fluidRow(align = "center",
-        downloadButton("download_progeny_analysis", "Download PROGENy scores and figures"),
-        downloadButton("download_scatter", "Download scatter plot"),
-        downloadButton("download_barplot", "Download barplot"),
-        downloadButton("download_heatmap", "Download heatmap")
+               downloadButton("download_progeny_analysis", "Download PROGENy scores and figures"),
+               downloadButton("download_scatter", "Download scatter plot"),
+               downloadButton("download_barplot", "Download barplot"),
+               downloadButton("download_heatmap", "Download heatmap")
       )
     ),
     mainPanel(width = 0)

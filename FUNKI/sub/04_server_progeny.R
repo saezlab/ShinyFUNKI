@@ -1,20 +1,28 @@
 # Reactive Computations ---------------------------------------------------
 P = eventReactive({
   input$an_progeny
-  },{
-    if(!is.null(input$an_progeny)){
-      withProgress(message = "Calculate PROGENy matrix", value = 1, {
-        
-        if (input$example_data){
-          organism = "Human"
-        }else {organism = input$select_organism}
-        
-        expr() %>%
-          run_progeny(organism = organism, 
-                      top = input$perm, 
-                      perm = input$top)
-      })
-    }
+},{
+  if(!is.null(input$an_progeny)){
+    withProgress(message = "Calculate PROGENy matrix", value = 1, {
+      data = expr()
+      if (input$example_data){
+        organism = "Human"
+      }else {organism = input$select_organism}
+      
+      if(any(colnames(data) == "t")){
+        data = data %>%
+          dplyr::select(t) %>%
+          unique.data.frame()
+      }
+      
+      prog = data %>%
+        run_progeny(organism = organism, 
+                    top = input$perm, 
+                    perm = input$top)
+      
+      if(nrow(prog) == 1){rownames(prog) = input$select_contrast_progeny}
+    })
+  }
 })
 
 # Dynamic widgets / RenderUI ----------------------------------------------
@@ -79,7 +87,7 @@ scatter_reactive = reactive({
     if (input$example_data){
       organism = "Human"
     }else {organism = input$select_organism}
-
+    
     prog_matrix <- progeny::getModel(organism = organism, top =  input$top) %>%
       tibble::rownames_to_column("GeneID") %>%
       dplyr::select(GeneID, input$select_pathway)
@@ -107,25 +115,29 @@ scatter_reactive = reactive({
 # Progent-activities
 output$progeny_table = DT::renderDataTable({
   
-  if( !is.null(P()) ){
-    results_progeny = P() %>%
-      t() %>%
-      as.data.frame() %>%
-      round(digits = 3) %>%
-      rownames_to_column(var = "Pathways")
-    
-    result_matrix = DT::datatable(
-      results_progeny,
-      option = list(
-        scrollX = TRUE,
-        autoWidth = T,
-        pageLength = 14
-      ),
-      filter = "top"
-    )
-  }
+  req(P())
   
-
+  results_progeny = P() %>%
+    t() %>%
+    as.data.frame() %>%
+    round(digits = 3) %>%
+    rownames_to_column(var = "Pathways")
+  
+  result_matrix = DT::datatable(
+    results_progeny,
+    extensions = "Buttons",
+    filter = "top",
+    options = list(
+      paging = TRUE,
+      searching = TRUE,
+      fixedColumns = TRUE,
+      autoWidth = TRUE,
+      ordering = TRUE,
+      pageLength = 14,
+      dom = 'tB',
+      buttons = c('csv', 'excel'))
+  )
+  
 })
 
 # Render Plots ------------------------------------------------------------
@@ -146,7 +158,7 @@ output$heatmap_progeny = plotly::renderPlotly({
     P() %>%
       heatmap_scores()
   }
-
+  
 })
 
 # Download Handler --------------------------------------------------------

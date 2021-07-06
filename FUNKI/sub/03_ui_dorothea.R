@@ -3,18 +3,18 @@ tabPanel(
   # Row controlling the widgets
   fluidRow(
     column(6, align = "center",
-      sidebarLayout(
-        sidebarPanel(
-          width = 12,
-          uiOutput("select_contrast_dorothea"),
-          uiOutput("select_tf"),
-          downloadButton(
-            "download_dorothea_analysis",
-            "Download DoRothEA scores and figures"
-          ),
-        ),
-        mainPanel(width = 0)
-      )
+           sidebarLayout(
+             sidebarPanel(
+               width = 12,
+               uiOutput("select_contrast_dorothea"),
+               uiOutput("select_tf"),
+               downloadButton(
+                 "download_dorothea_analysis",
+                 "Download DoRothEA scores and figures"
+               ),
+             ),
+             mainPanel(width = 0)
+           )
     ),
     
     column(
@@ -47,4 +47,3 @@ tabPanel(
   # Table visualization
   DT::dataTableOutput("dorothea_table")
 )
-    
