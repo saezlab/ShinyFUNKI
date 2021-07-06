@@ -1,26 +1,35 @@
 # Show expression data 
 expr = reactive({
-  if (any(input$example_data | input$phospho_data | input$contrast_data)){
-    shinyjs::disable("upload_expr")
-    shinyjs::disable("select_organism")
-    if(input$example_data){
-      expDATA = read_csv("data/examples/example_data.csv") %>% 
-        dplyr::select(contrast, gene, logFC) %>% 
-        tidyr::pivot_wider(names_from = contrast, values_from = logFC) %>%
-        data.frame() %>%
-        tibble::column_to_rownames(var = "gene")
+  toggleState("upload_expr", 
+              !input$example_data & !input$phospho_data & !input$contrast_data)
+  toggleState("select_organism", 
+              !input$example_data & !input$phospho_data & !input$contrast_data)
+  toggleState("phospho_data", 
+              !input$example_data & !input$contrast_data)
+  toggleState("example_data", 
+              !input$phospho_data & !input$contrast_data)
+  toggleState("contrast_data", 
+              !input$phospho_data & !input$example_data)
+  
+  if(input$example_data){
+    expDATA = read_csv("data/examples/example_data.csv") %>% 
+      dplyr::select(contrast, gene, logFC) %>% 
+      tidyr::pivot_wider(names_from = contrast, values_from = logFC) %>%
+      data.frame() %>%
+      tibble::column_to_rownames(var = "gene")
       
-    }
-    if(input$phospho_data){
-      expDATA = read.csv("data/examples/phospho_data.csv", row.names = 1, header = TRUE)
-    }
-    if(input$contrast_data){
-      expDATA = as.data.frame(read_csv("data/examples/RNA_ttop_tumorvshealthy.csv")) %>%
-        dplyr::mutate(ID = as.character(ID))
-    }
-  } else {
-    shinyjs::enable("upload_expr")
-    shinyjs::enable("select_organism")
+  }else if(input$phospho_data){
+    expDATA = read.csv("data/examples/phospho_data.csv", row.names = 1, header = TRUE)
+  }else if(input$contrast_data){
+    expDATA = read.delim("data/examples/contrast_cosmos.csv", header = T, sep  =  ',') %>%
+      tibble() %>%
+      dplyr::mutate(ID = as.character(ID)) %>%
+      arrange(HGNC, -adj.P.Val) %>%
+      filter(duplicated(HGNC) == FALSE) %>%
+      tibble::column_to_rownames(var = "HGNC")
+
+ }else {
+    
     inFile = input$upload_expr$datapath
     
     if (is.null(inFile)){
@@ -33,39 +42,28 @@ expr = reactive({
 })
 
 output$expr = DT::renderDataTable({
-  if(!is.null(expr())){
-    DT::datatable(expr(), option = list(autoWidth = TRUE, pageLength = 5)) %>%
-      formatSignif(which(map_lgl(expr(), is.numeric)))
-  }
+  shiny::req(expr())
+  DT::datatable(expr(), option = list(autoWidth = TRUE, pageLength = 5)) %>%
+    formatSignif(which(map_lgl(expr(), is.numeric)))
 })
 
 # if a file is uploaded, the calculation button in enabled
 observeEvent({
   input$upload_expr
   input$example_data
-  input$contrast_data
-  input$phospho_data}, {
-    toggleState("select_organism",
-                input$example_data == T | !is.null(input$upload_expr))
-    toggleState("upload_expr",
-                input$example_data == T )
-    toggleState("example_data",
-                all(input$contrast_data == F & input$phospho_data == F) )
-    toggleState("contrast_data",
-                all(input$example_data == F & input$phospho_data == F) )
-    toggleState("phospho_data",
-                all(input$example_data == F & input$contrast_data == F) )
+  input$phospho_data
+  input$dorothea
+  input$contrast_data}, {
     toggleState("an_dorothea",
                 input$example_data | input$contrast_data | !is.null(input$upload_expr))
     toggleState("an_progeny",
                 input$example_data | input$contrast_data | !is.null(input$upload_expr))
     toggleState("an_carnival",
-                input$example_data | input$contrast_data | !is.null(input$upload_expr))
+                input$example_data | input$contrast_data | !is.null(input$upload_expr) | input$dorothea == "up")
     toggleState("an_cosmos",
                 input$contrast_data | !is.null(input$upload_expr))
     toggleState("an_kinact",
                 input$phospho_data | !is.null(input$upload_expr))
-    
   })
 
 # jump to visualise results
@@ -104,11 +102,12 @@ observe({
 #Select sample for CARNIVAL analysis
 # select contrast/sample
 output$select_sample_carnival = renderUI({
-  req(expr(),  input$example_data)
+  if (!is.null(expr())) {
     choices = colnames(expr()) 
     
     pickerInput(inputId = "select_sample_carnival",
                 label = "Select Sample/Contrast",
                 choices = choices,
                 selected = choices[1])
+  }
 })

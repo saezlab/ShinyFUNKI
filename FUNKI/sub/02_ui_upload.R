@@ -26,7 +26,7 @@ tabPanel(
                     ),
                     
                     bsPopover(id = "q2_data", title = "Upload data",
-                              content = "comma-separated-values with samples in columns and gene (HGNC symbol) in rows.",
+                              content = "file with comma-separated-values. If there are multiple conditions, samples in columns and gene (HGNC symbol) in rows. If contrasts, HGNC symbol as row names and at least a column called t with the statistic value from the differential expression analysis. For COSMOS analysis, a column called ID with entrez ids should be provided (it the default networks is going to be used).",
                               placement = "right", 
                               trigger = "click", 
                               options = list(container = "body")
@@ -70,7 +70,7 @@ tabPanel(
                         href = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE20948",
                         target = "_blank"))
                     
-                    ),
+             ),
              column(6, align = "center",
                     materialSwitch(inputId = "contrast_data",
                                    label = "Constrast",
@@ -78,17 +78,14 @@ tabPanel(
                                    status = "default",
                                    width = "100%"),
                     p("Dataset taken from ",
-                      a("Blackham et al, J Virol., 2010", 
-                        href = "https://www.ncbi.nlm.nih.gov/pubmed/20200238",
-                        target = "_blank"),
-                      a("(GSE20948)",
-                        href = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE20948",
+                      a("Dugourd et al, Mol. Sys. Biology, 2021", 
+                        href = "https://www.embopress.org/doi/full/10.15252/msb.20209730",
                         target = "_blank")),
                     
              )
            ),
-          h5("Phosphoproteomics"),
-          materialSwitch(inputId = "phospho_data", 
+           h5("Phosphoproteomics"),
+           materialSwitch(inputId = "phospho_data", 
                           label = "Phosphodata", 
                           value = FALSE,
                           status = "default",
@@ -98,6 +95,7 @@ tabPanel(
                href = "https://pubmed.ncbi.nlm.nih.gov/29191787/",
                target = "_blank"))
     ),
+    
     column(8,
            DT::dataTableOutput("expr")  
     )  
@@ -269,7 +267,7 @@ tabPanel(
                                 trigger = "click", 
                                 options = list(container = "body")
                       ),
-                    
+                      
                     )
              ),
              ## network -----------
@@ -291,11 +289,6 @@ tabPanel(
                     conditionalPanel(
                       condition = ("input.omnipath == 'up'"),
                       fileInput("upload_network", label = NULL, accept = ".csv")),
-                    # radioButtons("net_type", 
-                    #              label = NULL, 
-                    #              choices = c("Gene" = "gene", "Protein" = "protein"), 
-                    #              selected = "gene",
-                    #              inline = TRUE),
                     checkboxInput("net_complex", 
                                   label = "Add complexes",
                                   value = TRUE)
@@ -378,145 +371,144 @@ tabPanel(
            
     )
   ),
-# COSMOS ------------------------------------
-hr(),
-fluidRow(
-  column(1, align="center",
-         img(src="logo_cosmos.png", align = "right", height=75, width=75)
+  # COSMOS ------------------------------------
+  hr(),
+  fluidRow(
+    column(1, align="center",
+           img(src="logo_cosmos.png", align = "right", height=75, width=75)
+    ),
+    column(2, align="center",
+           radioButtons("cosnet",
+                        label = h5("Network",
+                                   tags$style(type = "text/css", "#q1c_cosnet {vertical-align: top;}"),
+                                   bsButton("q1c_cosnet", label = "", icon = icon("question"), style = "info", size = "extra-small")),
+                        choices = c("Default" = "def", "Upload" = "up"),
+                        selected = "def",
+                        inline = TRUE),
+           bsPopover(id = "q1c_cosnet",
+                     title = "Network",
+                     content = "Prior knowledge network (PKN).",
+                     placement = "right",
+                     trigger = "click",
+                     options = list(container = "body")
+           ),
+           conditionalPanel(
+             condition = ("input.cosnet == 'up'"),
+             fileInput("upload_cosnet", label = NULL)),
+    ),
+    column(2, align="center",
+           radioButtons(inputId = "layer1",
+                        label = h5("Layer 1",
+                                   tags$style(type = "text/css", "#q2c_layer1 {vertical-align: top;}"),
+                                   bsButton("q2c_layer1", label = "", icon = icon("question"), style = "info", size = "extra-small")),
+                        choices = c("Example Phosphoproteomics" = "l1", "Upload" = "up"), 
+                        selected = "l1",
+                        inline = TRUE),
+           bsPopover(id = "q2c_layer1",
+                     title = "Activities of Layer 1",
+                     content = "Numerical vector, where names are nodes identifiers as in the network and values are from 1, 0, -1. Continuous data will be discretized using the sign function.",
+                     placement = "right",
+                     trigger = "click",
+                     options = list(container = "body")
+           ),
+           conditionalPanel(
+             condition = ("input.layer1 == 'up'"),
+             fileInput("upload_layer1", label = NULL, accept = ".csv"))
+    ),
+    
+    column(2, align="center",
+           radioButtons(inputId = "layer2",
+                        label = h5("Layer 2",
+                                   tags$style(type = "text/css", "#q3c_layer2 {vertical-align: top;}"),
+                                   bsButton("q3c_layer2", label = "", icon = icon("question"), style = "info", size = "extra-small")),
+                        choices = c("Example Metabolomics" = "l2", "Upload" = "up"), 
+                        selected = "l2",
+                        inline = TRUE),
+           bsPopover(id = "q3c_layer2",
+                     title = "Activities of Layer 2",
+                     content = "Numerical vector, where names are nodes identifiers as in the network and values are from 1, 0, -1. Continuous data will be discretized using the sign function.",
+                     placement = "right",
+                     trigger = "click",
+                     options = list(container = "body")
+           ),
+           conditionalPanel(
+             condition = ("input.layer2 == 'up'"),
+             fileInput("upload_layer2", label = NULL, accept = ".csv"))
+    ),
+    column(3, align="center",
+           radioButtons("solver_cosmos",
+                        label = h5("Solver",
+                                   tags$style(type = "text/css", "#q4c_solver {vertical-align: top;}"),
+                                   bsButton("q4c_solver", label = "", icon = icon("question"), style = "info", size = "extra-small")),
+                        choices = c("lpSolve" = "lpSolve", "cplex" = "cplex", "cbc" = "cbc"),
+                        selected = "cplex",
+                        inline = TRUE),
+           bsPopover(id = "q4c_solver",
+                     title = "Solver",
+                     content = "Select solver to run the optimization. When cbc/cplex is selected, a path to the executable file is requiered.",
+                     placement = "right",
+                     trigger = "click",
+                     options = list(container = "body")
+           ),
+           conditionalPanel(
+             condition = ("input.solver_cosmos != 'lpSolve'"),
+             shinyFilesButton(id = 'solverPath',
+                              label = 'Select path of cbc/cplex file',
+                              title = NULL,
+                              multiple = FALSE),
+           ),
+    ),
+    column(1, align="center", actionButton("an_cosmos", "Run COSMOS")),
   ),
-  column(2, align="center",
-         radioButtons("cosnet",
-                      label = h5("Network",
-                                 tags$style(type = "text/css", "#q1c_cosnet {vertical-align: top;}"),
-                                 bsButton("q1c_cosnet", label = "", icon = icon("question"), style = "info", size = "extra-small")),
-                      choices = c("Default" = "def", "Upload" = "up"),
-                      selected = "def",
-                      inline = TRUE),
-         bsPopover(id = "q1c_cosnet",
-                   title = "Network",
-                   content = "Prior knowledge network (PKN).",
-                   placement = "right",
-                   trigger = "click",
-                   options = list(container = "body")
-         ),
-         conditionalPanel(
-           condition = ("input.cosnet == 'up'"),
-           fileInput("upload_cosnet", label = NULL)),
-  ),
-  column(2, align="center",
-         radioButtons(inputId = "layer1",
-                   label = h5("Layer 1",
-                              tags$style(type = "text/css", "#q2c_layer1 {vertical-align: top;}"),
-                              bsButton("q2c_layer1", label = "", icon = icon("question"), style = "info", size = "extra-small")),
-                   choices = c("Example Phosphoproteomics" = "l1", "Upload" = "up"), 
-                   selected = "l1",
-                   inline = TRUE),
-         bsPopover(id = "q2c_layer1",
-                   title = "Activities of Layer 1",
-                   content = "Numerical vector, where names are nodes identifiers as in the network and values are from 1, 0, -1. Continuous data will be discretized using the sign function.",
-                   placement = "right",
-                   trigger = "click",
-                   options = list(container = "body")
-         ),
-         conditionalPanel(
-           condition = ("input.layer1 == 'up'"),
-           fileInput("upload_layer1", label = NULL, accept = ".csv"))
-  ),
+  # KinAct ------------------------------------
+  hr(),
+  fluidRow(
+    column(1, align = "center",
+           img(src = "logo_kinact.png", align = "right", height = 75, width = 75)
+    ),
+    column(11,
+           fluidRow(
+             column(5, align="center",
+                    numericInput(inputId = "minsize",
+                                 label = h5("Regulon's minimal size",
+                                            tags$style(type = "text/css", "#q2d_regulon {vertical-align: top;}"),
+                                            bsButton("q2d_regulon", label = "", icon = icon("question"),
+                                                     style = "info", size = "extra-small")),
+                                 min = 1, max = NA, value = 5
+                    ),
+                    bsPopover(id = "q2d_regulon",
+                              title = "Minimal size of the regulon",
+                              content = "Minimun number of genes targeted by a kinase.",
+                              placement = "right",
+                              trigger = "click",
+                              options = list(container = "body")
+                    )
+             ),
+             column(5, align="center",
+                    selectInput(inputId = "method",
+                                label = h5("Method for computing signatures",
+                                           tags$style(type = "text/css", "#q2d_method {vertical-align: top;}"),
+                                           bsButton("q2d_method", label = "", icon = icon("question"),
+                                                    style = "info", size = "extra-small")),
+                                choices = c("scale" = "scale",
+                                            "rank" = "rank",
+                                            "mad" = "mad",
+                                            "ttest" = "ttest",
+                                            "none" = "none"),
+                                selected = "none"
+                    ),
+                    bsPopover(id = "q2d_method",
+                              title = "Method for computing signature",
+                              content = "Method for computing the single sample signatures.",
+                              placement = "right",
+                              trigger = "click",
+                              options = list(container = "body")
+                    )
+             ),
+             column(1, align="center",
+                    actionButton("an_kinact", "Run KinAct") )
+           )
+    )
+  )  
   
-  column(2, align="center",
-         radioButtons(inputId = "layer2",
-                   label = h5("Layer 2",
-                              tags$style(type = "text/css", "#q3c_layer2 {vertical-align: top;}"),
-                              bsButton("q3c_layer2", label = "", icon = icon("question"), style = "info", size = "extra-small")),
-                   choices = c("Example Metabolomics" = "l2", "Upload" = "up"), 
-                   selected = "l2",
-                   inline = TRUE),
-         bsPopover(id = "q3c_layer2",
-                   title = "Activities of Layer 2",
-                   content = "Numerical vector, where names are nodes identifiers as in the network and values are from 1, 0, -1. Continuous data will be discretized using the sign function.",
-                   placement = "right",
-                   trigger = "click",
-                   options = list(container = "body")
-         ),
-         conditionalPanel(
-           condition = ("input.layer2 == 'up'"),
-           fileInput("upload_layer2", label = NULL, accept = ".csv"))
-  ),
-  column(3, align="center",
-         radioButtons("solver_cosmos",
-                      label = h5("Solver",
-                                 tags$style(type = "text/css", "#q4c_solver {vertical-align: top;}"),
-                                 bsButton("q4c_solver", label = "", icon = icon("question"), style = "info", size = "extra-small")),
-                      choices = c("lpSolve" = "lpSolve", "cplex" = "cplex", "cbc" = "cbc"),
-                      selected = "cplex",
-                      inline = TRUE),
-         bsPopover(id = "q4c_solver",
-                   title = "Solver",
-                   content = "Select solver to run the optimization. When cbc/cplex is selected, a path to the executable file is requiered.",
-                   placement = "right",
-                   trigger = "click",
-                   options = list(container = "body")
-         ),
-         conditionalPanel(
-           condition = ("input.solver_cosmos != 'lpSolve'"),
-           shinyFilesButton(id = 'solverPath',
-                            label = 'Select path of cbc/cplex file',
-                            title = NULL,
-                            multiple = FALSE),
-         ),
-  ),
-  column(1, align="center", actionButton("an_cosmos", "Run COSMOS")),
-),
-
-# KinAct ------------------------------------
-hr(),
-fluidRow(
-  column(1, align = "center",
-         img(src = "logo_kinact.png", align = "right", height = 75, width = 75)
-  ),
-  column(11,
-         fluidRow(
-           column(5, align="center",
-                  numericInput(inputId = "minsize",
-                               label = h5("Regulon's minimal size",
-                                          tags$style(type = "text/css", "#q2d_regulon {vertical-align: top;}"),
-                                          bsButton("q2d_regulon", label = "", icon = icon("question"),
-                                                   style = "info", size = "extra-small")),
-                               min = 1, max = NA, value = 5
-                  ),
-                  bsPopover(id = "q2d_regulon",
-                            title = "Minimal size of the regulon",
-                            content = "Minimun number of genes targeted by a kinase.",
-                            placement = "right",
-                            trigger = "click",
-                            options = list(container = "body")
-                  )
-           ),
-           column(5, align="center",
-                  selectInput(inputId = "method",
-                              label = h5("Method for computing signatures",
-                                         tags$style(type = "text/css", "#q2d_method {vertical-align: top;}"),
-                                         bsButton("q2d_method", label = "", icon = icon("question"),
-                                                  style = "info", size = "extra-small")),
-                              choices = c("scale" = "scale",
-                                          "rank" = "rank",
-                                          "mad" = "mad",
-                                          "ttest" = "ttest",
-                                          "none" = "none"),
-                              selected = "none"
-                  ),
-                  bsPopover(id = "q2d_method",
-                            title = "Method for computing signature",
-                            content = "Method for computing the single sample signatures.",
-                            placement = "right",
-                            trigger = "click",
-                            options = list(container = "body")
-                  )
-           ),
-           column(1, align="center",
-                  actionButton("an_kinact", "Run KinAct") )
-         )
-  )
-)  
-
 )
