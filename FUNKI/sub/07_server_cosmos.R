@@ -36,7 +36,7 @@ COSMOS = eventReactive({
                            layer_2 = layer_2, 
                            RNA_data = expr(), 
                            PKN = PKN, 
-                           solver = input$solver, 
+                           solver = input$solver_cosmos, 
                            solver_path = solverpath,
                            runtime = c(200,200,1000,1000))
      
