@@ -38,7 +38,7 @@ COSMOS = eventReactive({
                            PKN = PKN, 
                            solver = input$solver, 
                            solver_path = solverpath,
-                           runtime = c(100,100,100,100))
+                           runtime = c(200,200,1000,1000))
      
     })
   
@@ -48,7 +48,7 @@ COSMOS = eventReactive({
 edges_cosmos <- reactive({
   req(COSMOS())
   # edges and node information for visnetwork
-  edges <- COSMOS()$weightedSIF %>%
+  edges <- COSMOS()[[1]] %>%
     dplyr::rename(from = Node1, to = Node2, value = Weight) %>%
     tibble::rowid_to_column(var = "id") %>%
     dplyr::mutate(color = dplyr::case_when(Sign == 1 ~ plotly::toRGB('#0578F0', alpha = 1),
@@ -66,10 +66,10 @@ nodes_cosmos <- reactive({
   pal = colorRampPalette(pal_red_blue)(100)
   
   #nodes
-  nodes <- COSMOS()$nodesAttributes %>%
+  nodes <- COSMOS()[[2]] %>%
     dplyr::filter(ZeroAct != 100) %>%
-    dplyr::filter(Node %in% c(union(edges_cosmos()$from, edges_cosmos()$to))) %>%
-    dplyr::rename(id = Node) %>%
+    dplyr::filter(Nodes %in% c(union(edges_cosmos()$from, edges_cosmos()$to))) %>%
+    dplyr::rename(id = Nodes) %>%
     dplyr::mutate(label = id) %>%
     dplyr::mutate(shape = dplyr::case_when(NodeType == "T" ~ "triangle",
                                            NodeType == "S" ~ "diamond",
@@ -86,9 +86,9 @@ nodes_cosmos <- reactive({
 output$select_node_cosmos = renderUI({
   req(COSMOS())
     
-    choices = COSMOS()$nodesAttributes %>% #C()$nodesAttributes$Node %>%
+    choices = COSMOS()[[2]] %>% #C()$nodesAttributes$Node %>%
       dplyr::filter(ZeroAct != 100) %>%
-      dplyr::select(Node) %>%
+      dplyr::select(Nodes) %>%
       dplyr::pull() %>%
       stringr::str_sort(numeric = T) %>%
       unique()

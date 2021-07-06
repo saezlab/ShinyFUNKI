@@ -17,6 +17,7 @@ library(progeny)
 library(CARNIVAL)
 library(OmnipathR)
 library(visNetwork)
+library(cosmosR)
 plan(multisession)
 
 # shiny options
@@ -291,7 +292,7 @@ run_COSMOS <- function(layer_1,
                        remove_unexpressed_nodes = T,
                        filter_tf_gene_interaction_by_optimization = F,
                        diff_exp_threshold = 1,
-                       full_loop = T)
+                       full_loop = F)
 {
   #layer_1
   if(!class(layer_1) == "numeric")
