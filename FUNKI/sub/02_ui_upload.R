@@ -4,6 +4,7 @@ tabPanel(
     sidebarLayout(
       sidebarPanel(
         width = 12,
+        # DATA -----
         fluidRow(h3("Upload Data"))
       ),
       mainPanel(width = 0)
@@ -49,57 +50,78 @@ tabPanel(
                               options = list(container = "body")
                     )
                     
-             )
-           ),
-           
-           # select example data
-           h4("Load Examples"),
-           h5("Expression"),
-           fluidRow(
-             column(6, align = "center",
-                    materialSwitch(inputId = "example_data",
-                                   label = "Multiple conditions",
-                                   value = FALSE,
-                                   status = "default",
-                                   width = "100%"),
-                    p("Dataset taken from ",
-                      a("Blackham et al, J Virol., 2010", 
-                        href = "https://www.ncbi.nlm.nih.gov/pubmed/20200238",
-                        target = "_blank"),
-                      a("(GSE20948)",
-                        href = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE20948",
-                        target = "_blank"))
-                    
              ),
-             column(6, align = "center",
-                    materialSwitch(inputId = "contrast_data",
-                                   label = "Constrast",
-                                   value = FALSE,
-                                   status = "default",
-                                   width = "100%"),
-                    p("Dataset taken from ",
-                      a("Dugourd et al, Mol. Sys. Biology, 2021", 
-                        href = "https://www.embopress.org/doi/full/10.15252/msb.20209730",
-                        target = "_blank")),
-                    
-             )
            ),
-           h5("Phosphoproteomics"),
-           materialSwitch(inputId = "phospho_data", 
-                          label = "Phosphodata", 
-                          value = FALSE,
-                          status = "default",
-                          width = "100%"),
-           p("Dataset taken from ",
-             a("Gonçalves et al, Met Eng, 2018", 
-               href = "https://pubmed.ncbi.nlm.nih.gov/29191787/",
-               target = "_blank"))
+           radioButtons("type_analysis", 
+                        label = h5("Type of analysis",
+                                   tags$style(type = "text/css", "#q3_typeanalysis {vertical-align: top;}"),
+                                   bsButton("q3_typeanalysis", label = "", icon = icon("question"), style = "info", size = "extra-small")),
+                        choices = c("Multiple conditions" = "multi", "Contrast" = "contrast"), 
+                        selected = "multi",
+                        inline = TRUE),
+           bsPopover(id = "q3_typeanalysis",
+                     title = "Type of analysis",
+                     content = "Type of upload data. If the data come from a differential expression analysis, select contrast. If it contains multiple samples to analyse, select multiple conditions.",
+                     placement = "right", 
+                     trigger = "click", 
+                     options = list(container = "body")
+                     ),
+           # select example data
+           actionButton(
+             inputId = "examples",
+             label = "Load Examples",
+             icon = NULL
+           ),
+           conditionalPanel(
+             condition =  ("input.examples"),
+             h5("Expression"),
+             fluidRow(
+               column(6, align = "center",
+                      materialSwitch(inputId = "example_data",
+                                     label = "Multiple conditions",
+                                     value = FALSE,
+                                     status = "default",
+                                     width = "100%"),
+                      p("Dataset taken from ",
+                        a("Blackham et al, J Virol., 2010", 
+                          href = "https://www.ncbi.nlm.nih.gov/pubmed/20200238",
+                          target = "_blank"),
+                        a("(GSE20948)",
+                          href = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE20948",
+                          target = "_blank"))
+                      
+               ),
+               column(6, align = "center",
+                      materialSwitch(inputId = "contrast_data",
+                                     label = "Constrast",
+                                     value = FALSE,
+                                     status = "default",
+                                     width = "100%"),
+                      p("Dataset taken from ",
+                        a("Dugourd et al, Mol. Sys. Biology, 2021", 
+                          href = "https://www.embopress.org/doi/full/10.15252/msb.20209730",
+                          target = "_blank")),
+               )
+             ),
+             h5("Phosphoproteomics"),
+             materialSwitch(inputId = "phospho_data", 
+                            label = "Phosphodata", 
+                            value = FALSE,
+                            status = "default",
+                            width = "100%"),
+             p("Dataset taken from ",
+               a("Gonçalves et al, Met Eng, 2018", 
+                 href = "https://pubmed.ncbi.nlm.nih.gov/29191787/",
+                 target = "_blank"))
+           )
     ),
     
     column(8,
            DT::dataTableOutput("expr")  
     )  
   ),
+  
+  br(),
   
   ## ANALYSIS --------
   fluidRow(
