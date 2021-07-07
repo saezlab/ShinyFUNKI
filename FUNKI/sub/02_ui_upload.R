@@ -16,7 +16,7 @@ tabPanel(
            # show the upload stage if the example is not selected
            fluidRow(
              column(7, align = "center",
-                    # data upload
+                    # data upload -----
                     fileInput("upload_expr", 
                               label = h5("Upload gene expression (.csv)",
                                          tags$style(type = "text/css", "#q2_data {vertical-align: top;}"),
@@ -57,7 +57,7 @@ tabPanel(
                                    tags$style(type = "text/css", "#q3_typeanalysis {vertical-align: top;}"),
                                    bsButton("q3_typeanalysis", label = "", icon = icon("question"), style = "info", size = "extra-small")),
                         choices = c("Multiple conditions" = "multi", "Contrast" = "contrast"), 
-                        selected = "multi",
+                        selected = character(0),
                         inline = TRUE),
            bsPopover(id = "q3_typeanalysis",
                      title = "Type of analysis",
@@ -66,7 +66,7 @@ tabPanel(
                      trigger = "click", 
                      options = list(container = "body")
                      ),
-           # select example data
+           # select example data -----
            actionButton(
              inputId = "examples",
              label = "Load Examples",

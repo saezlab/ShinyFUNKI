@@ -4,6 +4,8 @@ expr = reactive({
               !input$example_data & !input$phospho_data & !input$contrast_data)
   toggleState("select_organism", 
               !input$example_data & !input$phospho_data & !input$contrast_data)
+  toggleState("type_analysis", 
+              !input$example_data & !input$phospho_data & !input$contrast_data)
   toggleState("phospho_data", 
               !input$example_data & !input$contrast_data)
   toggleState("example_data", 
