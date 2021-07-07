@@ -4,21 +4,29 @@ D = eventReactive({
 }, {
   
   if (!is.null(input$selected_conf_level)) {
-
+    
     withProgress(message = "Calculate TF activities...", value = 1, {
       
-      if (input$example_data){
+      data = expr()
+      
+      if (input$examples){
         organism = "Human"
       }else {organism = input$select_organism}
       
-      dorothea_result = run_dorothea(dorothea_matrix = expr(), 
+      if(any(  input$contrast_data | all(length(input$type_analysis) > 0 & input$type_analysis == "contrast") )){
+        data = data %>%
+          dplyr::select(t) %>%
+          unique.data.frame()
+      }
+
+      dorothea_result = run_dorothea(dorothea_matrix = data, 
                                      organism = organism, 
                                      confidence_level = input$selected_conf_level, 
                                      minsize = input$minsize, 
                                      method = input$method)
     })
   }
-
+  
 })
 
 # Dynamic widgets / RenderUI ----------------------------------------------
@@ -46,7 +54,7 @@ output$select_tf = renderUI({
       dplyr::filter(!!as.name(input$select_contrast) == max(abs(!!as.name(input$select_contrast)))) %>%
       dplyr::select(TF) %>%
       dplyr::pull()
-      
+    
     pickerInput(
       inputId = "select_tf",
       label = "Select Transcription Factor",
@@ -75,7 +83,7 @@ output$select_top_n_labels = renderUI({
     
     sliderInput(
       "select_top_n_labels",
-      label = "Number of targets to display",
+      label = "Number of TF's target genes to display",
       value = dplyr::case_when(targets > 10 ~ 10, targets <= 10 ~ round(targets * (2 / 3))),
       min = 1,
       max = targets,
@@ -107,7 +115,7 @@ barplot_nes_reactive_dorothea = reactive ({
       as.data.frame() %>%
       rownames_to_column(var = "GeneID") %>%
       barplot_nes_dorothea(smpl = input$select_contrast,
-                  nHits = input$select_top_n_hits)
+                           nHits = input$select_top_n_hits)
   }
   
 })
@@ -124,29 +132,30 @@ barplot_tf_reactive = reactive({
 
 network_tf_reactive = reactive({
   
+  req(D(), expr(),
+      input$select_tf,
+      input$select_contrast,
+      input$select_top_n_labels,
+      input$selected_conf_level)
+  
   if(input$select_organism == "Human"){
     aux = dorothea_hs
   }else{
     aux = dorothea_mm
   }
   
-  if (!is.null(input$select_tf) &
-      !is.null(input$select_contrast) &
-      input$select_top_n_hits > 0) {
-    aux = aux %>%
-      dplyr::filter(confidence %in% input$selected_conf_level)
-    
-    
-    plot_network(
-      data = expr(), 
-      footprint_result = D(),
-      regulon = aux,
-      sample = input$select_contrast,
-      selected_hub = input$select_tf,
-      number_targets = input$select_top_n_labels
-    )
-    
-  }
+  aux = aux %>%
+    dplyr::filter(confidence %in% input$selected_conf_level)
+  
+  
+  plot_network(
+    data = expr(), 
+    footprint_result = D(),
+    regulon = aux,
+    sample = input$select_contrast,
+    selected_hub = input$select_tf,
+    number_targets = input$select_top_n_labels
+  )
   
 })
 
@@ -169,12 +178,10 @@ output$tf_network = renderVisNetwork({
 
 # Heatmap of samples vs TFs
 output$heatmap_dorothea = plotly::renderPlotly({
-  if(!is.null(D())){
-    D() %>% t() %>% data.frame() %>%
-      heatmap_scores()
-  }
+  req(D())
+  D() %>% t() %>% data.frame() %>%
+    heatmap_scores()
 })
-
 
 # Render Tables -----------------------------------------------------------
 # TF-activities
@@ -185,20 +192,29 @@ output$dorothea_table = DT::renderDataTable({
   }else{
     targets = dorothea_mm
   }
-
+  
   results_confidence = unique.data.frame(merge(
     targets[, c("tf", "confidence")],
     D() %>%
-    data.frame() %>%
-    round(digits = 3) %>% 
-    rownames_to_column(var = "tf"),
+      data.frame() %>%
+      round(digits = 3) %>% 
+      rownames_to_column(var = "tf"),
     by = "tf"
   ))
   colnames(results_confidence)[colnames(results_confidence) == "tf"] = "Transcription Factor"
   dorothea_result_matrix = DT::datatable(
     results_confidence,
-    option = list(scrollX = TRUE, autoWidth = T),
-    filter = "top"
+    # option = list(scrollX = TRUE, autoWidth = T),
+    filter = "top",
+    extensions = "Buttons",
+    options = list(
+      paging = TRUE,
+      searching = TRUE,
+      fixedColumns = TRUE,
+      autoWidth = TRUE,
+      ordering = TRUE,
+      dom = 'tB',
+      buttons = c('csv', 'excel'))
   )
   
 })
