@@ -13,10 +13,10 @@ D = eventReactive({
         organism = "Human"
       }else {organism = input$select_organism}
       
-      if(any(  input$contrast_data | all(length(input$type_analysis) > 0 & input$type_analysis == "contrast") )){
-        data = data %>%
-          dplyr::select(t) %>%
-          unique.data.frame()
+      if( any( input$contrast_data | all(!is.null(input$upload_expr) & input$type_analysis == "contrast") ) ){
+          data = data %>%
+            dplyr::select(t) %>%
+            unique.data.frame()
       }
 
       dorothea_result = run_dorothea(dorothea_matrix = data, 
@@ -27,6 +27,15 @@ D = eventReactive({
     })
   }
   
+})
+
+D = eventReactive({
+  input$upload_doro_results
+  },{
+  read.delim(input$upload_doro_results$datapath, sep = ",") %>% 
+      dplyr::mutate(dplyr::across(-1,as.numeric)) %>%
+      tibble::column_to_rownames(var="X")
+      
 })
 
 # Dynamic widgets / RenderUI ----------------------------------------------
