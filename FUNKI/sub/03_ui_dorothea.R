@@ -20,8 +20,8 @@ tabPanel(
               options = list(container = "body")
     )
   ),
-  conditionalPanel(
-    condition = ("output.dorothea_table"),
+  # conditionalPanel(
+    # condition = ("output.dorothea_table.length > 0"),
     fluidRow(
       column(6, align = "center",
              sidebarLayout(
@@ -49,25 +49,25 @@ tabPanel(
           mainPanel(width = 0)
         )
       )
-    )
-    
-  ),
+    ),
+  # ),
   hr(),
   
   fluidRow(
-    conditionalPanel(
-      condition = ("output.tf_bar"),
-      # dropdownButton(
-      #   tags$h3("Download"),
-      #   downloadButton("download_dorothea_analysis", "Download DoRothEA scores"),
-      #   selectInput(inputId = 'xcol', label = 'X Variable', choices = names(iris)),
-      #   selectInput(inputId = 'ycol', label = 'Y Variable', choices = names(iris), selected = names(iris)[[2]]),
-      #   sliderInput(inputId = 'clusters', label = 'Cluster count', value = 3, min = 1, max = 9),
-      #   circle = TRUE, status = "danger", icon = icon("gear"), width = "300px",
-      #   tooltip = tooltipOptions(title = "Click to see inputs !")
-      # ),
-      column(4, plotly::plotlyOutput("tf_bar"))
-    ),
+    column(4,
+           # conditionalPanel(
+             # condition = ("output.dorothea_table.length = 0 && output.dorothea_table == 'undefined'"),
+             # "typeof input.one_rows_selected  !== 'undefined' && input.one_rows_selected.length > 0"
+             # condition = ("output.tf_bar !== undefined"),
+           #   dropdownButton(
+           #     tags$h3("Download"),
+           #     # downloadButton("download_dorothea_analysis", "Download DoRothEA scores"),
+           #     selectInput(inputId = 'xcol', label = 'X Variable', choices = names(iris)),
+           #     circle = TRUE, status = "danger", icon = icon("gear"), width = "300px",
+           #     tooltip = tooltipOptions(title = "Click to see inputs !")
+           #   )
+           # ),
+           plotly::plotlyOutput("tf_bar")),
     column(4, plotly::plotlyOutput("barplot_nes_dorothea")),
     column(4, visNetworkOutput("tf_network"))
   ),

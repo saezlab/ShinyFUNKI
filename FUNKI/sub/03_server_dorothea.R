@@ -1,24 +1,35 @@
 # Reactive Computations ---------------------------------------------------
 D = eventReactive({
-  input$an_dorothea
+  (input$an_dorothea & is.null(input$upload_doro_results$datapath)) |
+    !is.null(input$upload_doro_results$datapath)
 }, {
   
-  if (!is.null(input$selected_conf_level)) {
+  if (all(input$an_dorothea & !is.null(input$selected_conf_level))) {
     
     withProgress(message = "Calculate TF activities...", value = 1, {
       
       data = expr()
+      tyan = input$type_analysis
       
       if (input$examples){
         organism = "Human"
       }else {organism = input$select_organism}
       
-      if( any( input$contrast_data | all(!is.null(input$upload_expr) & input$type_analysis == "contrast") ) ){
+      if( any( input$contrast_data | all(!is.null(input$upload_expr) & !is.null(input$type_analysis)) ) ){
+        if(any( input$contrast_data | input$type_analysis == "contrast")){
           data = data %>%
             dplyr::select(t) %>%
-            unique.data.frame()
-      }
+            unique.data.frame()          
+        }else{
+          validate(
+            need(input$type_analysis == "multi", 
+                 "The type of analysis selected should be contrast")
+          )
+          
+        }
 
+      }
+      
       dorothea_result = run_dorothea(dorothea_matrix = data, 
                                      organism = organism, 
                                      confidence_level = input$selected_conf_level, 
@@ -26,34 +37,33 @@ D = eventReactive({
                                      method = input$method)
     })
   }
+  else if(!is.null(input$upload_doro_results$datapath)){
+    
+    withProgress(message = "Loading TF activities...", value = 1, {
+      
+      dorothea_result = read.delim(input$upload_doro_results$datapath, sep = ",") %>%
+        dplyr::mutate(dplyr::across(-1,as.numeric)) %>%
+        tibble::column_to_rownames(var="X")
+      
+    })
+    
+  }
   
 })
-
-D = eventReactive({
-  input$upload_doro_results
-  },{
-  read.delim(input$upload_doro_results$datapath, sep = ",") %>% 
-      dplyr::mutate(dplyr::across(-1,as.numeric)) %>%
-      tibble::column_to_rownames(var="X")
-      
-})
-
 # Dynamic widgets / RenderUI ----------------------------------------------
-
 # select contrast/sample
 output$select_contrast_dorothea = renderUI({
-  if (!is.null(D())) {
-    choices = colnames(D()) %>%
-      str_sort(numeric = T)
-    pickerInput(inputId = "select_contrast",
-                label = "Select Sample/Contrast",
-                choices = choices)
-  }
+  req(D())
+  choices = colnames(D()) %>%
+    str_sort(numeric = T)
+  pickerInput(inputId = "select_contrast",
+              label = "Select Sample/Contrast",
+              choices = choices)
 })
 
 # select TFs
 output$select_tf = renderUI({
-  if (!is.null(input$select_contrast)) {
+  req(input$select_contrast, D())
     choices = unique(rownames(D()))
     
     default_selected = D() %>%
@@ -71,13 +81,16 @@ output$select_tf = renderUI({
       options = list("live-search" = TRUE),
       selected = default_selected[1]
     )
-    
-  }
+
 })
 
 # select number of targets
 output$select_top_n_labels = renderUI({
-  if (!is.null(input$select_tf)) {
+  req(input$select_tf,
+      input$select_organism,
+      input$selected_conf_level,
+      D())
+  
     if(input$select_organism == "Human"){
       targets = dorothea_hs
     }else{
@@ -98,12 +111,11 @@ output$select_top_n_labels = renderUI({
       max = targets,
       step = 1
     )
-  }
 })
 
 # select top n results
 output$select_top_n_hits = renderUI({
-  if (!is.null(D())) {
+  req(D())
     max_tfs = nrow(D())
     sliderInput(
       "select_top_n_hits",
@@ -113,39 +125,37 @@ output$select_top_n_hits = renderUI({
       max = max_tfs,
       step = 1
     )
-  }
 })
 
-# Bar plot with the TFs for a condition---------------------------------------------------
+# Plots ---------------------------------------------------
 barplot_nes_reactive_dorothea = reactive ({
-  if (!is.null(input$select_contrast) &
-      !is.null(input$select_top_n_hits)) {
+  req(input$select_contrast, input$select_top_n_hits)
     p <- D() %>%
       as.data.frame() %>%
       rownames_to_column(var = "GeneID") %>%
       barplot_nes_dorothea(smpl = input$select_contrast,
                            nHits = input$select_top_n_hits)
-  }
-  
 })
 
 barplot_tf_reactive = reactive({
-  if (!is.null(input$select_tf)) {
+  req(input$select_tf, D())
     q <- D() %>%
       data.frame() %>%
       barplot_tf(selTF = input$select_tf)
-    
-  }
-  
 })
 
 network_tf_reactive = reactive({
   
-  req(D(), expr(),
+  req(D(),
       input$select_tf,
       input$select_contrast,
       input$select_top_n_labels,
       input$selected_conf_level)
+  
+  validate(
+    need(expr(), 
+         "The plot cannot be showed because the expression file is not included")
+  )
   
   if(input$select_organism == "Human"){
     aux = dorothea_hs
@@ -188,8 +198,24 @@ output$tf_network = renderVisNetwork({
 # Heatmap of samples vs TFs
 output$heatmap_dorothea = plotly::renderPlotly({
   req(D())
-  D() %>% t() %>% data.frame() %>%
+  
+  tfs = D() %>%
+    as.data.frame() %>%
+    rownames_to_column(var = "GeneID") %>%
+    .[, c("GeneID", input$select_contrast_dorothea)]
+  
+  tfs$abs = abs(as.numeric(tfs[,input$select_contrast_dorothea]))
+  tfs = tfs %>%
+    dplyr::top_n(input$select_top_n_hits, wt = abs) %>%
+    dplyr::pull(GeneID)
+
+  D() %>%
+    tibble::rownames_to_column(var = "GeneID") %>%
+    dplyr::filter(GeneID %in% tfs) %>%
+    tibble::column_to_rownames(var = "GeneID") %>%
+    t() %>% data.frame() %>%
     heatmap_scores()
+  
 })
 
 # Render Tables -----------------------------------------------------------
