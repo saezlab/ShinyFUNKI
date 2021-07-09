@@ -3,7 +3,7 @@ D = eventReactive({
   (input$an_dorothea & is.null(input$upload_doro_results$datapath)) |
     !is.null(input$upload_doro_results$datapath)
 }, {
-  
+
   if (all(input$an_dorothea & !is.null(input$selected_conf_level))) {
     
     withProgress(message = "Calculate TF activities...", value = 1, {
@@ -16,7 +16,15 @@ D = eventReactive({
       }else {organism = input$select_organism}
       
       if( any( input$contrast_data | all(!is.null(input$upload_expr) & !is.null(input$type_analysis)) ) ){
-        if(any( input$contrast_data | input$type_analysis == "contrast")){
+        upcon = T
+        
+        if(!is.null(input$type_analysis)){
+          if(input$type_analysis == "multi"){
+            upcon = F
+          }
+        }
+        
+        if(any( input$contrast_data | upcon)){
           data = data %>%
             dplyr::select(t) %>%
             unique.data.frame()          
@@ -36,6 +44,7 @@ D = eventReactive({
                                      minsize = input$minsize, 
                                      method = input$method)
     })
+    
   }
   else if(!is.null(input$upload_doro_results$datapath)){
     
@@ -48,8 +57,31 @@ D = eventReactive({
     })
     
   }
-  
+
 })
+
+heatmap_df_reactive = reactive({
+  req(D(),
+      input$select_contrast,
+      input$select_top_n_hits)
+  
+  tfs = D() %>%
+    data.frame() %>%
+    tibble::rownames_to_column(var = "GeneID") %>%
+    dplyr::select(GeneID, !!as.name(input$select_contrast)) %>%
+    dplyr::mutate(ab = abs(as.numeric(!!as.name(input$select_contrast)))) %>%
+    dplyr::top_n(input$select_top_n_hits, wt = ab) %>%
+    dplyr::pull(GeneID)
+
+  cosa = D() %>%
+    data.frame() %>%
+    tibble::rownames_to_column(var = "GeneID") %>%
+    dplyr::filter(GeneID %in% tfs) %>%
+    tibble::column_to_rownames(var = "GeneID") %>%
+    t() %>% as.data.frame()
+
+})
+
 # Dynamic widgets / RenderUI ----------------------------------------------
 # select contrast/sample
 output$select_contrast_dorothea = renderUI({
@@ -197,26 +229,13 @@ output$tf_network = renderVisNetwork({
 
 # Heatmap of samples vs TFs
 output$heatmap_dorothea = plotly::renderPlotly({
-  req(D())
+  req(heatmap_df_reactive())
   
-  tfs = D() %>%
-    as.data.frame() %>%
-    rownames_to_column(var = "GeneID") %>%
-    .[, c("GeneID", input$select_contrast_dorothea)]
-  
-  tfs$abs = abs(as.numeric(tfs[,input$select_contrast_dorothea]))
-  tfs = tfs %>%
-    dplyr::top_n(input$select_top_n_hits, wt = abs) %>%
-    dplyr::pull(GeneID)
-
-  D() %>%
-    tibble::rownames_to_column(var = "GeneID") %>%
-    dplyr::filter(GeneID %in% tfs) %>%
-    tibble::column_to_rownames(var = "GeneID") %>%
-    t() %>% data.frame() %>%
+  heatmap_df_reactive() %>%
     heatmap_scores()
   
 })
+
 
 # Render Tables -----------------------------------------------------------
 # TF-activities

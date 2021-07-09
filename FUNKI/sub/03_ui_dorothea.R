@@ -21,7 +21,7 @@ tabPanel(
     )
   ),
   # conditionalPanel(
-    # condition = ("output.dorothea_table.length > 0"),
+  #   condition = ("input.an_dorothea || output.dorothea_table.length > 0"),
     fluidRow(
       column(6, align = "center",
              sidebarLayout(
