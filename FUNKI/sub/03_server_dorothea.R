@@ -60,28 +60,6 @@ D = eventReactive({
 
 })
 
-heatmap_df_reactive = reactive({
-  req(D(),
-      input$select_contrast,
-      input$select_top_n_hits)
-  
-  tfs = D() %>%
-    data.frame() %>%
-    tibble::rownames_to_column(var = "GeneID") %>%
-    dplyr::select(GeneID, !!as.name(input$select_contrast)) %>%
-    dplyr::mutate(ab = abs(as.numeric(!!as.name(input$select_contrast)))) %>%
-    dplyr::top_n(input$select_top_n_hits, wt = ab) %>%
-    dplyr::pull(GeneID)
-
-  cosa = D() %>%
-    data.frame() %>%
-    tibble::rownames_to_column(var = "GeneID") %>%
-    dplyr::filter(GeneID %in% tfs) %>%
-    tibble::column_to_rownames(var = "GeneID") %>%
-    t() %>% as.data.frame()
-
-})
-
 # Dynamic widgets / RenderUI ----------------------------------------------
 # select contrast/sample
 output$select_contrast_dorothea = renderUI({
@@ -159,9 +137,25 @@ output$select_top_n_hits = renderUI({
     )
 })
 
+#download handler
+output$down_doro = renderUI({
+  req(D())
+  choices = list("DoRothEA scores" = 1, 
+                 "Barplot for Sample" = 2, 
+                 "Barplot for TF" = 3,
+                 "TF's network" = 4)#,
+                 # "Heatmap" = 5)
+  pickerInput(inputId = "down_doro",
+              label = "Select Download",
+              choices = choices,
+              selected = 1)
+})
+
 # Plots ---------------------------------------------------
 barplot_nes_reactive_dorothea = reactive ({
-  req(input$select_contrast, input$select_top_n_hits)
+  req(D(),
+      input$select_contrast,
+      input$select_top_n_hits)
     p <- D() %>%
       as.data.frame() %>%
       rownames_to_column(var = "GeneID") %>%
@@ -207,6 +201,28 @@ network_tf_reactive = reactive({
     selected_hub = input$select_tf,
     number_targets = input$select_top_n_labels
   )
+  
+})
+
+heatmap_df_reactive = reactive({
+  req(D(),
+      input$select_contrast,
+      input$select_top_n_hits)
+  
+  tfs = D() %>%
+    data.frame() %>%
+    tibble::rownames_to_column(var = "GeneID") %>%
+    dplyr::select(GeneID, !!as.name(input$select_contrast)) %>%
+    dplyr::mutate(ab = abs(as.numeric(!!as.name(input$select_contrast)))) %>%
+    dplyr::top_n(input$select_top_n_hits, wt = ab) %>%
+    dplyr::pull(GeneID)
+  
+  cosa = D() %>%
+    data.frame() %>%
+    tibble::rownames_to_column(var = "GeneID") %>%
+    dplyr::filter(GeneID %in% tfs) %>%
+    tibble::column_to_rownames(var = "GeneID") %>%
+    t() %>% as.data.frame()
   
 })
 
@@ -274,35 +290,52 @@ output$dorothea_table = DT::renderDataTable({
 })
 
 # Download Handler --------------------------------------------------------
-
-# All in a tar
-output$download_dorothea_analysis = downloadHandler(
-  filename = "footprint_dorothea_saezLab.tar.gz",
-  content = function(x) {
-    fdir = "footprint_dorothea_saezLab"
-    
-    if (dir.exists(fdir)) {
-      do.call(file.remove, list(list.files(fdir, full.names = TRUE)))
-    } else{
-      dir.create(fdir)
-    }
-    
-    fnames = c(
-      paste0("barplot_tfs_", input$select_contrast, ".png"),
-      paste0("barplot_samples_", input$select_tf, ".png"),
-      paste0("network_", input$select_contrast, "_", input$select_tf, ".png")
-    )
-    
-    ggsave(file.path(fdir, fnames[1]), barplot_nes_reactive_dorothea(), device = "png")
-    ggsave(file.path(fdir, fnames[2]), barplot_tf_reactive(), device = "png")
-    
-    visSave(network_tf_reactive(), "temp.html")
-    webshot::webshot("temp.html", zoom = 2, file = file.path(fdir, fnames[3]))
-    file.remove("temp.html")
-    
-    write.csv(D(),
-              file.path(fdir, "TFactivities_nes.csv"),
-              quote = F)
-    tar(x, files = fdir, compression = "gzip")
+doro_download = observeEvent({
+  input$down_doro
+},{
+  req(D())
+  
+  if(input$down_doro == 1){
+    a = list(fname = "dorothea_TFactivities_nes.csv",
+         cont = function(file){
+           write.csv(D(),
+                     file,
+                     quote = F)
+         })
+  }else if(input$down_doro == 2){
+    a = list(fname = function(){paste0("barplot_dorothea_tfs", input$select_top_n_hits, "_", input$select_contrast, ".png")},
+         cont = function(file){ggsave(file, barplot_nes_reactive_dorothea(), device = "png")})
+  }else if(input$down_doro == 3){
+    a = list(fname = function(){paste0("barplot_dorothea_samples_", input$select_tf, ".png")},
+         cont = function(file){ggsave(file, barplot_tf_reactive(), device = "png")})
+  }else if(input$down_doro == 4){
+    a = list(fname = paste0("network_dorothea_targets_", input$select_tf, "_", input$select_contrast, ".png"),
+         cont = function(file){
+           visSave(network_tf_reactive(), "temp.html")
+           webshot::webshot("temp.html", zoom = 2, file = file)
+           file.remove("temp.html")
+  })
+  }else if(input$down_doro == 5){
+    a = list(fname = function(){paste0("heatmap_dorothea_sample_", input$select_tf, "_view.png")},
+             cont = function(file){
+               plotly::orca(heatmap_dorothea(), file)
+               }
+             )
   }
-)
+  
+  callModule(id = "download_dorothea",
+             module = downloadObj,
+             filename = a$fname,
+             content = a$cont)
+  
+})
+
+ 
+# output$download_dorothea_network = downloadHandler(
+#   filename = function(){ppaste0("network_dorotea_targets_", input$select_top_n_labels, "_", input$select_contrast, "_", input$select_tf, ".png")},
+  # content = function(file){
+  #   visSave(network_tf_reactive(), "temp.html")
+  #   webshot::webshot("temp.html", zoom = 2, file = file)
+  #   file.remove("temp.html")
+  # })
+# 

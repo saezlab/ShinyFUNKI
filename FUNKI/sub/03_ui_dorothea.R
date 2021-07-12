@@ -20,54 +20,24 @@ tabPanel(
               options = list(container = "body")
     )
   ),
-  # conditionalPanel(
-  #   condition = ("input.an_dorothea || output.dorothea_table.length > 0"),
-    fluidRow(
-      column(6, align = "center",
-             sidebarLayout(
-               sidebarPanel(
-                 width = 12,
-                 uiOutput("select_contrast_dorothea"),
-                 uiOutput("select_tf"),
-                 downloadButton(
-                   "download_dorothea_analysis",
-                   "Download DoRothEA scores"
-                 ),
-               ),
-               mainPanel(width = 0)
-             )
-      ),
-      
-      column(
-        6,
-        sidebarLayout(
-          sidebarPanel(
-            width = 12,
-            uiOutput("select_top_n_hits"),
-            uiOutput("select_top_n_labels")
-          ),
-          mainPanel(width = 0)
-        )
-      )
+  
+   # fluidRow(
+    dropdown(
+      # tags$h5("List of Inputs"),
+      uiOutput("select_contrast_dorothea"),
+      uiOutput("select_tf"),
+      uiOutput("select_top_n_hits"),
+      uiOutput("select_top_n_labels"),
+      uiOutput("down_doro"),
+      downloadObjUI(id = "download_dorothea"),
+      circle = TRUE, 
+      status = "primary",
+      inputId = "mydropdown",
+      icon = icon("gear"), width = "300px"
     ),
   # ),
-  hr(),
-  
   fluidRow(
-    column(4,
-           # conditionalPanel(
-             # condition = ("output.dorothea_table.length = 0 && output.dorothea_table == 'undefined'"),
-             # "typeof input.one_rows_selected  !== 'undefined' && input.one_rows_selected.length > 0"
-             # condition = ("output.tf_bar !== undefined"),
-           #   dropdownButton(
-           #     tags$h3("Download"),
-           #     # downloadButton("download_dorothea_analysis", "Download DoRothEA scores"),
-           #     selectInput(inputId = 'xcol', label = 'X Variable', choices = names(iris)),
-           #     circle = TRUE, status = "danger", icon = icon("gear"), width = "300px",
-           #     tooltip = tooltipOptions(title = "Click to see inputs !")
-           #   )
-           # ),
-           plotly::plotlyOutput("tf_bar")),
+    column(4, plotly::plotlyOutput("tf_bar")),
     column(4, plotly::plotlyOutput("barplot_nes_dorothea")),
     column(4, visNetworkOutput("tf_network"))
   ),
@@ -82,3 +52,54 @@ tabPanel(
   # Table visualization
   DT::dataTableOutput("dorothea_table")
 )
+
+
+
+
+
+# conditionalPanel(
+#   condition = ("typeof output.dorothea_table !== 'undefined' && output.dorothea_table > 0"),
+#   fluidRow(
+#     column(6, align = "center",
+#            sidebarLayout(
+#              sidebarPanel(
+#                width = 12,
+#                checkboxGroupInput("download_check", 
+#                                   h5("Download"), 
+#                                   choices = list("DoRothEA scores" = 1, 
+#                                                  "Barplot for Sample" = 2, 
+#                                                  "Barplot for TF" = 3,
+#                                                  "TF's network" = 4,
+#                                                  "Heatmap" = 5),
+#                                   selected = character(0),
+#                                   inline = T),
+#                
+#                conditionalPanel(condition = ("input.download_check.indexOf('1')>=0"),
+#                                   downloadButton(
+#                                     "download_dorothea_scores",
+#                                     label = "DoRothEA scores"
+#                                   )
+#                                 ),
+#                conditionalPanel(condition = ("input.download_check.indexOf('2')>=0"),#"input.method.indexOf('M')>=0 || input.method.indexOf('S')>=0"
+#                                 downloadButton(
+#                                   "download_dorothea_barplotSample",
+#                                   label = "Barplot for Sample"
+#                                 )
+#                                 ),
+#                conditionalPanel(condition = ("input.download_check.indexOf('3')>=0"),
+#                downloadButton("download_dorothea_barplotTF",
+#                  label = "Barplot for TF"
+#                )),
+#                conditionalPanel(condition = ("input.download_check.indexOf('4')>=0"),
+#                                 downloadButton("download_dorothea_network",
+#                                                label = "TF's network"
+#                                 ))
+# 
+#              ),
+#              mainPanel(width = 0)
+#            )
+#     ),
+#   ),
+# ),
+# hr(),
+
