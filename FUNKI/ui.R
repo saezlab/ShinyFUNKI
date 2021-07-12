@@ -2,6 +2,7 @@
 source("sub/global_analysis.R")
 source("sub/global_plots.R")
 source("sub/global_sup.R")
+source("sub/global_modules.R")
 ui = function(request) {
   fluidPage(
     
