@@ -5,10 +5,22 @@ downloadObjUI <- function(id) {
   downloadButton(ns("funki_download"), label = "Download")
 }
 
-downloadObj <- function(input, output, session, filename, content) {
+# downloadObj <- function(input, output, session, filename, content) {
+#   
+#   output$funki_download <- downloadHandler(
+#     filename = filename,
+#     content = content
+#   )
+# }
+
+downloadObjSever <- function(id, filename, content) {
+  moduleServer(
+    id,
+    function(input, output, session){
+      output$funki_download <- downloadHandler(
+        filename = filename,
+        content = content
+      )
+    })
   
-  output$funki_download <- downloadHandler(
-    filename = filename,
-    content = content
-  )
 }
