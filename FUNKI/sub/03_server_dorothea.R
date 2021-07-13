@@ -9,9 +9,8 @@ D = eventReactive({
     withProgress(message = "Calculate TF activities...", value = 1, {
       
       data = expr()
-      tyan = input$type_analysis
       
-      if (input$examples){
+      if(input$examples){
         organism = "Human"
       }else {organism = input$select_organism}
       
@@ -323,19 +322,5 @@ doro_download = observeEvent({
              )
   }
   
-  callModule(id = "download_dorothea",
-             module = downloadObj,
-             filename = a$fname,
-             content = a$cont)
-  
+  downloadObjSever("download_dorothea", filename = a$fname, content = a$cont)
 })
-
- 
-# output$download_dorothea_network = downloadHandler(
-#   filename = function(){ppaste0("network_dorotea_targets_", input$select_top_n_labels, "_", input$select_contrast, "_", input$select_tf, ".png")},
-  # content = function(file){
-  #   visSave(network_tf_reactive(), "temp.html")
-  #   webshot::webshot("temp.html", zoom = 2, file = file)
-  #   file.remove("temp.html")
-  # })
-# 
