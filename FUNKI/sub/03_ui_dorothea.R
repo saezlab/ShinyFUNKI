@@ -21,21 +21,19 @@ tabPanel(
     )
   ),
   
-   # fluidRow(
-    dropdown(
-      # tags$h5("List of Inputs"),
-      uiOutput("select_contrast_dorothea"),
-      uiOutput("select_tf"),
-      uiOutput("select_top_n_hits"),
-      uiOutput("select_top_n_labels"),
-      uiOutput("down_doro"),
-      downloadObjUI(id = "download_dorothea"),
-      circle = TRUE, 
-      status = "primary",
-      inputId = "mydropdown",
-      icon = icon("gear"), width = "300px"
-    ),
-  # ),
+  dropdown(
+    uiOutput("select_contrast_dorothea"),
+    uiOutput("select_tf"),
+    uiOutput("select_top_n_hits"),
+    uiOutput("select_top_n_labels"),
+    uiOutput("down_doro"),
+    downloadObjUI(id = "download_dorothea"),
+    circle = TRUE, 
+    status = "primary",
+    inputId = "mydropdown",
+    icon = icon("gear"), width = "300px"
+  ),
+  
   fluidRow(
     column(4, plotly::plotlyOutput("tf_bar")),
     column(4, plotly::plotlyOutput("barplot_nes_dorothea")),
