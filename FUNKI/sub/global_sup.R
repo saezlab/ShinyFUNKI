@@ -40,6 +40,28 @@ get_network <- function(net_type = "gene", complx = T){
   return(cNET)
 }
 
+generateTFList <- function (df = df, top = 50, access_idx = 1) 
+{
+  if (top == "all") {
+    top <- nrow(df)
+  }
+  if (top > nrow(df)) {
+    warning("Number of to TF's inserted exceeds the number of actual TF's in the data frame. All the TF's will be considered.")
+    top <- nrow(df)
+  }
+  ctrl <- intersect(x = access_idx, y = 1:ncol(df))
+  if (length(ctrl) == 0) {
+    stop("The indeces you inserted do not correspond to the number of columns/samples")
+  }
+  returnList <- list()
+  for (ii in 1:length(ctrl)) {
+    tfThresh <- sort(x = abs(df[, ctrl[ii]]), decreasing = TRUE)[1:top]
+    currDF <- df[which(rownames(df)%in%names(tfThresh)), ctrl[ii]]
+    returnList[[ colnames(df)[ctrl[ii]] ]] <- as.data.frame(t(currDF))
+  }
+  return(returnList)
+}
+
 assignPROGENyScores <- function (progeny = progeny, progenyMembers = progenyMembers, 
                                  id = "gene", access_idx = 1) 
 {
@@ -84,26 +106,55 @@ assignPROGENyScores <- function (progeny = progeny, progenyMembers = progenyMemb
   return(pxList)
 }
 
-generateTFList <- function (df = df, top = 50, access_idx = 1) 
-{
-  if (top == "all") {
-    top <- nrow(df)
+pathEnreach <- function(nodeAtt, database, select_collection = NULL){
+  
+  if(database == 'Custom'){
+    
+    
+    value = "pathway"
+    
+    annotations = read_tsv(collection)
+    colnames(annotations) = c("genesymbol", "pathway")
+    
+  }else{
+    
+    annotations = OmnipathR::import_omnipath_annotations(
+      resources = database,
+      proteins = nodeAtt$Node,
+      wide = TRUE)
+    
+    if(database == 'MSigDB'){
+      value = "geneset"
+      
+      annotations = annotations %>%
+        dplyr::filter(collection %in% select_collection)
+      
+      
+    }else{value = "pathway"}
+    
   }
-  if (top > nrow(df)) {
-    warning("Number of to TF's inserted exceeds the number of actual TF's in the data frame. All the TF's will be considered.")
-    top <- nrow(df)
-  }
-  ctrl <- intersect(x = access_idx, y = 1:ncol(df))
-  if (length(ctrl) == 0) {
-    stop("The indeces you inserted do not correspond to the number of columns/samples")
-  }
-  returnList <- list()
-  for (ii in 1:length(ctrl)) {
-    tfThresh <- sort(x = abs(df[, ctrl[ii]]), decreasing = TRUE)[1:top]
-    currDF <- df[which(rownames(df)%in%names(tfThresh)), ctrl[ii]]
-    returnList[[ colnames(df)[ctrl[ii]] ]] <- as.data.frame(t(currDF))
-  }
-  return(returnList)
+  
+  gsea_sets = list(success = nodeAtt %>% 
+                     dplyr::filter(ZeroAct != 100) %>%
+                     dplyr::select(Node) %>%
+                     dplyr::pull(),
+                   bg = nodeAtt$Node,
+                   gs = annotations %>%
+                     dplyr::select(genesymbol, !!as.name(value)))
+  
+  gsea_analysis = piano::runGSAhyper(genes = gsea_sets$success,
+                                     universe = gsea_sets$bg,
+                                     gsc = piano::loadGSC(gsea_sets$gs))
+  
+  gsea_analysis_df = gsea_analysis$resTab %>%
+    as.data.frame() %>%
+    tibble::rownames_to_column(var = "pathway") %>%
+    dplyr::select(1:3) %>%
+    as.data.frame() %>% 
+    tibble::tibble() %>%
+    dplyr::arrange((!!as.name('Adjusted p-value'))) 
+  
+  return(list( annot = annotations, pea = gsea_analysis_df ))  
 }
 
 #Calculate all pathways
@@ -163,4 +214,27 @@ get_labels <- function(df, nlabel, npaths, threshold){
   lbls = rbind.data.frame(aux_up, aux_dwn)
   
   return(lbls)
-}  
+}
+
+#function to handle if the data come from example or upload to make it suitable for the analysis
+progessDATA <- function(data, contrast_data = F, upload_expr, type_analysis){
+  
+  if( any( contrast_data | all(!is.null(upload_expr) & !is.null(type_analysis)) ) ){
+    upcon = T
+    
+    if(!is.null(type_analysis)){
+      if(type_analysis == "multi"){
+        upcon = F
+      }
+    }
+    
+    if(any(contrast_data | upcon)){
+      data = data %>%
+        dplyr::select(t) %>%
+        unique.data.frame()
+    }
+  }
+  
+  return(data)
+  
+}
