@@ -5,20 +5,10 @@ tabPanel(
   # Visuales previous results --------
   conditionalPanel(
     condition = ("input.an_dorothea == 0"),
-    fileInput("upload_doro_results", 
-              label = h5("Upload DoRothEA results",
-                         tags$style(type = "text/css", "#q1_doroVis {vertical-align: top;}"),
-                         bsButton("q1_doroVis", label = "", icon = icon("question"), style = "info", size = "extra-small")),
-              accept = c("text/csv",
-                         "text/comma-separated-values,text/plain",
-                         ".csv")
-    ),
-    bsPopover(id = "q1_doroVis", title = "Upload DoRothEA results",
-              content = "Visualise the DoRothEA results that you already have. The format should be a csv file with samples in columns and genes in rows",
-              placement = "right", 
-              trigger = "click", 
-              options = list(container = "body")
-    )
+    uploadResultsObjUI(id = "upload_dorothea_results", 
+                       label = "Upload DoRothEA results", 
+                       title_bs = "Upload DoRothEA results", 
+                       content = "Visualise the DoRothEA results that you already have. The format should be a csv file with samples in columns and genes in rows")
   ),
   
   dropdown(
@@ -31,7 +21,8 @@ tabPanel(
     circle = TRUE, 
     status = "primary",
     inputId = "mydropdown",
-    icon = icon("gear"), width = "300px"
+    icon = icon("gear"), width = "300px",
+    # inputId = "drop_dorothea",
   ),
   
   fluidRow(

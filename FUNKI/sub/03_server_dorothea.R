@@ -1,62 +1,76 @@
 # Reactive Computations ---------------------------------------------------
-D = eventReactive({
-  (input$an_dorothea & is.null(input$upload_doro_results$datapath)) |
-    !is.null(input$upload_doro_results$datapath)
-}, {
+doro = uploadResultsObjSever("upload_dorothea_results")
 
-  if (all(input$an_dorothea & !is.null(input$selected_conf_level))) {
-    
+D = reactive({
+  if(input$an_dorothea){
     withProgress(message = "Calculate TF activities...", value = 1, {
-      
-      data = expr()
-      
       if(input$examples){
         organism = "Human"
       }else {organism = input$select_organism}
       
-      if( any( input$contrast_data | all(!is.null(input$upload_expr) & !is.null(input$type_analysis)) ) ){
-        upcon = T
-        
-        if(!is.null(input$type_analysis)){
-          if(input$type_analysis == "multi"){
-            upcon = F
-          }
-        }
-        
-        if(any( input$contrast_data | upcon)){
-          data = data %>%
-            dplyr::select(t) %>%
-            unique.data.frame()          
-        }else{
-          validate(
-            need(input$type_analysis == "multi", 
-                 "The type of analysis selected should be contrast")
-          )
-          
-        }
-
-      }
-      
-      dorothea_result = run_dorothea(dorothea_matrix = data, 
-                                     organism = organism, 
-                                     confidence_level = input$selected_conf_level, 
-                                     minsize = input$minsize, 
-                                     method = input$method)
+      dorothea_result = progessDATA(data = expr(),
+                                    contrast_data = input$contrast_data,
+                                    input$upload_expr,
+                                    input$type_analysis) %>%
+        run_dorothea(dorothea_matrix = data, 
+                     organism = organism, 
+                     confidence_level = input$selected_conf_level, 
+                     minsize = input$minsize, 
+                     method = input$method)
     })
     
-  }
-  else if(!is.null(input$upload_doro_results$datapath)){
-    
-    withProgress(message = "Loading TF activities...", value = 1, {
-      
-      dorothea_result = read.delim(input$upload_doro_results$datapath, sep = ",") %>%
-        dplyr::mutate(dplyr::across(-1,as.numeric)) %>%
-        tibble::column_to_rownames(var="X")
-      
-    })
-    
+  }else{
+    dorothea_result = doro()
   }
 
+  # if (all(input$an_dorothea & !is.null(input$selected_conf_level))) {
+  #   
+  #   withProgress(message = "Calculate TF activities...", value = 1, {
+  #     
+  #     data = expr()
+  #     
+  #     if(input$examples){
+  #       organism = "Human"
+  #     }else {organism = input$select_organism}
+  #     
+  #     if( any( input$contrast_data | all(!is.null(input$upload_expr) & !is.null(input$type_analysis)) ) ){
+  #       upcon = T
+  #       
+  #       if(!is.null(input$type_analysis)){
+  #         if(input$type_analysis == "multi"){
+  #           upcon = F
+  #         }
+  #       }
+  #       
+  #       if(any( input$contrast_data | upcon)){
+  #         data = data %>%
+  #           dplyr::select(t) %>%
+  #           unique.data.frame()          
+  #       }else{
+  #         validate(
+  #           need(input$type_analysis == "multi", 
+  #                "The type of analysis selected should be contrast")
+  #         )
+  #         
+  #       }
+  # 
+  #     }
+  #     
+  #   })
+  #   
+  # }
+  # else if(!is.null(input$upload_doro_results$datapath)){
+  #   
+  #   withProgress(message = "Loading TF activities...", value = 1, {
+  #     
+  #     dorothea_result = read.delim(input$upload_doro_results$datapath, sep = ",") %>%
+  #       dplyr::mutate(dplyr::across(-1,as.numeric)) %>%
+  #       tibble::column_to_rownames(var="X")
+  #     
+  #   })
+  #   
+  # }
+  return(dorothea_result)
 })
 
 # Dynamic widgets / RenderUI ----------------------------------------------
