@@ -180,7 +180,7 @@ heatmap_df_reactive = reactive({
     dplyr::top_n(input$select_top_n_hits, wt = ab) %>%
     dplyr::pull(GeneID)
   
-  cosa = D() %>%
+  D() %>%
     data.frame() %>%
     tibble::rownames_to_column(var = "GeneID") %>%
     dplyr::filter(GeneID %in% tfs) %>%
