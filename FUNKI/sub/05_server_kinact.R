@@ -94,7 +94,7 @@ output$select_top_kinases = renderUI({
 
 #download handler
 output$down_kinact = renderUI({
-  req(D())
+  req(K())
   choices = list("KinAct scores" = 1, 
                  "Barplot for Sample" = 2, 
                  "Barplot for Kinase" = 3,
@@ -106,45 +106,46 @@ output$down_kinact = renderUI({
               selected = 1)
 })
 
-# Bar plot with the TFs for a condition---------------------------------------------------
+# Plots ---------------------------------------------------
 barplot_nes_reactive_kinact = reactive ({
-  if (!is.null(input$select_contrast_kinact) &
-      !is.null(input$select_top_kinases)) {
-    p <- K() %>%
-      as.data.frame() %>%
-      rownames_to_column(var = "GeneID") %>%
-      barplot_nes_dorothea(smpl = input$select_contrast_kinact,
-                           nHits = input$select_top_kinases)
-  }
+  req(K(),
+      input$select_contrast_kinact,
+      input$select_top_kinases)
+  K() %>%
+    as.data.frame() %>%
+    rownames_to_column(var = "GeneID") %>%
+    barplot_nes_dorothea(smpl = input$select_contrast_kinact,
+                         nHits = input$select_top_kinases)
   
 })
 
 barplot_kinase_reactive = reactive({
-  if (!is.null(input$select_kinase)) {
-    q <- K() %>%
-      data.frame() %>%
-      barplot_tf(selTF = input$select_kinase)
-    
-  }
-  
+  req(input$select_kinase, K())
+  K() %>%
+    data.frame() %>%
+    barplot_tf(selTF = input$select_kinase)
 })
 
 network_kinase_reactive = reactive({
   
-  if (!is.null(input$select_kinase) &
-      !is.null(input$select_contrast_kinact) &
-      input$select_top_targets > 0) {
-
-      plot_network(
-        data = expr(), 
-        footprint_result = K(),
-        regulon = kinact_regulon_human,
-        sample = input$select_contrast_kinact,
-        selected_hub = input$select_kinase,
-        number_targets = input$select_top_targets
-      )
-      
-  }
+  req(K(),
+      input$select_kinase,
+      input$select_contrast_kinact,
+      input$select_top_targets)
+  
+  validate(
+    need(expr(), 
+         "The plot cannot be showed because the expression file is not included. Please, upload it in the Data and Parameters section.")
+  )
+  
+  plot_network(
+    data = expr(), 
+    footprint_result = K(),
+    regulon = kinact_regulon_human,
+    sample = input$select_contrast_kinact,
+    selected_hub = input$select_kinase,
+    number_targets = input$select_top_targets
+  )
   
 })
 
@@ -167,14 +168,12 @@ output$kinase_network = renderVisNetwork({
 
 # Heatmap of samples vs TFs
 output$heatmap_kinase =  plotly::renderPlotly({
-  if(!is.null(K())){
+  req(K())
     K() %>% t() %>% data.frame() %>%
       heatmap_scores()
-  }
 })
 
 # Render Tables -----------------------------------------------------------
-# TF-activities
 output$kinase_table = DT::renderDataTable({
   
   results = K() %>%
@@ -184,42 +183,52 @@ output$kinase_table = DT::renderDataTable({
   
   kinase_result_matrix = DT::datatable(
     results,
-    option = list(scrollX = TRUE, autoWidth = T),
-    filter = "top"
+    filter = "top",
+    extensions = "Buttons",
+    options = list(
+      paging = TRUE,
+      searching = TRUE,
+      fixedColumns = TRUE,
+      autoWidth = TRUE,
+      ordering = TRUE,
+      dom = 'tB',
+      buttons = c('csv', 'excel'))
   )
-  
+
 })
 
 # Download Handler --------------------------------------------------------
-
-# All in a tar
-output$download_kinact_analysis = downloadHandler(
-  filename = "footprint_kinact_saezLab.tar.gz",
-  content = function(x) {
-    fdir = "footprint_kinact_saezLab"
-    
-    if (dir.exists(fdir)) {
-      do.call(file.remove, list(list.files(fdir, full.names = TRUE)))
-    } else{
-      dir.create(fdir)
-    }
-    
-    fnames = c(
-      paste0("barplot_kinact_", input$select_contrast_kinact, ".png"),
-      paste0("barplot_samples_", input$select_kinase, ".png"),
-      paste0("network_", input$select_contrast_kinact, "_", input$select_kinase, ".png")
+kinact_download = observeEvent({
+  input$down_kinact
+},{
+  req(K())
+  
+  if(input$down_kinact == 1){
+    a = list(fname = "kinact_Kinase_activities_nes.csv",
+             cont = function(file){
+               write.csv(K(),
+                         file,
+                         quote = F)
+             })
+  }else if(input$down_kinact == 2){
+    a = list(fname = function(){paste0("barplot_kinact_kinases", input$select_top_targets, "_", input$select_contrast_kinact, ".png")},
+             cont = function(file){ggsave(file, barplot_nes_reactive_kinact(), device = "png")})
+  }else if(input$down_kinact == 3){
+    a = list(fname = function(){paste0("barplot_kinact_samples_", input$select_kinase, ".png")},
+             cont = function(file){ggsave(file, barplot_kinase_reactive(), device = "png")})
+  }else if(input$down_kinact == 4){
+    a = list(fname = paste0("network_kinact_substract_", input$select_kinase, "_", input$select_contrast_kinact, ".png"),
+             cont = function(file){
+               visSave(network_kinase_reactive(), "temp.html")
+               webshot::webshot("temp.html", zoom = 2, file = file)
+               file.remove("temp.html")})
+  }else if(input$down_kinact == 5){
+    a = list(fname = function(){paste0("heatmap_kinact_sample_", input$select_kinase, "_view.png")},
+             cont = function(file){
+               plotly::orca(heatmap_kinase(), file)
+             }
     )
-    
-    ggsave(file.path(fdir, fnames[1]), barplot_nes_reactive_kinact(), device = "png")
-    ggsave(file.path(fdir, fnames[2]), barplot_kinase_reactive(), device = "png")
-    
-    visSave(network_kinase_reactive(), "temp.html")
-    webshot::webshot("temp.html", zoom = 2, file = file.path(fdir, fnames[3]))
-    file.remove("temp.html")
-
-    write.csv(K(),
-              file.path(fdir, "kinasesActivities_nes.csv"),
-              quote = F)
-    tar(x, files = fdir, compression = "gzip")
   }
-)
+  
+  downloadObjSever("download_kinact", filename = a$fname, content = a$cont)
+})
