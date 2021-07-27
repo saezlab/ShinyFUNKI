@@ -68,7 +68,6 @@ uploadResultsObjSever <- function(id) {
         cat(msg, "\n")
       })
       
-      print(head(dataframe))
       # Return the reactive that yields the data frame
       return(dataframe)
     }
