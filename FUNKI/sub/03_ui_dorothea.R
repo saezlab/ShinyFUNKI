@@ -11,18 +11,17 @@ tabPanel(
                        content = "Visualise the DoRothEA results that you already have. The format should be a csv file with samples in columns and genes in rows")
   ),
   
-  dropdown(
+  shinyWidgets::dropdown(
     uiOutput("select_contrast_dorothea"),
     uiOutput("select_tf"),
     uiOutput("select_top_n_hits"),
     uiOutput("select_top_n_labels"),
     uiOutput("down_doro"),
     downloadObjUI(id = "download_dorothea"),
-    circle = TRUE, 
+    circle = TRUE,
     status = "primary",
-    inputId = "mydropdown",
-    icon = icon("gear"), width = "300px",
-    # inputId = "drop_dorothea",
+    inputId = "dorotea_control",
+    icon = icon("sliders"), width = "300px"
   ),
   
   fluidRow(

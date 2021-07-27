@@ -1,30 +1,25 @@
 tabPanel(
-  title="PROGENy",
-  # img(src="logo_progeny.png", align = "right", width = (16/9)*75, height=75),
-  # Row controlling the widgets
-  sidebarLayout(
-    sidebarPanel(
-      width = 12,
-      fluidRow(align = "center",
-               column(6, aling = "center",
-                      uiOutput("select_contrast_progeny")
-               ),
-               column(6, aling = "center",
-                      uiOutput("select_pathway")
-               )
-      ),
-      fluidRow(align = "center",
-               downloadButton("download_progeny_analysis", "Download PROGENy scores and figures"),
-               downloadButton("download_scatter", "Download scatter plot"),
-               downloadButton("download_barplot", "Download barplot"),
-               downloadButton("download_heatmap", "Download heatmap")
-      )
-    ),
-    mainPanel(width = 0)
+  title="PROGENy", value = "PROGENy",
+  
+  # Visuales previous results --------
+  conditionalPanel(
+    condition = ("input.an_progeny == 0"),
+    uploadResultsObjUI(id = "upload_progeny_results", 
+                       label = "Upload PROGENy results", 
+                       title_bs = "Upload PROGENy results", 
+                       content = "Visualise the PROGENy results that you already have. The format should be a csv file with samples in columns and genes in rows")
   ),
-  
-  hr(),
-  
+  shinyWidgets::dropdown(
+    uiOutput("select_contrast_progeny"),
+    uiOutput("select_pathway"),
+    uiOutput("down_progeny"),
+    downloadObjUI(id = "download_progeny"),
+    circle = TRUE,
+    status = "primary",
+    icon = icon("sliders"), width = "300px",
+    inputId = "progeny_control"
+    ),
+
   # Row showing plots
   fluidRow(column(6, plotOutput("scatter")),
            column(6, plotly::plotlyOutput("barplot_progeny"))
