@@ -1,85 +1,109 @@
-K = eventReactive(input$an_kinact, {
+# Reactive Computations ---------------------------------------------------
+kin = uploadResultsObjSever("upload_kinact_results")
 
-      withProgress(message = "Calculate KinAct matrix", value = 1, {
-        kinact_result = run_kinact(data = expr(), 
-                                   organism = "Human", 
-                                   minsize = 5, 
-                                   method = 'none')
-          
-        })
+K = reactive({
+  if(input$an_kinact){
+    withProgress(message = "Calculate KinAct matrix...", value = 1, {
+      
+      kinact_result = run_kinact(data = expr(), 
+                                 organism = "Human", 
+                                 minsize = input$minsize_kinact, 
+                                 method = input$method_kinact)
+      
+    })
+    
+  }else{
+    kinact_result = kin()
+  }
+  return(kinact_result)
 })
 
 # Dynamic widgets / RenderUI ----------------------------------------------
-
 # select contrast/sample
 output$select_contrast_kinact = renderUI({
-  if (!is.null(K())) {
-    choices = colnames(K()) %>%
+  req(K())
+  
+  choices = colnames(K()) %>%
       str_sort(numeric = T)
-    pickerInput(inputId = "select_contrast_kinact",
-                label = "Select Sample/Contrast",
-                choices = choices)
-  }
+  
+  pickerInput(inputId = "select_contrast_kinact",
+              label = "Select Sample/Contrast",
+              choices = choices)
 })
 
 # select kinase
 output$select_kinase = renderUI({
-  if (!is.null(input$select_contrast_kinact)) {
-    choices = unique(rownames(K()))
+  req(input$select_contrast_kinact, K())
+  
+  choices = unique(rownames(K()))
     
-    default_selected = K() %>%
-      data.frame() %>%
-      tibble::rownames_to_column(var = "Kinase") %>%
-      dplyr::select(Kinase, !!as.name(input$select_contrast_kinact)) %>%
-      dplyr::filter(!!as.name(input$select_contrast_kinact) == max(abs(!!as.name(input$select_contrast_kinact)))) %>%
-      dplyr::select(Kinase) %>%
-      dplyr::pull()
+  default_selected = K() %>%
+    data.frame() %>%
+    tibble::rownames_to_column(var = "Kinase") %>%
+    dplyr::select(Kinase, !!as.name(input$select_contrast_kinact)) %>%
+    dplyr::filter(!!as.name(input$select_contrast_kinact) == max(abs(!!as.name(input$select_contrast_kinact)))) %>%
+    dplyr::select(Kinase) %>%
+    dplyr::pull()
     
-    pickerInput(
-      inputId = "select_kinase",
-      label = "Select Kinase",
-      choices = choices,
-      options = list("live-search" = TRUE),
-      selected = default_selected[1]
+  pickerInput(
+    inputId = "select_kinase",
+    label = "Select Kinase",
+    choices = choices,
+    options = list("live-search" = TRUE),
+    selected = default_selected[1]
     )
-    
-  }
+
 })
 
 # select number of targets for kinase
 output$select_top_targets = renderUI({
-  if (!is.null(input$select_kinase)) {
+  
+  req(input$select_kinase,
+      K())
 
-    targets = kinact_regulon_human %>%
-      dplyr::filter(kinase == input$select_kinase) %>%
-      dplyr::select(target) %>%
-      dplyr::filter(target %in% rownames(expr())) %>%
-      nrow()
+  targets = kinact_regulon_human %>%
+    dplyr::filter(kinase == input$select_kinase) %>%
+    dplyr::select(target) %>%
+    dplyr::filter(target %in% rownames(expr())) %>%
+    nrow()
     
-    sliderInput(
-      "select_top_targets",
-      label = "Number of targets to display",
-      value = dplyr::case_when(targets > 10 ~ 10, targets <= 10 ~ round(targets * (2 / 3))),
-      min = 1,
-      max = targets,
-      step = 1
-    )
-  }
+  sliderInput(
+    "select_top_targets",
+    label = "Number of Kinase substrates to display",
+    value = dplyr::case_when(targets > 10 ~ 10, targets <= 10 ~ round(targets * (2 / 3))),
+    min = 1,
+    max = targets,
+    step = 1
+  )
 })
 
 # select top kinases
 output$select_top_kinases = renderUI({
-  if (!is.null(K())) {
-    max_kin = nrow(K())
-    sliderInput(
-      "select_top_kinases",
-      label = "Number of Kinases to display",
-      value = 25,
-      min = 1,
-      max = max_kin,
-      step = 1
-    )
-  }
+  req(K())
+  max_kin = nrow(K())
+  
+  sliderInput(
+    "select_top_kinases",
+    label = "Number of Kinases to display",
+    value = 25,
+    min = 1,
+    max = max_kin,
+    step = 1
+  )
+})
+
+#download handler
+output$down_kinact = renderUI({
+  req(D())
+  choices = list("KinAct scores" = 1, 
+                 "Barplot for Sample" = 2, 
+                 "Barplot for Kinase" = 3,
+                 "Kinase's network" = 4)#,
+  # "Heatmap" = 5)
+  pickerInput(inputId = "down_kinact",
+              label = "Select Download",
+              choices = choices,
+              selected = 1)
 })
 
 # Bar plot with the TFs for a condition---------------------------------------------------
