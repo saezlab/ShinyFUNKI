@@ -21,7 +21,7 @@ tabPanel(
     circle = TRUE,
     status = "primary",
     inputId = "kinact_control",
-    icon = icon("gear"), width = "300px"
+    icon = icon("sliders"), width = "300px"
   ),
   
   fluidRow(
