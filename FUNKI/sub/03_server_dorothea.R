@@ -7,13 +7,11 @@ D = reactive({
       if(input$examples){
         organism = "Human"
       }else {organism = input$select_organism}
-      
       dorothea_result = progessDATA(data = expr(),
                                     contrast_data = input$contrast_data,
                                     input$upload_expr,
                                     input$type_analysis) %>%
-        run_dorothea(dorothea_matrix = data, 
-                     organism = organism, 
+        run_dorothea(organism = organism, 
                      confidence_level = input$selected_conf_level, 
                      minsize = input$minsize, 
                      method = input$method)
@@ -22,54 +20,6 @@ D = reactive({
   }else{
     dorothea_result = doro()
   }
-
-  # if (all(input$an_dorothea & !is.null(input$selected_conf_level))) {
-  #   
-  #   withProgress(message = "Calculate TF activities...", value = 1, {
-  #     
-  #     data = expr()
-  #     
-  #     if(input$examples){
-  #       organism = "Human"
-  #     }else {organism = input$select_organism}
-  #     
-  #     if( any( input$contrast_data | all(!is.null(input$upload_expr) & !is.null(input$type_analysis)) ) ){
-  #       upcon = T
-  #       
-  #       if(!is.null(input$type_analysis)){
-  #         if(input$type_analysis == "multi"){
-  #           upcon = F
-  #         }
-  #       }
-  #       
-  #       if(any( input$contrast_data | upcon)){
-  #         data = data %>%
-  #           dplyr::select(t) %>%
-  #           unique.data.frame()          
-  #       }else{
-  #         validate(
-  #           need(input$type_analysis == "multi", 
-  #                "The type of analysis selected should be contrast")
-  #         )
-  #         
-  #       }
-  # 
-  #     }
-  #     
-  #   })
-  #   
-  # }
-  # else if(!is.null(input$upload_doro_results$datapath)){
-  #   
-  #   withProgress(message = "Loading TF activities...", value = 1, {
-  #     
-  #     dorothea_result = read.delim(input$upload_doro_results$datapath, sep = ",") %>%
-  #       dplyr::mutate(dplyr::across(-1,as.numeric)) %>%
-  #       tibble::column_to_rownames(var="X")
-  #     
-  #   })
-  #   
-  # }
   return(dorothea_result)
 })
 
@@ -193,7 +143,7 @@ network_tf_reactive = reactive({
   
   validate(
     need(expr(), 
-         "The plot cannot be showed because the expression file is not included")
+         "The plot cannot be showed because the expression file is not included. Please, upload it in the Data and Parameters section.")
   )
   
   if(input$select_organism == "Human"){
@@ -326,8 +276,7 @@ doro_download = observeEvent({
          cont = function(file){
            visSave(network_tf_reactive(), "temp.html")
            webshot::webshot("temp.html", zoom = 2, file = file)
-           file.remove("temp.html")
-  })
+           file.remove("temp.html")})
   }else if(input$down_doro == 5){
     a = list(fname = function(){paste0("heatmap_dorothea_sample_", input$select_tf, "_view.png")},
              cont = function(file){
