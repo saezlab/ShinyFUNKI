@@ -81,20 +81,19 @@ plot_network = function(data, footprint_result, regulon, sample, selected_hub, n
   
   # get the activity of the targets from the data 
   nodes = data %>%
-    tibble::rownames_to_column(var = "target") %>%
-    dplyr::filter(target %in% targets_of_hub) %>%
-    dplyr::select(target, !!as.name(sample)) %>%
-    dplyr::rename(id = target) %>%
+    tibble::rownames_to_column(var = "id") %>%
+    dplyr::select(id, !!as.name(sample)) %>%
+    dplyr::filter(id %in% targets_of_hub) %>%
     dplyr::arrange(desc(abs(!!as.name(sample)))) %>%
     dplyr::slice(1:number_targets) %>%
-    rbind(c(selected_hub, hub_activity)) %>%
+    rbind(.,c(selected_hub, hub_activity)) %>%
     dplyr::mutate(
       color = dplyr::case_when(
         !!as.name(sample) >= 0 ~ "#0859A2",
         !!as.name(sample) < 0 ~ "#99004C",
       )) %>%
     dplyr::mutate(label = id)
-  
+
   # get the network from the regulon
   edges = regulon %>%
     dplyr::filter(target %in% nodes$id & hub == selected_hub) %>%
@@ -257,25 +256,28 @@ scater_pathway = function (df, weight_matrix, title) {
     patchwork::plot_layout(ncol = 2, nrow = 2, widths = c(4, 1), heights = c(1, 4))
 }
 
-# CARNIVAL and COSMOS -----------------------------------------------------------
+# CARNIVAL -----------------------------------------------------------
 barplot_pea <- function(pea, threshold_adjpval = 0.05, n_paths = 10){
   ggdata = pea %>% 
     dplyr::rename(pvalue = `p-value`, AdjPvalu = `Adjusted p-value`) %>%
     dplyr::filter(AdjPvalu <= threshold_adjpval) %>% 
     dplyr::arrange(AdjPvalu) %>%
-    dplyr::slice(1:n_paths) %>%
-    ggplot2::ggplot(aes(y = reorder(pathway, -AdjPvalu), x = AdjPvalu)) +
-    ggplot2::geom_segment(aes(y = reorder(pathway, -AdjPvalu),
-                              yend = reorder(pathway, -AdjPvalu),
-                              x = AdjPvalu, xend = 100),
-                          color = "gray", lwd = 1) +
-    ggplot2::geom_point(size = 4, pch = 21, bg = 4, col = 1) +
-    ggplot2::scale_x_continuous(trans = ggforce::trans_reverser('log10'),
-                                breaks = scales::trans_breaks("log10", function(x) 10^x),
-                                labels = scales::trans_format("log10", scales::math_format(10^.x))) +
-    ggplot2::ylab("Adjusted p-value") +
-    ggplot2::xlab("") +
-    ggplot2::theme_minimal(base_size = 15)
+    dplyr::slice(1:n_paths)
+  
+  ggplot(ggdata, aes(y = reorder(pathway, AdjPvalu), x = -log10(AdjPvalu))) + 
+    geom_bar(stat = "identity") +
+    scale_x_continuous(
+      expand = c(0.01, 0.01),
+      limits = c(0, ceiling(max(-log10(ggdata$AdjPvalu)))),
+      breaks = seq(floor(min(-log10(ggdata$AdjPvalu))), 
+                   ceiling(max(-log10(ggdata$AdjPvalu))), 1),
+      labels = scales::math_format(10^-.x)
+    ) +
+    annotation_logticks(sides = "bt") +
+    theme_bw(base_size = 15) +
+    theme(axis.title = element_text(),
+          axis.text.y = element_text()) +
+    xlab("Adjusted p-value") + ylab("")
   
 }
 
