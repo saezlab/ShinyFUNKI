@@ -89,7 +89,7 @@ observeEvent(input$an_kinact, {
                     selected = "KinAct")
 })
 
-observeEvent(input$an_kinact, {
+observeEvent(input$an_cosmos, {
   updateTabsetPanel(session, inputId = "menu",
                     selected = "COSMOS")
 })

@@ -504,7 +504,7 @@ tabPanel(
       h4("KinAct"),
       fluidRow(
         column(5, align="center",
-               numericInput(inputId = "minsize",
+               numericInput(inputId = "minsize_kinact",
                             label = h5("Regulon's minimal size",
                                        tags$style(type = "text/css", "#q2d_regulon {vertical-align: top;}"),
                                        bsButton("q2d_regulon", label = "", icon = icon("question"),
@@ -520,7 +520,7 @@ tabPanel(
                )
         ),
         column(5, align="center",
-               selectInput(inputId = "method",
+               selectInput(inputId = "method_kinact",
                            label = h5("Method for computing signatures",
                                       tags$style(type = "text/css", "#q2d_method {vertical-align: top;}"),
                                       bsButton("q2d_method", label = "", icon = icon("question"),
