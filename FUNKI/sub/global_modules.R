@@ -1,4 +1,4 @@
-# Handle download
+# Handle download ---------------------------
 downloadObjUI <- function(id) {
   ns <- NS(id)
 
@@ -17,7 +17,7 @@ downloadObjSever <- function(id, filename, content) {
   
 }
 
-#handle upload visualisation
+# Handle upload resuts widget and server -------------
 uploadResultsObjUI <- function(id, label, title_bs, content) {#tag_bs, 
   ns <- NS(id)
   
@@ -28,7 +28,8 @@ uploadResultsObjUI <- function(id, label, title_bs, content) {#tag_bs,
                          bsButton(ns("info"), label = "", icon = icon("question"), style = "info", size = "extra-small")),
               accept = c("text/csv",
                          "text/comma-separated-values,text/plain",
-                         ".csv")
+                         ".csv",
+                         ".rds")
     ),
     bsPopover(id = ns("info"),#tag_bs, 
               title = title_bs,
@@ -55,10 +56,18 @@ uploadResultsObjSever <- function(id) {
       
       # The user's data, parsed into a data frame
       dataframe <- reactive({
-        userFile()$datapath %>%
-        read.delim(., sep = ",") %>%
-          dplyr::mutate(dplyr::across(-1, as.numeric)) %>%
-          tibble::column_to_rownames(var = "X")
+        if(!is.null(userFile()$name)){
+          n = grepl("\\.rds$", userFile()$name)
+        }
+        if(n){
+          userFile()$datapath %>% readRDS(.)
+        }else{
+          userFile()$datapath %>%
+            read.delim(., sep = ",") %>%
+            dplyr::mutate(dplyr::across(-1, as.numeric)) %>%
+            tibble::column_to_rownames(var = "X")
+          
+        }
         
       })
       
@@ -72,4 +81,36 @@ uploadResultsObjSever <- function(id) {
       return(dataframe)
     }
   )    
+}
+
+# Handle knobNumeric inputs
+knobNumericInfoUI <- function(id, label, title_bs, content, thresholds) {#tag_bs,
+  ns <- NS(id)
+
+  tagList(
+    knobInput(
+      inputId = ns("pea_carnival_controls"),
+      label = h5(label,
+                 tags$style(type = "text/css", paste0("#", ns("info")," {vertical-align: top;}")),
+                 bsButton(ns("info"), label = "", icon = icon("question"), style = "info", size = "extra-small")),
+      value = thresholds$value,
+      min = thresholds$min,
+      max = thresholds$max,
+      step = thresholds$step,
+      displayPrevious = TRUE,
+      lineCap = "round",
+      fgColor = "#428BCA",
+      inputColor = "#428BCA",
+      width = "80", height = "80"
+    ),
+
+    bsPopover(id = ns("info"),#tag_bs,
+              title = title_bs,
+              content = content,
+              placement = "right",
+              trigger = "click",
+              options = list(container = "body")
+    )
+  )
+
 }
