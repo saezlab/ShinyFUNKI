@@ -27,13 +27,6 @@ options(shiny.maxRequestSize=30*1024^2)
 # Load models
 kinact_regulon_human = readRDS("data/models/kinact_regulon_human_symbol.rds")
 
-# load examples
-# carnival_result = readRDS("data/examples/carnival_result_celline_SIDM00194.rds")
-# carnival_result$nodesAttributes = as.data.frame(carnival_result$nodesAttributes)
-# carnival_result$weightedSIF = as.data.frame(carnival_result$weightedSIF)
-# carnival_result$nodesAttributes = carnival_result$nodesAttributes %>%
-#   dplyr::filter(Node %in%union(carnival_result$weightedSIF$Node1,carnival_result$weightedSIF$Node2))
-
 # ANALYSIS -------------------------------------------------------------
 
 run_progeny <- function(data, organism = "Human", top = 100, perm = 100, ...){
@@ -191,41 +184,14 @@ run_carnival <- function(data, net = NULL, dorothea = NULL, progeny = NULL,
   
 }
 
-pathEnreach <- function(nodeAtt, database, select_collection = NULL){
-  
-  if(database == 'Custom'){
-    
-    
-    value = "pathway"
-    
-    annotations = read_tsv(collection)
-    colnames(annotations) = c("genesymbol", "pathway")
-    
-  }else{
-    
-    annotations = OmnipathR::import_omnipath_annotations(
-      resources = database,
-      proteins = nodeAtt$Node,
-      wide = TRUE)
-    
-    if(database == 'MSigDB'){
-      value = "geneset"
-      
-      annotations = annotations %>%
-        dplyr::filter(collection %in% select_collection)
-      
-      
-    }else{value = "pathway"}
-    
-  }
+pathEnreach <- function(nodeAtt, database){
   
   gsea_sets = list(success = nodeAtt %>% 
                      dplyr::filter(ZeroAct != 100) %>%
                      dplyr::select(Node) %>%
                      dplyr::pull(),
                    bg = nodeAtt$Node,
-                   gs = annotations %>%
-                     dplyr::select(genesymbol, !!as.name(value)))
+                   gs = database)
   
   gsea_analysis = piano::runGSAhyper(genes = gsea_sets$success,
                                      universe = gsea_sets$bg,
@@ -233,13 +199,13 @@ pathEnreach <- function(nodeAtt, database, select_collection = NULL){
   
   gsea_analysis_df = gsea_analysis$resTab %>%
     as.data.frame() %>%
-    tibble::rownames_to_column(var = "pathway") %>%
+    tibble::rownames_to_column(var = colnames(database)[2]) %>%
     dplyr::select(1:3) %>%
     as.data.frame() %>% 
     tibble::tibble() %>%
     dplyr::arrange((!!as.name('Adjusted p-value'))) 
   
-  return(list( annot = annotations, pea = gsea_analysis_df ))  
+  return(list( annot = database, pea = gsea_analysis_df ))  
 }
 
 #' run COSMOS
