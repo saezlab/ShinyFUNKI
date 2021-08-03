@@ -483,7 +483,7 @@ tabPanel(
                ),
                conditionalPanel(
                  condition = ("input.solver_cosmos != 'lpSolve'"),
-                 shinyFilesButton(id = 'solverPath',
+                 shinyFilesButton(id = 'solverPath_cosmos',
                                   label = 'Select path of cbc/cplex file',
                                   title = NULL,
                                   multiple = FALSE),

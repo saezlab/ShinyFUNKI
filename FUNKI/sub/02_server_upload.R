@@ -101,6 +101,12 @@ observe({
   solverpath <<- paste( unlist(unname(input$solverPath[1])), collapse = "/")
 })
 
+observe({
+  shinyFileChoose(input, 'solverPath_cosmos', roots = volumes, session = session) 
+  solverpath_cosmos <<- paste( unlist(unname(input$solverPath_cosmos[1])), collapse = "/")
+})
+
+
 #Select sample for CARNIVAL analysis
 # select contrast/sample
 output$select_sample_carnival = renderUI({
