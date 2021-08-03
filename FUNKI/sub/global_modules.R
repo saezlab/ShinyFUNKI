@@ -98,10 +98,11 @@ knobNumericInfoUI <- function(id, label, title_bs, content, thresholds) {#tag_bs
       max = thresholds$max,
       step = thresholds$step,
       displayPrevious = TRUE,
+      thickness = 0.1,
       lineCap = "round",
       fgColor = "#428BCA",
       inputColor = "#428BCA",
-      width = "80", height = "80"
+      width = "140", height = "140"
     ),
 
     bsPopover(id = ns("info"),#tag_bs,
