@@ -258,34 +258,35 @@ scater_pathway = function (df, weight_matrix, title) {
 
 # CARNIVAL -----------------------------------------------------------
 barplot_pea <- function(pea, threshold_adjpval = 0.05, n_paths = 10){
+  
   ggdata = pea %>% 
     dplyr::rename(pvalue = `p-value`, AdjPvalu = `Adjusted p-value`) %>%
     dplyr::filter(AdjPvalu <= threshold_adjpval) %>% 
     dplyr::arrange(AdjPvalu) %>%
     dplyr::slice(1:n_paths)
+
+  col_called = setdiff(colnames(ggdata), c("pvalue", "AdjPvalu"))
+  colnames(ggdata)[which(colnames(ggdata)==col_called)] = "pathway"
   
-  ggplot(ggdata, aes(y = reorder(pathway, AdjPvalu), x = -log10(AdjPvalu))) + 
-    geom_bar(stat = "identity") +
-    scale_x_continuous(
-      expand = c(0.01, 0.01),
-      limits = c(0, ceiling(max(-log10(ggdata$AdjPvalu)))),
-      breaks = seq(floor(min(-log10(ggdata$AdjPvalu))), 
-                   ceiling(max(-log10(ggdata$AdjPvalu))), 1),
-      labels = scales::math_format(10^-.x)
-    ) +
-    annotation_logticks(sides = "bt") +
-    theme_bw(base_size = 15) +
-    theme(axis.title = element_text(),
-          axis.text.y = element_text()) +
-    xlab("Adjusted p-value") + ylab("")
+  ggdata %>%
+  ggplot2::ggplot(aes(y = reorder(pathway, -AdjPvalu), x = AdjPvalu)) +
+    ggplot2::geom_segment(aes(y = reorder(pathway, -AdjPvalu),
+                              yend = reorder(pathway, -AdjPvalu),
+                              x = AdjPvalu, xend = 100),
+                          color = "gray", lwd = 1) +
+    ggplot2::geom_point(size = 4, pch = 21, bg = 4, col = 1) +
+    ggplot2::scale_x_continuous(trans = ggforce::trans_reverser('log10'),#scales::log10_trans(),#ggforce::trans_reverser('log10'),
+                                breaks = scales::trans_breaks("log10", function(x) 10^x),
+                                labels = scales::trans_format("log10", scales::math_format(10^.x))) +
+    ggplot2::xlab("Adjusted p-value") +
+    ggplot2::ylab("") +
+    ggplot2::theme_minimal(base_size = 12)
   
 }
 
 volcano_pea <- function(pea, nodAtt, threshold_adjpval = 0.05, n_paths = 10, n_genes = 4){
   
-  if(any("geneset" %in% colnames(pea$annot))){pea$annot = pea$annot %>% dplyr::rename(pathway = geneset)}
-  
-  ggdata = plyr::join_all(pea, by = "pathway") %>% 
+  ggdata = plyr::join_all(pea, by = colnames(pea$annot)[2]) %>% 
     dplyr::rename(pvalue = `p-value`, AdjPvalu = `Adjusted p-value`, Node = genesymbol) %>%
     dplyr::inner_join(nodAtt, by = "Node") %>%
     dplyr::mutate(across(c(ZeroAct, UpAct, DownAct, AvgAct), as.numeric))
@@ -302,7 +303,7 @@ volcano_pea <- function(pea, nodAtt, threshold_adjpval = 0.05, n_paths = 10, n_g
   ggplot(ggdata, aes(x = AvgAct, y = -log10(AdjPvalu) )) + # , color = supra_pathway
     geom_point(alpha = 0.7, na.rm = F, colour = "#918D8D") +
     geom_point(data = get_labels(ggdata, ceiling(n_genes/2), n_paths, threshold_adjpval),
-               aes(x = AvgAct, y = -log10(AdjPvalu), color = pathway), 
+               aes(x = AvgAct, y = -log10(AdjPvalu), color = !!as.name(colnames(ggdata)[2])), 
                alpha = 0.7, na.rm = F) +
     stat_function(fun = xneg, xlim = c(-xlimAbs, -vAss),
                   color = "black", alpha = 0.7) +
@@ -310,7 +311,7 @@ volcano_pea <- function(pea, nodAtt, threshold_adjpval = 0.05, n_paths = 10, n_g
                   color = "black", alpha = 0.7) +
     ggrepel::geom_label_repel(data = get_labels(ggdata, ceiling(n_genes/2), n_paths, threshold_adjpval), 
                               aes(x = AvgAct, y = -log10(AdjPvalu),
-                                  color = pathway, label = Node),
+                                  color = !!as.name(colnames(ggdata)[2]), label = Node),
                               show.legend = F, inherit.aes = F) +
     scale_y_continuous(limits = c(0, ylimAbs), 
                        expand = c(0.01, 0.01),
@@ -318,7 +319,7 @@ volcano_pea <- function(pea, nodAtt, threshold_adjpval = 0.05, n_paths = 10, n_g
                        labels = scales::math_format(10^-.x)
     )+
     annotation_logticks(sides = "lr") +
-    xlab("CARNIVAL's activity") + ylab("Adjusted p-value")  +
+    xlab("Node activity") + ylab("Adjusted p-value")  +
     theme_bw(base_size = 15)
   
 }
