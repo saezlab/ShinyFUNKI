@@ -1,13 +1,11 @@
 # Reactive Computations ---------------------------------------------------
+carni = uploadResultsObjSever("upload_carnival_results")
 
 # CARNIVAL
-C = eventReactive({
-  input$an_carnival
-}, {
+C = reactive({
   
-  if (!is.null(input$solver)) {
-    
-    withProgress(message="Running CARNIVAL", value=1, {
+  if(input$an_carnival){
+    withProgress(message = "Running CARNIVAL...", value = 1, {
       
       if (input$example_data){
         organism = "Human"
@@ -15,39 +13,56 @@ C = eventReactive({
       
       #dorthea
       if(input$dorothea == "doro"){
+        data = expr() %>% dplyr::select(!!as.name(input$select_sample_carnival))
         param_doro = list("organism" = organism,
                           "confidence_level" = input$selected_conf_level,
                           "minsize" = input$minsize, 
                           "method" = input$method)
-      }else{param_doro = input$upload_tfs}
+      }else{
+        data = NULL
+        param_doro = input$upload_tfs$datapath
+      }
       
       #progeny
-      if(input$progeny == "prog"){
-        param_prog = list("organism" = organism, 
-                          "top" = input$top, 
-                          "perm" = input$perm)
-      }else{param_prog = input$upload_progeny}
+      if(!is.null(input$progeny)){
+        if(input$progeny == "prog"){
+          param_prog = list("organism" = organism, 
+                            "top" = input$top, 
+                            "perm" = input$perm)
+        }else if(input$progeny == "up"){
+          param_prog = input$upload_progeny$datapath
+        }
+      }else{param_prog = NULL}
       
       #network
       if(input$omnipath == "omni"){
         net = list("net_complex" = input$net_complex, 
                    "net_type" = "gene")#input$net_type)
-      }else{net = input$upload_network}
+      }else{net = input$upload_network$datapath}
+      #targets
+      if( input$inputs_targets == "up"){
+        targets = input$upload_targets$datapath
+      }else{targets = input$inputs_targets}
       
       # CARNIVAL parameters
       if (input$solver == "lpSolve"){
         solverpath = NULL
       }
       
-      carnival_results = run_carnival(data = expr(),
-                     net = net,
-                     ini_nodes = input$inputs_targets,
-                     dorothea = param_doro,
-                     progeny = param_prog,
-                     solver = list(spath = solverpath,
-                                   solver = input$solver))
+      carnival_results = run_carnival( data = data,
+                                       net = net,
+                                       ini_nodes = targets,
+                                       dorothea = param_doro,
+                                       progeny = param_prog,
+                                       solver = list(spath = solverpath,
+                                                     solver = input$solver))
     })
+    
+  } else{
+    carnival_results = carni()
   }
+  
+  
   
 })
 
@@ -55,29 +70,41 @@ C = eventReactive({
 PEA = eventReactive({
   input$run_PEA
 }, {
+  req(input$pathEnrich_database)
 
-    if (input$pathEnrich_database == 'MSigDB'){
-      cll = input$pathEnrich_collection
-    }
-    else if(input$pathEnrich_database == 'Custom'){
-      req(input$upload_custom)
+    if (input$pathEnrich_database == 'Omnipath'){
+      database = omnipath_resources()[[input$select_resource_omnipath]]
+      if(input$select_resource_omnipath == 'MSigDB'){
+        database = database %>%
+          dplyr::filter(collection == input$pathEnrich_msigDB_collection) %>%
+          dplyr::select(genesymbol, geneset)
+      } else if(ncol(database) > 4){
+        database = database %>%
+          dplyr::select(genesymbol, !!as.name(input$set_resource_pea)) %>%
+          as.data.frame()
+      }else{
+        database = database[,c(2, 4)]
+      }
+    } else if(input$pathEnrich_database == 'Custom'){
+      # req(input$upload_custom)
       validate(need(tools::file_ext(input$upload_custom$datapath) == "tsv", "Please upload a tsv file"))
-      cll = input$upload_custom$datapath}
-    else{ cll = NULL}
+      database = read_tsv(input$upload_custom$datapath)
+      # colnames(database) = c("genesymbol", "pathway")
+    }
     
     # GSA
     withProgress(message = "Running Enrichment...", value = 1, {
-      message(input$upload_custom)
+
       pathEnreach(nodeAtt = C()$nodesAttributes, 
-                  database = input$pathEnrich_database,
-                  collection = cll)
+                  database = database)
 
   })
   
 })
 
 #objects for visualisation
-edges <- reactive(if (!all(is.na( C() ))){
+edges <- reactive({
+  req(C())
   # edges and node information for visnetwork
   edges <- C()$weightedSIF %>%
     dplyr::rename(from = Node1, to = Node2, value = Weight) %>%
@@ -88,7 +115,8 @@ edges <- reactive(if (!all(is.na( C() ))){
   
 })
 
-nodes_carnival <- reactive(if (!all(is.na(C()))){
+nodes_carnival <- reactive({
+  req(C())
     # create color scale for nodes
     pal_red_blue = c(rev(RColorBrewer::brewer.pal(9, 'Reds')),
                      "#FFFFFF",
@@ -109,18 +137,23 @@ nodes_carnival <- reactive(if (!all(is.na(C()))){
       dplyr::mutate(color = pal[color]) %>%
       dplyr::mutate(color = plotly::toRGB(color, alpha = 1))
     
-    
   })
 
-paths <- reactive(if (!all(is.na(C()))){
+paths <- reactive({
+  req(C())
   paths = calculate_all_paths(C())
+})
+
+omnipath_resources <- reactive({
+  req(C())
+  OmnipathR::import_omnipath_annotations(proteins = C()$nodesAttribute$Node, wide = TRUE)
 })
 
 # Dynamic widgets / RenderUI ----------------------------------------------
 output$select_node = renderUI({
-  if (!is.null(C())) {
+  req(C())
 
-    choices = C()$nodesAttributes %>% #C()$nodesAttributes$Node %>%
+    choices = C()$nodesAttributes %>% 
       dplyr::filter(ZeroAct != 100) %>%
       dplyr::select(Node) %>%
       dplyr::pull() %>%
@@ -132,38 +165,62 @@ output$select_node = renderUI({
                 choices = choices,
                 options = list("live-search" = TRUE),
                 selected = NULL)
-
-  }
 })
 
 output$select_tf_carnival = renderUI({
-  if (!is.null(C())) {
+  req(C())
 
   choices = base::setdiff(C()$weightedSIF$Node2,
-                          C()$weightedSIF$Node1) # C()$nodesAttributes$Node %>%
+                          C()$weightedSIF$Node1)
   pickerInput(inputId = "select_tf_carnival",
               label = "Path to TF:",
               choices = choices,
               options = list("live-search" = TRUE),
               selected = NULL)
+})
+
+output$select_resource_omnipath = renderUI({
+  req(omnipath_resources())
+  
+  choices = names(omnipath_resources())
+    
+  pickerInput(inputId = "select_resource_omnipath",
+              label = NULL,
+              choices = choices,
+              options = list("live-search" = TRUE),
+              selected = "SIGNOR")
+})
+
+output$set_resource_pea = renderUI({
+  req(omnipath_resources(),
+      input$select_resource_omnipath)
+  
+  columns_names = names(omnipath_resources()[[input$select_resource_omnipath]])
+
+  if(length(columns_names) > 4){
+    choices = columns_names[4:length(columns_names)]
+    pickerInput(inputId = "set_resource_pea",
+                label = NULL,
+                choices = choices,
+                selected = NULL)
   }
 })
 
 output$pathEnrich_msigDB_collection = renderUI({
-  if (input$pathEnrich_database == 'MSigDB') {
-
-    choices = OmnipathR::import_omnipath_annotations(
-      resources = 'MSigDB',
-      proteins = C()$nodesAttributes %>% dplyr::filter(ZeroAct != 100) %>% dplyr::select(Node) %>% dplyr::pull(),
-      wide = TRUE) %>%
+  shiny::req(omnipath_resources(),
+             input$select_resource_omnipath)
+  if(input$select_resource_omnipath == 'MSigDB'){
+    choices = omnipath_resources()[[input$select_resource_omnipath]] %>%
       dplyr::select(collection) %>% 
       dplyr::pull() %>%
       unique()
-      
-      pickerInput(inputId = "pathEnrich_collection",
-                label = "Select Specific collection from MSigDB",
+    
+    pickerInput(inputId = "pathEnrich_msigDB_collection",
+                label = NULL,
                 choices = choices)
+    
   }
+  
 })
 
 output$pathEnrich_custom = renderUI({
@@ -172,6 +229,29 @@ output$pathEnrich_custom = renderUI({
     fileInput("upload_custom", label = NULL, accept = ".tsv")
 
   }
+})
+
+output$down_carnival = renderUI({
+  req(C())
+  choices = list("CARNIVAL result (rds)" = 1, 
+                 "CARNIVAL network (csv)" = 2, 
+                 "CARNIVAL attributes (csv)" = 3)#,
+  # "Heatmap" = 5)
+  pickerInput(inputId = "down_carnival",
+              label = "Select Download",
+              choices = choices,
+              selected = 1)
+})
+
+output$down_pea = renderUI({
+  req(PEA())
+  choices = list("PEA results" = 1, 
+                 "Volcanoplot" = 2, 
+                 "Barplot" = 3)
+  pickerInput(inputId = "down_pea",
+              label = "Select Download",
+              choices = choices,
+              selected = 1)
 })
 
 # Plots ---------------------------------------------------
@@ -193,8 +273,11 @@ output$network <- renderVisNetwork({
   visNetwork::visNetwork(nodes_carnival(), edges(), height = "500px", width = "100%") %>%
     visNetwork::visIgraphLayout() %>%
     visEdges(arrows = 'to') %>%
-    visNetwork::visLegend(addEdges = ledges, addNodes = lnodes,
-                          width = 0.1, position = "right", useGroups = FALSE)
+    visNetwork::visLegend(addEdges = ledges, 
+                          addNodes = lnodes,
+                          width = 0.1, 
+                          position = "left", 
+                          useGroups = FALSE)
 })
 
 observeEvent(input$focus_node,{
@@ -246,17 +329,19 @@ observeEvent(input$hierarchical,{
   }
 })
 
-
 # enritchment analysis
 
 barplot_pea_reactive = reactive ({
-  if ( !is.null(PEA()) & input$pea_thresbold != 0) {
-    
-    p <- PEA()$pea %>%
-      barplot_pea(threshold_adjpval = input$pea_thresbold,
-                  n_paths = input$pea_nPaths)
-  }
+  req(PEA())
   
+  validate(
+    need((min(PEA()$pea$`Adjusted p-value`) < input$p_value), 
+         paste0("The selected Adjusted pValue is lower than the min value: ", round(min(PEA()$pea$`Adjusted p-value`), 2)))
+  )
+  
+  PEA()$pea %>%
+    barplot_pea(threshold_adjpval = input$p_value,
+                n_paths = input$pea_nPaths)
 })
 
 output$barplot_pea = renderPlot({
@@ -264,15 +349,18 @@ output$barplot_pea = renderPlot({
 })
 
 volcano_pea_reactive = reactive ({
-  if ( !is.null(PEA()) ) {
+  req(PEA())
+  
+  validate(
+    need((min(PEA()$pea$`Adjusted p-value`) < input$p_value), 
+         paste0("The selected Adjusted pValue is lower than the min value: ", round(min(PEA()$pea$`Adjusted p-value`), 2)))
+  )
     
-    volcano_pea(PEA(), 
-                C()$nodesAttributes,
-                threshold_adjpval = input$pea_thresbold,
-                n_paths = input$pea_nPaths,
-                n_genes = input$pea_nGenes)
-    
-  }
+  volcano_pea(PEA(), 
+              C()$nodesAttributes,
+              threshold_adjpval = input$p_value,
+              n_paths = input$pea_nPaths,
+              n_genes = input$pea_nGenes)
   
 })
 
@@ -281,68 +369,98 @@ output$volcano_pea = renderPlot({
 })
 
 # Render Tables -----------------------------------------------------------
-output$pea_table = DT::renderDataTable({
- if(!is.null(PEA())){
+output$omnipath_resource = DT::renderDataTable({
+  shiny::req(omnipath_resources(),
+             input$select_resource_omnipath)
+  columns_names = names(omnipath_resources()[[input$select_resource_omnipath]])
+  if( length(columns_names) > 4 ){
+    df = omnipath_resources()[[input$select_resource_omnipath]]
+    df = df[1:3,4:ncol(df)]
+    DT::datatable(df)
+  }
+})
 
+output$pea_table = DT::renderDataTable({
+  
+ req(PEA())
+  
    pea_result_matrix = DT::datatable(
      PEA()$pea %>%
        data.frame() %>%
-       tibble::column_to_rownames(var = "pathway") %>%
+       tibble::column_to_rownames(var = colnames(PEA()$annot)[2]) %>%
        round(digits = 3) %>%
        tibble::rownames_to_column(var = "Pathway/Signature"),
-     option = list(scrollX = TRUE, autoWidth = T),
-     filter = "top"
+     filter = "top",
+     extensions = "Buttons",
+     options = list(
+       paging = TRUE,
+       searching = TRUE,
+       fixedColumns = TRUE,
+       autoWidth = TRUE,
+       ordering = TRUE,
+       dom = 'tB',
+       buttons = c('csv', 'excel'))
    )
-   
- }
-  
+
 })
 
 # Download Handler --------------------------------------------------------
-
-output$download_pea_analysis = downloadHandler(
-  filename = "footprint_carnival_EnrichmentAnalysis_saezLab.tar.gz",
-  content = function(x) {
-    fdir = "footprint_carnival_EnrichmentAnalysis_saezLab"
-    
-    if (dir.exists(fdir)) {
-      do.call(file.remove, list(list.files(fdir, full.names = TRUE)))
-    } else{
-      dir.create(fdir)
-    }
-    
-    fnames = c(
-      paste0("barplot_carnivalEA_apval", input$pea_thresbold, ".png"),
-      paste0("volcano_carnivalEA_", input$pea_thresbold, ".png")
+carnival_download = observeEvent({
+  input$down_carnival
+},{
+  req(C())
+  
+  if(is.null(input$select_sample_carnival)){
+    smpl = ""
+  }else{
+    smpl = paste0("_", input$select_sample_carnival)
+  }
+  if(input$down_carnival == 1){
+    a = list(fname = "CARNIVAL.rds",
+             cont = function(file){C() %>% saveRDS(., file = file)})
+  }else if(input$down_carnival == 2){
+    a = list(fname = function(){paste0("carnival_network", smpl, ".csv")},
+             cont = function(file){write.csv(C()$weightedSIF, file, quote = F)})
+  }else if(input$down_carnival == 3){ 
+    a = list(fname = function(){paste0("carnival_nodesAttributes", smpl, ".csv")},
+             cont = function(file){write.csv(C()$weightedSIF, file, quote = F)})
+  }else if(input$down_carnival == 4){
+    a = list(fname = paste0("network_carnival_targets_", input$select_tf, "_", input$select_contrast, ".png"),
+             cont = function(file){
+               visSave(network_tf_reactive(), "temp.html")
+               webshot::webshot("temp.html", zoom = 2, file = file)
+               file.remove("temp.html")})
+  }else if(input$down_carnival == 5){
+    a = list(fname = function(){paste0("heatmap_dorothea_sample_", input$select_tf, "_view.png")},
+             cont = function(file){
+               plotly::orca(heatmap_dorothea(), file)
+             }
     )
-    
-    ggsave(file.path(fdir, fnames[1]), barplot_pea_reactive(), device = "png")
-    ggsave(file.path(fdir, fnames[2]), volcano_pea_reactive(), device = "png")
-    write.csv(PEA()$psa,
-              file.path(fdir, paste0("carnivalEA_", input$pathEnrich_database, ".csv")),
-              quote = F)
-    tar(x, files = fdir, compression = "gzip")
   }
-)
+  
+  downloadObjSever("download_carnival", filename = a$fname, content = a$cont)
+})
 
-output$download_carnival = downloadHandler(
-  filename = "footprint_carnival_saezLab.tar.gz",
-  content = function(x) {
-    fdir = "footprint_carnival_saezLab"
-    
-    if (dir.exists(fdir)) {
-      do.call(file.remove, list(list.files(fdir, full.names = TRUE)))
-    } else{
-      dir.create(fdir)
-    }
-    
-    saveRDS(C(), file = paste0("carnival_results_", input$select_sample_carnival, ".rds"))
-    write.csv(C()$weightedSIF,
-              file.path(fdir, paste0("carnival_network_", input$select_sample_carnival, ".csv")),
-              quote = F)
-    write.csv(C()$nodesAttributes,
-              file.path(fdir, paste0("carnival_nodesAttributes_", input$select_sample_carnival, ".csv")),
-              quote = F)
-    tar(x, files = fdir, compression = "gzip")
+pea_download = observeEvent({
+  input$down_pea
+},{
+  req(PEA())
+  
+  if(is.null(input$select_sample_carnival)){
+    smpl = ""
+  }else{
+    smpl = paste0("_", input$select_sample_carnival)
   }
-)
+  if(input$down_pea == 1){
+    a = list(fname = paste0("enrichment_analysis_", input$select_resource_omnipath, smpl, ".csv"),
+             cont = function(file){write.csv(PEA()$psa, file = file,  quote = F)})
+  }else if(input$down_pea == 2){
+    a = list(fname = function(){paste0("volcano_carnivalEA_", input$p_value, smpl, ".png")},
+             cont = function(file){ggsave(file, volcano_pea_reactive(), device = "png")})
+  }else if(input$down_pea == 3){ 
+    a = list(fname = function(){paste0("barplot_carnivalEA_apval", input$p_value, smpl, ".png")},
+             cont = function(file){ggsave(file, barplot_pea_reactive(), device = "png")})
+  }
+  
+  downloadObjSever("download_pea", filename = a$fname, content = a$cont)
+})
