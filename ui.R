@@ -1,6 +1,3 @@
-# UI
-
-
 ui = function(request) {
   source("sub/global.R")
   
@@ -57,43 +54,18 @@ ui = function(request) {
       )
     )),
     
-    # column(4,
-    #   sidebarLayout(
-    #     sidebarPanel( width = 12,
-    #       downloadButton("download_dorothea_scores", "Download TF-activities (NES)"),
-    #       downloadButton("download_graphics", "Download figues (.svg)")
-    #     ),
-    #     mainPanel( width = 0 )
-    #   )
-    # ),
-    
-    
     hr(),
     
     fluidRow(
       column(3, plotOutput("tf_bar")),
       column(4, plotOutput("barplot_nes")),
-      
       column(5, plotOutput("tf_network"))
     ),
+    
     hr(),
     
     # Table visualization
     DT::dataTableOutput("dorothea_result"),
-    hr(),
-    
-    # Download content
-    # fluidRow(
-    #   column(
-    #     6,
-    #     downloadButton("download_dorothea_scores", "Download TF-activities (NES)")
-    #   ),
-    #   column(
-    #     6,
-    #     downloadButton("download_graphics", "Download figues (.svg)")
-    #   )
-    # ),
-    #bookmarkButton(id = "dorothea_bookmark"),
     hr()
     
   ) # close fluidPage
