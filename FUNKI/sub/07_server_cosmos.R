@@ -1,12 +1,10 @@
 # Reactive Computations ---------------------------------------------------
+cos = uploadResultsObjSever("upload_cosmos_results")
 
 # COSMOS
-COSMOS = eventReactive({
-  input$an_cosmos
-}, {
+COSMOS = reactive({
   
-  req(expr(), input$solver)
-    
+  if(input$an_carnival){
     withProgress(message="Running COSMOS", value=1, {
       
       if(input$cosnet == "def"){
@@ -29,7 +27,7 @@ COSMOS = eventReactive({
       
       # CARNIVAL parameters
       if (input$solver == "lpSolve"){
-        solverpath = NULL
+        solverpath = solverPath_cosmos
       }
       
       cosmos <- run_COSMOS(layer_1 = layer_1, 
@@ -39,9 +37,11 @@ COSMOS = eventReactive({
                            solver = input$solver_cosmos, 
                            solver_path = solverpath,
                            runtime = c(200,200,1000,1000))
-     
+      
     })
-  
+  }else{
+    cosmos = cos()
+  }
 })
 
 #objects for visualisation
