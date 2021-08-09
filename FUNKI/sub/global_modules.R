@@ -82,36 +82,3 @@ uploadResultsObjSever <- function(id) {
     }
   )    
 }
-
-# Handle knobNumeric inputs
-knobNumericInfoUI <- function(id, label, title_bs, content, thresholds) {#tag_bs,
-  ns <- NS(id)
-
-  tagList(
-    knobInput(
-      inputId = ns("pea_carnival_controls"),
-      label = h5(label,
-                 tags$style(type = "text/css", paste0("#", ns("info")," {vertical-align: top;}")),
-                 bsButton(ns("info"), label = "", icon = icon("question"), style = "info", size = "extra-small")),
-      value = thresholds$value,
-      min = thresholds$min,
-      max = thresholds$max,
-      step = thresholds$step,
-      displayPrevious = TRUE,
-      thickness = 0.1,
-      lineCap = "round",
-      fgColor = "#428BCA",
-      inputColor = "#428BCA",
-      width = "140", height = "140"
-    ),
-
-    bsPopover(id = ns("info"),#tag_bs,
-              title = title_bs,
-              content = content,
-              placement = "right",
-              trigger = "click",
-              options = list(container = "body")
-    )
-  )
-
-}
