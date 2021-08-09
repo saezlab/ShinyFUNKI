@@ -1,23 +1,23 @@
-# SERVER
 server = function(input, output, session) {
   # Load data from VRE
-  query <-
-    parseQueryString(isolate(session$clientData$url_search))
+  query <- parseQueryString(isolate(session$clientData$url_search))
   
-  # input for progeny
-  inputProgeny <- read.csv(query$file1, row.names = 1)
+  # Expression matrix
+  progeny_input <- read.csv(query$expression_matrix, row.names = 1)
   
-  # progeny results
-  progeny_result = read.csv(query$file2, row.names = 1) # from VRE
+  # Scores
+  progeny_result = read.csv(query$progeny_scores, row.names = 1)
   rownames(progeny_result) = gsub(".", "-", rownames(progeny_result), fixed = T)
   
-  aux = unlist(strsplit(gsub(".csv", "", query$file2, fixed = T) , split = "_"))[-c(1, 2)]
+  aux = unlist(strsplit(gsub(
+    ".csv", "", query$progeny_scores, fixed = T
+  ) , split = "_"))[-c(1, 2)]
   organism = aux[1]
   top = as.numeric(aux[2])
   
   # Dynamic widgets / RenderUI ----------------------------------------------
   
-  # select contrast/sample
+  # Select contrast/sample
   output$select_contrast = renderUI({
     if (!is.null(progeny_result)) {
       choices = colnames(progeny_result) %>%
@@ -28,7 +28,7 @@ server = function(input, output, session) {
     }
   })
   
-  # select TFs
+  # Select TFs
   output$select_pathway = renderUI({
     if (!is.null(input$select_contrast)) {
       choices = unique(rownames(progeny_result))
@@ -68,7 +68,7 @@ server = function(input, output, session) {
         tibble::rownames_to_column("GeneID") %>%
         dplyr::select(GeneID, input$select_pathway)
       
-      inputProgeny_df <- inputProgeny %>%
+      progeny_input_df <- progeny_input %>%
         as.data.frame() %>%
         dplyr::select(input$select_contrast) %>%
         tibble::rownames_to_column("GeneID")
@@ -80,12 +80,9 @@ server = function(input, output, session) {
         input$select_contrast
       )
       
-      scat_plots <- scater_pathway(df = inputProgeny_df,
+      scat_plots <- scater_pathway(df = progeny_input_df,
                                    weight_matrix = prog_matrix,
                                    tittle = title)
-      
-      
-      
       
     }
     
@@ -191,6 +188,5 @@ server = function(input, output, session) {
       
     }
   )
-  
   
 }
