@@ -269,9 +269,9 @@ barplot_pea <- function(pea, threshold_adjpval = 0.05, n_paths = 10){
   colnames(ggdata)[which(colnames(ggdata)==col_called)] = "pathway"
   
   ggdata %>%
-  ggplot2::ggplot(aes(y = reorder(pathway, -AdjPvalu), x = AdjPvalu)) +
-    ggplot2::geom_segment(aes(y = reorder(pathway, -AdjPvalu),
-                              yend = reorder(pathway, -AdjPvalu),
+  ggplot2::ggplot(aes(y = reorder(stringr::str_wrap(pathway, width = 20), -AdjPvalu), x = AdjPvalu)) +
+    ggplot2::geom_segment(aes(y = reorder(stringr::str_wrap(pathway, width = 20), -AdjPvalu),
+                              yend = reorder(stringr::str_wrap(pathway, width = 20), -AdjPvalu),
                               x = AdjPvalu, xend = 100),
                           color = "gray", lwd = 1) +
     ggplot2::geom_point(size = 4, pch = 21, bg = 4, col = 1) +
@@ -291,8 +291,8 @@ volcano_pea <- function(pea, nodAtt, threshold_adjpval = 0.05, n_paths = 10, n_g
     dplyr::inner_join(nodAtt, by = "Node") %>%
     dplyr::mutate(across(c(ZeroAct, UpAct, DownAct, AvgAct), as.numeric))
   
-  xlimAbs <- ceiling(max(abs(ggdata$AvgAct)))
-  ylimAbs <- ceiling(max(abs(log10(ggdata$AdjPvalu))))
+  xlimAbs <- ceiling(max(abs(ggdata$AvgAct), na.rm = T))
+  ylimAbs <- ceiling(max(abs(log10(ggdata$AdjPvalu)), na.rm = T))
   
   vAss <- 0.5
   hAss <- threshold_adjpval
@@ -315,7 +315,7 @@ volcano_pea <- function(pea, nodAtt, threshold_adjpval = 0.05, n_paths = 10, n_g
                               show.legend = F, inherit.aes = F) +
     scale_y_continuous(limits = c(0, ylimAbs), 
                        expand = c(0.01, 0.01),
-                       breaks = seq(floor(min(-log10(ggdata$AdjPvalu))), ceiling(max(-log10(ggdata$AdjPvalu))), 1),
+                       breaks = seq(floor(min(-log10(ggdata$AdjPvalu), na.rm = T)), ceiling(max(-log10(ggdata$AdjPvalu), na.rm = T)), 1),
                        labels = scales::math_format(10^-.x)
     )+
     annotation_logticks(sides = "lr") +
