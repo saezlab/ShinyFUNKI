@@ -1,21 +1,17 @@
-# SERVER
 server = function(input, output, session) {
-  
   # Load data from VRE
-  query <- parseQueryString( isolate( session$clientData$url_search ) )
+  query <-parseQueryString(isolate(session$clientData$url_search))
   
-  # input for dorothea
-  inputDorothea <- read.csv( query$file1, row.names = 1)
+  # Expression matrix
+  dorothea_input <- read.csv(query$expression_matrix, row.names = 1)
   
-  # dorothea results
-  dorothea_result = read.csv( query$file2, row.names = 1) # from VRE
+  # Scores
+  dorothea_result = read.csv(query$dorothea_scores, row.names = 1)
   data(dorothea_hs, package = "dorothea")
   
-  #get confidence levels
-  confidence_level = unlist(strsplit(gsub(".csv", "", query$file2, fixed = T) , split =
-                                       "_"))
-  confidence_level = unlist(strsplit(confidence_level[length(confidence_level)] , split =
-                                       ""))
+  # Get confidence levels
+  confidence_level = unlist(strsplit(gsub(".csv", "", query$dorothea_scores, fixed = T) , split = "_"))
+  confidence_level = unlist(strsplit(confidence_level[length(confidence_level)] , split = ""))
   
   # Dynamic widgets / RenderUI ----------------------------------------------
   
@@ -56,14 +52,13 @@ server = function(input, output, session) {
         dplyr::filter(tf == input$select_tf &
                         confidence %in% confidence_level) %>%
         dplyr::select(target) %>%
-        dplyr::filter(target %in% rownames(inputDorothea)) %>%
+        dplyr::filter(target %in% rownames(dorothea_input)) %>%
         nrow()
       
       sliderInput(
         "select_top_n_labels",
         label = "Number of targets to display",
-        value = dplyr::case_when(targets > 10 ~ 10, targets <= 10 ~ round(targets *
-                                                                            (2 / 3))),
+        value = dplyr::case_when(targets > 10 ~ 10, targets <= 10 ~ round(targets * (2 / 3))),
         min = 1,
         max = targets,
         step = 1
@@ -121,16 +116,16 @@ server = function(input, output, session) {
       nodes = merge.data.frame(
         aux %>%
           dplyr::select(target),
-        inputDorothea %>%
+        dorothea_input %>%
           dplyr::select(input$select_contrast) %>%
           tibble::rownames_to_column("target"),
         by = "target"
       )
       
-      nodes = nodes[order(abs(nodes[, input$select_contrast]), decreasing = T), ]
+      nodes = nodes[order(abs(nodes[, input$select_contrast]), decreasing = T),]
       
       if (input$select_top_n_labels <= nrow(nodes)) {
-        nodes = nodes[1:input$select_top_n_labels, ]
+        nodes = nodes[1:input$select_top_n_labels,]
       }
       
       nodes = tibble(

@@ -1,7 +1,3 @@
-
-
-#initialize
-
 library(shiny)
 library(shinyWidgets)
 library(DT)
@@ -12,12 +8,13 @@ library(reshape2)
 library(tidygraph)
 library(ggraph)
 library(plotly)
+library(jsonlite)
 
-# shiny options
+# Shiny options
 enableBookmarking(store = "server")
 options(shiny.maxRequestSize = 30 * 1024 ^ 2)
 
-# PLOTS -------------------------------------------------------------
+# Plots -------------------------------------------------------------
 
 barplot_nes = function(df, smpl, nHits) {
   df = df[, c("GeneID", smpl)] %>%
