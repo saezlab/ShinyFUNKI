@@ -1,6 +1,3 @@
-# UI
-
-
 ui = function(request) {
   source("sub/global.R")
   

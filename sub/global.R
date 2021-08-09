@@ -1,7 +1,3 @@
-
-
-#initialize
-
 library(shiny)
 library(shinyWidgets)
 library(DT)
@@ -13,11 +9,11 @@ library(cowplot)
 library(pheatmap)
 library(plotly)
 
-# shiny options
+# Shiny options
 enableBookmarking(store = "server")
 options(shiny.maxRequestSize = 30 * 1024 ^ 2)
 
-# PLOTS -------------------------------------------------------------
+# Plots -------------------------------------------------------------
 
 heatmap_scores = function(df) {
   paletteLength = 100
@@ -78,9 +74,9 @@ barplot_nes = function(df, smpl) {
     ggtitle(title)
 }
 
-#adapted from progeny::progenyScatter
+# Adapted from progeny::progenyScatter
 scater_pathway = function (df, weight_matrix, tittle) {
-  #prepare data
+  # Prepare data
   names(df) <- c("ID", "stat")
   names(weight_matrix) <- c("ID", "weight")
   
@@ -94,7 +90,7 @@ scater_pathway = function (df, weight_matrix, tittle) {
   sub_df[(sub_df$weight < 0 & sub_df$stat > 0), "color"] <- "2"
   sub_df[(sub_df$weight < 0 & sub_df$stat < 0), "color"] <- "1"
   
-  # create scatterplot
+  # Create scatterplot
   percentile <- ecdf(df$stat)
   sub_df[(percentile(sub_df$stat) < 0.95 &
             percentile(sub_df$stat) > 0.05), 1] <- NA
@@ -120,12 +116,9 @@ scater_pathway = function (df, weight_matrix, tittle) {
     geom_vline(xintercept = 0, linetype = "dotted") +
     geom_hline(yintercept = 0, linetype = "dotted") +
     scale_y_continuous(breaks = scales::extended_breaks()) +
-    scale_x_continuous(breaks = scales::extended_breaks())# +
-  #ggtitle(title)#+
-  #labs(x = title, y = statName)
+    scale_x_continuous(breaks = scales::extended_breaks())
   
-  
-  #create Histogram with input data
+  # Create histogram with input data
   histo <- ggplot(df, aes(x = stat, fill = "")) +
     geom_density() +
     coord_flip() +
