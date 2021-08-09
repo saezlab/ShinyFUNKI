@@ -9,7 +9,7 @@ tabPanel(
                        title_bs = "Upload CARNIVAL results", 
                        content = "Visualise the CARNIVAL results that you already have. The format should be a rds file.")
   ),
-  
+  # Network visualisation --------
   fluidRow(
     h3("Network visualization"),
     hr(),
@@ -28,6 +28,7 @@ tabPanel(
     visNetwork::visNetworkOutput("network"),
     
   ),
+  # Pathway Enrichment Analysis --------
   hr(),
   fluidRow(
     h3("Pathway Enrichment Analysis"),
@@ -37,21 +38,28 @@ tabPanel(
                    fluidRow(
                      column(width = 6, align = "left",
                             awesomeRadio(inputId = "pathEnrich_database",
-                                         label = h5("Select database from Omnipath",
+                                         label = h5("Select resource",
                                                     tags$style(type = "text/css", "#q7c_database {vertical-align: top;}"),
                                                     bsButton("q7c_database", label = "", icon = icon("question"), 
                                                              style = "info", size = "extra-small")),
-                                         choices = c('SIGNOR', 'NetPath', 'MSigDB', 'SignaLink' = 'SignaLink_pathway', 'Custom'),
-                                         selected = 'SIGNOR',
+                                         choices = c('Omnipath', 'Custom'),
+                                         selected = 'Omnipath',
                                          inline = TRUE),
                             bsPopover(id = "q7c_database", 
-                                      title = "Select database from Omnipath",
-                                      content = "Select source to run a pathway enrichment analysis on CARNIVAL output. If custom option is selected, upload a tsv file containing genes in the first column (HGNC/uniprot ids) and the second the gene sets",
+                                      title = "Select resource",
+                                      content = "Select source to run a pathway enrichment analysis on CARNIVAL output. If custom option is selected, upload a tsv file containing genes in the first column (HGNC/uniprot ids) and the second the gene sets. If Omnipaht is selected, select one of the databases offered.",
                                       placement = "right", 
                                       trigger = "click", 
                                       options = list(container = "body")
                             ),
-                            uiOutput("pathEnrich_msigDB_collection"),
+                            conditionalPanel(
+                              condition = ("input.pathEnrich_database == 'Omnipath'"),
+                              fluidRow(
+                                column(width = 4, uiOutput("select_resource_omnipath")),
+                                column(width = 4, uiOutput("set_resource_pea")),
+                                column(width = 4, uiOutput("pathEnrich_msigDB_collection"))
+                              )
+                            ),
                             uiOutput("pathEnrich_custom"),
                             actionButton("run_PEA", "Run"),
                             hr(),
@@ -64,26 +72,87 @@ tabPanel(
 
                      column(width = 6, align = "left",
                             conditionalPanel(
+                              condition = ("input.run_PEA == 0"),
+                              DT::dataTableOutput("omnipath_resource"),
+                            ),
+                            conditionalPanel(
                               condition = ("input.run_PEA == 1"),
                               fluidRow(
                                 column(width = 4,
-                                       knobNumericInfoUI(id = "p_value", 
-                                                         label = "Adjusted pValue", 
-                                                         title_bs = "Adjusted pValue Cutoff",
-                                                         content = "Adjusted pValue to use as threshold to show the enriched results.",
-                                                         thresholds = list("value"=0.05, "min" = 0, "max" = 1, "step" = 0.01))),
+                                       knobInput(
+                                         inputId = "p_value",
+                                         label = h5("Adjusted pValue",
+                                                    tags$style(type = "text/css", paste0("#", "bs_pval_carnival"," {vertical-align: top;}")),
+                                                    bsButton("bs_pval_carnival", label = "", icon = icon("question"), style = "info", size = "extra-small")),
+                                         value = 0.05,
+                                         min = 0,
+                                         max = 1,
+                                         step = 0.01,
+                                         displayPrevious = TRUE,
+                                         thickness = 0.1,
+                                         lineCap = "round",
+                                         fgColor = "#428BCA",
+                                         inputColor = "#428BCA",
+                                         width = "140", height = "140"
+                                       ),
+                                       bsPopover(id = "bs_pval_carnival",
+                                                 title = "Adjusted pValue Cutoff",
+                                                 content = "Adjusted pValue to use as threshold to show the enriched results.",
+                                                 placement = "right",
+                                                 trigger = "click",
+                                                 options = list(container = "body")
+                                       )
+                                ),
                                 column(width = 4,
-                                       knobNumericInfoUI(id = "pea_nPaths", 
-                                                         label = "Paths/Signatures", 
-                                                         title_bs = "Number of Paths/Signatures",
-                                                         content = "The number of significant Paths/Signatures to show in plots.",
-                                                         thresholds = list("value" = 10, "min" = 5, "max" = 300, "step" = 1))),
+                                       knobInput(
+                                         inputId = "pea_nPaths",
+                                         label = h5( "Paths/Signatures",
+                                                    tags$style(type = "text/css", paste0("#", "bs_nPaths_carnival"," {vertical-align: top;}")),
+                                                    bsButton("bs_nPaths_carnival", label = "", icon = icon("question"), style = "info", size = "extra-small")),
+                                         value = 10,
+                                         min = 5,
+                                         max = 300,
+                                         step = 1,
+                                         displayPrevious = TRUE,
+                                         thickness = 0.1,
+                                         lineCap = "round",
+                                         fgColor = "#428BCA",
+                                         inputColor = "#428BCA",
+                                         width = "140", height = "140"
+                                       ),
+                                       bsPopover(id = "bs_nPaths_carnival",
+                                                 title = "Number of Paths/Signatures",
+                                                 content = "The number of significant Paths/Signatures to show in plots.",
+                                                 placement = "right",
+                                                 trigger = "click",
+                                                 options = list(container = "body")
+                                       )
+                                ),
                                 column(width = 4,
-                                       knobNumericInfoUI(id = "pea_nGenes", 
-                                                         label = "Genes", 
-                                                         title_bs = "Number of Genes",
-                                                         content = "The number of significant Genes to show in volcano plot.",
-                                                         thresholds = list("value"=10, "min" = 5, "max" = 500, "step" = 1)))
+                                       knobInput(
+                                         inputId = "pea_nGenes",
+                                         label = h5( "Genes",
+                                                     tags$style(type = "text/css", paste0("#", "bs_nGenes_carnival"," {vertical-align: top;}")),
+                                                     bsButton("bs_nGenes_carnival", label = "", icon = icon("question"), style = "info", size = "extra-small")),
+                                         value = 10,
+                                         min = 5,
+                                         max = 500,
+                                         step = 1,
+                                         displayPrevious = TRUE,
+                                         thickness = 0.1,
+                                         lineCap = "round",
+                                         fgColor = "#428BCA",
+                                         inputColor = "#428BCA",
+                                         width = "140", height = "140"
+                                       ),
+                                       bsPopover(id = "bs_nGenes_carnival",
+                                                 title = "Number of Genes",
+                                                 content = "The number of significant Genes to show in volcano plot.",
+                                                 placement = "right",
+                                                 trigger = "click",
+                                                 options = list(container = "body")
+                                       )
+                                )
                               )
                             )
                      )
