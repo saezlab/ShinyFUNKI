@@ -1,9 +1,9 @@
 server = function(input, output, session) {
   # Load data from VRE
-  query <- parseQueryString(isolate(session$clientData$url_search))
+  query = parseQueryString(isolate(session$clientData$url_search))
   
   # Expression matrix
-  progeny_input <- read.csv(query$expression_matrix, row.names = 1)
+  progeny_input = read.csv(query$expression_matrix, row.names = 1)
   
   # Scores
   progeny_result = read.csv(query$progeny_scores, row.names = 1)
@@ -12,8 +12,8 @@ server = function(input, output, session) {
   aux = unlist(strsplit(gsub(
     ".csv", "", query$progeny_scores, fixed = T
   ) , split = "_"))[-c(1, 2)]
-  organism = aux[1]
-  top = as.numeric(aux[2])
+  organism = aux[2]
+  top = as.numeric(aux[3])
   
   # Dynamic widgets / RenderUI ----------------------------------------------
   
