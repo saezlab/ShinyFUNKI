@@ -1,9 +1,9 @@
 server = function(input, output, session) {
   # Load data from VRE
-  query <-parseQueryString(isolate(session$clientData$url_search))
+  query = parseQueryString(isolate(session$clientData$url_search))
   
   # Expression matrix
-  dorothea_input <- read.csv(query$expression_matrix, row.names = 1)
+  dorothea_input = read.csv(query$expression_matrix, row.names = 1)
   
   # Scores
   dorothea_result = read.csv(query$dorothea_scores, row.names = 1)
