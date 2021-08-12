@@ -57,10 +57,11 @@ edges_cosmos <- reactive({
   edges <- COSMOS()[[1]] %>%
     dplyr::rename(from = Node1, to = Node2, value = Weight) %>%
     tibble::rowid_to_column(var = "id") %>%
-    dplyr::mutate(color = dplyr::case_when(Sign == 1 ~ plotly::toRGB('#0578F0', alpha = 1),
-                                           Sign == -1 ~ plotly::toRGB('#F20404', alpha = 1),
-                                           Sign == 0 ~ plotly::toRGB('#777777', alpha = 1)))
-  
+    dplyr::mutate(color = "grey") %>%
+    dplyr::mutate(arrows.to.type = dplyr::if_else(Sign ==1, "arrow", "circle")) %>%
+    dplyr::mutate(enabled = TRUE) %>%
+    dplyr::mutate(scaleFactor = 1) %>%
+    unique.data.frame()
 })
 
 nodes_cosmos <- reactive({
@@ -77,15 +78,18 @@ nodes_cosmos <- reactive({
     dplyr::filter(Nodes %in% c(union(edges_cosmos()$from, edges_cosmos()$to))) %>%
     dplyr::rename(id = Nodes) %>%
     dplyr::mutate(label = id) %>%
-    dplyr::mutate(shape = dplyr::case_when(NodeType == "T" ~ "triangle",
-                                           NodeType == "S" ~ "diamond",
+    dplyr::mutate(shape = dplyr::case_when(type == "TF" ~ "diamond",
+                                           type == "Kinase" ~ "triangle",
+                                           type == "protein" ~ "square",
+                                           type == "metab_enzyme" ~ "square",
                                            TRUE ~ "circle")) %>%
     dplyr::mutate(title = paste0("<p><b>", label, "</b><br> (", AvgAct, ")</p>")) %>%
-    dplyr::mutate(color = findInterval(AvgAct, seq(from = -1, to = 1, length.out = 50))) %>%
+    dplyr::mutate(color = findInterval(AvgAct, 
+                                       seq(from = min(COSMOS()[[2]]$AvgAct), to = max(COSMOS()[[2]]$AvgAct), 
+                                           length.out = 100))) %>%
     dplyr::mutate(color = pal[color]) %>%
-    dplyr::mutate(color = plotly::toRGB(color, alpha = 1))
-  
-  
+    dplyr::mutate(color = plotly::toRGB(color, alpha = 1)) %>%
+    dplyr::mutate(shadow = measured == 1)
 })
 
 # Dynamic widgets / RenderUI ----------------------------------------------
@@ -124,38 +128,23 @@ output$down_cosmos = renderUI({
 output$network_cosmos <- renderVisNetwork({
   
   ## legends
-  ledges <- data.frame(color = c("#0578F0", "#F20404", "#777777"),
-                       label = c("activation", "inhibition", "involved"), 
-                       arrows = c("to", "to", "to"),
+  ledges <- data.frame(color = c("grey", "grey"),
+                       label = c("activation", "inhibition"), 
+                       arrows.to.type = c("arrow", "circle"),
+                       # arrows.type = c("arrow", "circle"),
                        font.align = "top")
-  
-  lnodes <- data.frame(label = c("TF", "Perturbed", "Intermediate"),
+  lnodes <- data.frame(label = c("Kinase", "TF", "Protein/Enzyme", "Metabolite"),
                        color = c("gray"),
-                       shape = c("triangle", "diamond", "circle"))
-  
+                       shape = c("triangle", "diamond", "square", "circle"))
+
   # render network
-  visNetwork::visNetwork(nodes_cosmos(), edges_cosmos(), height = "500px", width = "100%") %>%
+  visNetwork::visNetwork(nodes_cosmos(), edges_cosmos(), height = 1600, width = 1600) %>%
     visNetwork::visIgraphLayout() %>%
-    visEdges(arrows = 'to') %>%
+    visNetwork::visOptions(highlightNearest = TRUE,
+                           nodesIdSelection = list(enabled = TRUE,
+                                                   style = "width: 200px; height: 26px;\n background: #f8f8f8;\n color: darkblue;\n border:none;\n outline:none;")) %>%
     visNetwork::visLegend(addEdges = ledges, addNodes = lnodes,
                           width = 0.1, position = "right", useGroups = FALSE)
-})
-
-observeEvent(input$select_node_cosmos,{
-  visNetwork::visNetworkProxy("network_cosmos") %>%
-    visNetwork::visFocus(id = input$select_node_cosmos, scale = 4)
-})
-
-observeEvent(input$hierarchical_cosmos,{
-  req(input$hierarchical_cosmos)
-
-    visNetwork::visNetworkProxy("network_cosmos") %>%
-      visNetwork::visHierarchicalLayout(levelSeparation = 500,
-                                        sortMethod = "directed",
-                                        treeSpacing = 20,
-                                        edgeMinimization=F, blockShifting=F) %>%
-      visNetwork::visPhysics(hierarchicalRepulsion = list(nodeDistance = 300))
-
 })
 
 # Download Handler --------------------------------------------------------

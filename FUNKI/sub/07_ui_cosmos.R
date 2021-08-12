@@ -11,19 +11,17 @@ tabPanel(
   # Network visualisation --------
   fluidRow(
     h3("Network visualization"),
-    hr(),
     shinyWidgets::dropdown(
+      label = "download",
       inputId = "cosmos_control",
-      uiOutput("select_node_cosmos"),
-      checkboxInput("hierarchical", label = "Hierarchical layout", value = FALSE),
+      # uiOutput("select_node_cosmos"),
+      # checkboxInput("hierarchical", label = "Hierarchical layout", value = FALSE),
       uiOutput("down_cosmos"),
       downloadObjUI(id = "download_cosmos"),
       circle = TRUE,
       status = "primary",
       icon = icon("sliders"), width = "300px"
     ),
-    
-    visNetwork::visNetworkOutput("network_cosmos"),
-    
-  )
+    hr(),
+    visNetwork::visNetworkOutput("network_cosmos"))
 )
