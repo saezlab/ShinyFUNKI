@@ -93,22 +93,6 @@ nodes_cosmos <- reactive({
 })
 
 # Dynamic widgets / RenderUI ----------------------------------------------
-output$select_node_cosmos = renderUI({
-  req(COSMOS())
-    
-    choices = COSMOS()[[2]] %>%
-      dplyr::filter(ZeroAct != 1) %>%
-      dplyr::select(Nodes) %>%
-      dplyr::pull() %>%
-      stringr::str_sort(numeric = T) %>%
-      unique()
-    
-    pickerInput(inputId = "focus_node_cosmos",
-                label = "Focus on node:",
-                choices = choices,
-                options = list("live-search" = TRUE),
-                selected = NULL)
-})
 
 output$down_cosmos = renderUI({
   req(COSMOS())
