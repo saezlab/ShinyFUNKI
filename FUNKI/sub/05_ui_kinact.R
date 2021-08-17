@@ -12,6 +12,7 @@ tabPanel(
   ),
   
   shinyWidgets::dropdown(
+    label = "Visualisation parameters",
     uiOutput("select_contrast_kinact"),
     uiOutput("select_kinase"),
     uiOutput("select_top_kinases"),

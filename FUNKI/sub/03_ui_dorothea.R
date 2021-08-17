@@ -12,6 +12,7 @@ tabPanel(
   ),
   
   shinyWidgets::dropdown(
+    label = "Visualisation parameters",
     uiOutput("select_contrast_dorothea"),
     uiOutput("select_tf"),
     uiOutput("select_top_n_hits"),

@@ -10,6 +10,7 @@ tabPanel(
                        content = "Visualise the PROGENy results that you already have. The format should be a csv file with samples in columns and genes in rows")
   ),
   shinyWidgets::dropdown(
+    label = "Visualisation parameters",
     uiOutput("select_contrast_progeny"),
     uiOutput("select_pathway"),
     uiOutput("down_progeny"),
