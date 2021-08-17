@@ -11,15 +11,16 @@ P = reactive({
         organism = "Human"
       }else {organism = input$select_organism}
       
-      prog_result = progessDATA(data = expr(),
+      data = progessDATA(data = expr(),
                          contrast_data = input$contrast_data,
                          input$upload_expr,
-                         input$type_analysis) %>%
+                         input$type_analysis)
+      prog_result = data %>%
         run_progeny(organism = organism,
                     top = input$perm,
                     perm = input$top)
 
-      if(nrow(prog_result) == 1){rownames(prog_result) = NULL}
+      if(ncol(data) == 1){rownames(prog_result) = colnames(data)}
     })
 
   }else{
