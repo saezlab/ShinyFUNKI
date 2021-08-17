@@ -61,9 +61,6 @@ C = reactive({
   } else{
     carnival_results = carni()
   }
-  
-  
-  
 })
 
 # Pathway enrichment analysis
@@ -71,33 +68,33 @@ PEA = eventReactive({
   input$run_PEA
 }, {
   req(input$pathEnrich_database)
-
-    if (input$pathEnrich_database == 'Omnipath'){
-      database = omnipath_resources()[[input$select_resource_omnipath]]
-      if(input$select_resource_omnipath == 'MSigDB'){
-        database = database %>%
-          dplyr::filter(collection == input$pathEnrich_msigDB_collection) %>%
-          dplyr::select(genesymbol, geneset)
-      } else if(ncol(database) > 4){
-        database = database %>%
-          dplyr::select(genesymbol, !!as.name(input$set_resource_pea)) %>%
-          as.data.frame()
-      }else{
-        database = database[,c(2, 4)]
-      }
-    } else if(input$pathEnrich_database == 'Custom'){
-      # req(input$upload_custom)
-      validate(need(tools::file_ext(input$upload_custom$datapath) == "tsv", "Please upload a tsv file"))
-      database = read_tsv(input$upload_custom$datapath)
-      # colnames(database) = c("genesymbol", "pathway")
+  
+  if (input$pathEnrich_database == 'Omnipath'){
+    database = omnipath_resources()[[input$select_resource_omnipath]]
+    if(input$select_resource_omnipath == 'MSigDB'){
+      database = database %>%
+        dplyr::filter(collection == input$pathEnrich_msigDB_collection) %>%
+        dplyr::select(genesymbol, geneset)
+    } else if(ncol(database) > 4){
+      database = database %>%
+        dplyr::select(genesymbol, !!as.name(input$set_resource_pea)) %>%
+        as.data.frame()
+    }else{
+      database = database[,c(2, 4)]
     }
+  } else if(input$pathEnrich_database == 'Custom'){
+    # req(input$upload_custom)
+    validate(need(tools::file_ext(input$upload_custom$datapath) == "tsv", "Please upload a tsv file"))
+    database = read_tsv(input$upload_custom$datapath)
+    # colnames(database) = c("genesymbol", "pathway")
+  }
+  
+  # GSA
+  withProgress(message = "Running Enrichment...", value = 1, {
     
-    # GSA
-    withProgress(message = "Running Enrichment...", value = 1, {
-
-      pathEnreach(nodeAtt = C()$nodesAttributes, 
-                  database = database)
-
+    pathEnreach(nodeAtt = C()$nodesAttributes, 
+                database = database)
+    
   })
   
 })
@@ -106,38 +103,45 @@ PEA = eventReactive({
 edges <- reactive({
   req(C())
   # edges and node information for visnetwork
-  edges <- C()$weightedSIF %>%
+  edges <- C()$weightedSIF %>% 
     dplyr::rename(from = Node1, to = Node2, value = Weight) %>%
     tibble::rowid_to_column(var = "id") %>%
-    dplyr::mutate(color = dplyr::case_when(Sign == 1 ~ plotly::toRGB('#0578F0', alpha = 1),
-                                           Sign == -1 ~ plotly::toRGB('#F20404', alpha = 1),
-                                           Sign == 0 ~ plotly::toRGB('#777777', alpha = 1)))
+    dplyr::mutate(color = "rgba(128,128,128,1)") %>%
+    dplyr::mutate(value = value/100) %>%
+    dplyr::mutate(arrows.to.type = dplyr::if_else(Sign == 1, "arrow", "circle")) %>%
+    dplyr::mutate(enabled = TRUE) %>%
+    dplyr::mutate(scaleFactor = 1) %>%
+    unique.data.frame()
   
 })
 
 nodes_carnival <- reactive({
   req(C())
-    # create color scale for nodes
-    pal_red_blue = c(rev(RColorBrewer::brewer.pal(9, 'Reds')),
-                     "#FFFFFF",
-                     RColorBrewer::brewer.pal(9, 'Blues'))
-    pal = colorRampPalette(pal_red_blue)(100)
-    
-    #nodes
-    nodes <- C()$nodesAttributes %>%
-      dplyr::filter(ZeroAct != 100) %>%
-      dplyr::filter(Node %in% c(union(edges()$from, edges()$to))) %>%
-      dplyr::rename(id = Node) %>%
-      dplyr::mutate(label = id) %>%
-      dplyr::mutate(shape = dplyr::case_when(NodeType == "T" ~ "triangle",
-                                             NodeType == "S" ~ "diamond",
-                                             TRUE ~ "circle")) %>%
-      dplyr::mutate(title = paste0("<p><b>", label, "</b><br> (", AvgAct, ")</p>")) %>%
-      dplyr::mutate(color = findInterval(AvgAct, seq(from = -100, to = 100, length.out = 100))) %>%
-      dplyr::mutate(color = pal[color]) %>%
-      dplyr::mutate(color = plotly::toRGB(color, alpha = 1))
-    
-  })
+  # create color scale for nodes
+  pal_red_blue = c(rev(RColorBrewer::brewer.pal(9, 'Reds')),
+                   "#FFFFFF",
+                   RColorBrewer::brewer.pal(9, 'Blues'))
+  pal = colorRampPalette(pal_red_blue)(100)
+  
+  #nodes
+  nodes <- C()$nodesAttributes %>%
+    dplyr::filter(ZeroAct != 100) %>%
+    dplyr::filter(Node %in% c(union(edges()$from, edges()$to))) %>%
+    dplyr::rename(id = Node) %>%
+    dplyr::mutate(label = id) %>%
+    dplyr::mutate(shape = dplyr::case_when(NodeType == "T" ~ "triangle",
+                                           NodeType == "S" ~ "diamond",
+                                           TRUE ~ "circle")) %>%
+    dplyr::mutate(title = paste0("<p><b>", label, "</b><br> (", AvgAct, ")</p>")) %>%
+    dplyr::mutate(color.background = findInterval(AvgAct,
+                                                  seq(from = min(C()$nodesAttributes$AvgAct),
+                                                      to = max(C()$nodesAttributes$AvgAct),
+                                                      length.out = 100))) %>%
+    dplyr::mutate(color.background = pal[color.background]) %>%
+    dplyr::mutate(color.background = plotly::toRGB(color.background, alpha = 1)) %>%
+    dplyr::mutate(color.border = "rgba(128,128,128,1)") %>%
+    dplyr::mutate(shadow = NodeType == T)
+})
 
 paths <- reactive({
   req(C())
@@ -146,44 +150,36 @@ paths <- reactive({
 
 omnipath_resources <- reactive({
   req(C())
-  OmnipathR::import_omnipath_annotations(proteins = C()$nodesAttribute$Node, wide = TRUE)
+  if(input$pathEnrich_database == 'Omnipath'){
+    OmnipathR::import_omnipath_annotations(proteins = C()$nodesAttribute$Node, wide = TRUE) 
+  }
 })
 
 # Dynamic widgets / RenderUI ----------------------------------------------
 output$select_node = renderUI({
   req(C())
-
-    choices = C()$nodesAttributes %>% 
-      dplyr::filter(ZeroAct != 100) %>%
-      dplyr::select(Node) %>%
-      dplyr::pull() %>%
-      stringr::str_sort(numeric = T) %>%
-      unique()
-
-    pickerInput(inputId = "focus_node",
-                label = "Focus on node:",
-                choices = choices,
-                options = list("live-search" = TRUE),
-                selected = NULL)
-})
-
-output$select_tf_carnival = renderUI({
-  req(C())
-
-  choices = base::setdiff(C()$weightedSIF$Node2,
-                          C()$weightedSIF$Node1)
-  pickerInput(inputId = "select_tf_carnival",
-              label = "Path to TF:",
+  
+  choices = C()$nodesAttributes %>% 
+    dplyr::filter(ZeroAct != 100) %>%
+    dplyr::select(Node) %>%
+    dplyr::pull() %>%
+    stringr::str_sort(numeric = T) %>%
+    unique()
+  
+  choices = c("select Node", choices)
+  
+  pickerInput(inputId = "focus_node",
+              label = "Focus on node:",
               choices = choices,
               options = list("live-search" = TRUE),
-              selected = NULL)
+              selected = "select Node")
 })
 
 output$select_resource_omnipath = renderUI({
   req(omnipath_resources())
   
   choices = names(omnipath_resources())
-    
+  
   pickerInput(inputId = "select_resource_omnipath",
               label = NULL,
               choices = choices,
@@ -196,7 +192,7 @@ output$set_resource_pea = renderUI({
       input$select_resource_omnipath)
   
   columns_names = names(omnipath_resources()[[input$select_resource_omnipath]])
-
+  
   if(length(columns_names) > 4){
     choices = columns_names[4:length(columns_names)]
     pickerInput(inputId = "set_resource_pea",
@@ -227,7 +223,7 @@ output$pathEnrich_custom = renderUI({
   if (input$pathEnrich_database == 'Custom') {
     
     fileInput("upload_custom", label = NULL, accept = ".tsv")
-
+    
   }
 })
 
@@ -260,62 +256,58 @@ output$down_pea = renderUI({
 output$network <- renderVisNetwork({
   
   ## legends
-  ledges <- data.frame(color = c("#0578F0", "#F20404", "#777777"),
-                       label = c("activation", "inhibition", "involved"), 
-                       arrows = c("to", "to", "to"),
+  ledges <- data.frame(color = "grey",
+                       label = c("activation", "inhibition"), 
+                       arrows.to.type = c("arrow", "circle"),
                        font.align = "top")
   
   lnodes <- data.frame(label = c("TF", "Perturbed", "Intermediate"),
-                       color = c("gray"),
+                       color = c("grey"),
                        shape = c("triangle", "diamond", "circle"))
   
   # render network
   visNetwork::visNetwork(nodes_carnival(), edges(), height = "500px", width = "100%") %>%
     visNetwork::visIgraphLayout() %>%
-    visEdges(arrows = 'to') %>%
+    visNetwork::visEdges(arrows = 'to') %>%
     visNetwork::visLegend(addEdges = ledges, 
                           addNodes = lnodes,
                           width = 0.1, 
                           position = "left", 
                           useGroups = FALSE)
+  
 })
 
 observeEvent(input$focus_node,{
-  visNetwork::visNetworkProxy("network") %>%
-    visNetwork::visFocus(id = input$focus_node, scale = 4)
-})
-
-observeEvent(input$select_tf_carnival,{
-
-  pat = paste0("_", input$select_tf_carnival, "$")
-  
-  selected_nodes = do.call(c,paths()[grep(pat, names(paths()))]) %>% unique()
-  background_nodes = nodes_carnival() %>%
-    apply(1, function(r, x){
-      if( !r["id"] %in% x ){
-        r["color"] = sub(",1)", ",0.3)", r["color"], fixed=T)};
-      return(r)}, selected_nodes) %>% 
-    t() %>% 
-    data.frame()
-  
-  background_edges = edges() %>%
-    apply(1, function(r, x){
-      if( !(r["from"] %in% x) & !(r["to"] %in% x) ){
-        r["color"] = sub(",1)", ",0.3)", r["color"], fixed=T)};
-      return(r)}, selected_nodes) %>% 
-    t() %>% 
-    data.frame()
-  
-  selected_edges = background_edges %>%
-    dplyr::filter(grepl(",1)", color, fixed = T)) %>%
-    dplyr::pull(id)
-
-  visNetwork::visNetworkProxy("network") %>%
-    visNetwork::visUpdateNodes(nodes = background_nodes) %>%
-    visNetwork::visUpdateEdges(edges = background_edges) %>%
-    visNetwork::visSetSelection(nodesId = selected_nodes, 
-                                edgesId = selected_edges)
+  if(input$focus_node == "select Node"){
+    visNetwork::visNetworkProxy("network") %>%
+      visNetwork::visUpdateNodes(nodes = nodes_carnival()) %>%
+      visNetwork::visUpdateEdges(edges = edges())
+  }else{
+    selected_nodes = lapply(paths(), function(p, n){
+      if( !any(p == n) ){
+        p = NULL 
+      }
+      return(p)
+    }, input$focus_node)
     
+    selected_nodes = do.call(c, selected_nodes) %>% unique()
+    
+    background = backgroundNET(selected_nodes, nodes_carnival(), edges())
+    
+    selected_edges = background$edges %>%
+      dplyr::filter(grepl(",1)", color, fixed = T)) %>%
+      dplyr::pull(id)
+    
+    message(head(selected_edges))
+    
+    visNetwork::visNetworkProxy("network") %>%
+      visNetwork::visUpdateNodes(nodes = background$nodes) %>%
+      visNetwork::visUpdateEdges(edges = background$edges) %>%
+      visNetwork::visSetSelection(nodesId = selected_nodes,
+                                  edgesId = selected_edges) %>%
+      visNetwork::visFit(nodes = selected_nodes)
+  }
+
 })
 
 observeEvent(input$hierarchical,{
@@ -329,7 +321,7 @@ observeEvent(input$hierarchical,{
   }
 })
 
-# enritchment analysis
+# enritchment analysis ------------------------------
 
 barplot_pea_reactive = reactive ({
   req(PEA())
@@ -355,7 +347,7 @@ volcano_pea_reactive = reactive ({
     need((min(PEA()$pea$`Adjusted p-value`) < input$p_value), 
          paste0("The selected Adjusted pValue is lower than the min value: ", round(min(PEA()$pea$`Adjusted p-value`), 2)))
   )
-    
+  
   volcano_pea(PEA(), 
               C()$nodesAttributes,
               threshold_adjpval = input$p_value,
@@ -382,26 +374,26 @@ output$omnipath_resource = DT::renderDataTable({
 
 output$pea_table = DT::renderDataTable({
   
- req(PEA())
+  req(PEA())
   
-   pea_result_matrix = DT::datatable(
-     PEA()$pea %>%
-       data.frame() %>%
-       tibble::column_to_rownames(var = colnames(PEA()$annot)[2]) %>%
-       round(digits = 3) %>%
-       tibble::rownames_to_column(var = "Pathway/Signature"),
-     filter = "top",
-     extensions = "Buttons",
-     options = list(
-       paging = TRUE,
-       searching = TRUE,
-       fixedColumns = TRUE,
-       autoWidth = TRUE,
-       ordering = TRUE,
-       dom = 'tB',
-       buttons = c('csv', 'excel'))
-   )
-
+  pea_result_matrix = DT::datatable(
+    PEA()$pea %>%
+      data.frame() %>%
+      tibble::column_to_rownames(var = colnames(PEA()$annot)[2]) %>%
+      round(digits = 3) %>%
+      tibble::rownames_to_column(var = "Pathway/Signature"),
+    filter = "top",
+    extensions = "Buttons",
+    options = list(
+      paging = TRUE,
+      searching = TRUE,
+      fixedColumns = TRUE,
+      autoWidth = TRUE,
+      ordering = TRUE,
+      dom = 'tB',
+      buttons = c('csv', 'excel'))
+  )
+  
 })
 
 # Download Handler --------------------------------------------------------
@@ -430,12 +422,6 @@ carnival_download = observeEvent({
                visSave(network_tf_reactive(), "temp.html")
                webshot::webshot("temp.html", zoom = 2, file = file)
                file.remove("temp.html")})
-  }else if(input$down_carnival == 5){
-    a = list(fname = function(){paste0("heatmap_dorothea_sample_", input$select_tf, "_view.png")},
-             cont = function(file){
-               plotly::orca(heatmap_dorothea(), file)
-             }
-    )
   }
   
   downloadObjSever("download_carnival", filename = a$fname, content = a$cont)

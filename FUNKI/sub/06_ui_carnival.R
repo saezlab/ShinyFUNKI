@@ -14,6 +14,7 @@ tabPanel(
     h3("Network visualization"),
     hr(),
     shinyWidgets::dropdown(
+      label = "Plot parameters",
       uiOutput("select_node"),
       uiOutput("select_tf_carnival"),
       checkboxInput("hierarchical", label = "Hierarchical layout", value = FALSE),
@@ -43,7 +44,7 @@ tabPanel(
                                                     bsButton("q7c_database", label = "", icon = icon("question"), 
                                                              style = "info", size = "extra-small")),
                                          choices = c('Omnipath', 'Custom'),
-                                         selected = 'Omnipath',
+                                         selected = NULL,
                                          inline = TRUE),
                             bsPopover(id = "q7c_database", 
                                       title = "Select resource",
