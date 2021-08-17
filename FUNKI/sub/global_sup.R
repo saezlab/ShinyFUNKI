@@ -106,57 +106,6 @@ assignPROGENyScores <- function (progeny = progeny, progenyMembers = progenyMemb
   return(pxList)
 }
 
-pathEnreach <- function(nodeAtt, database, select_collection = NULL){
-  
-  if(database == 'Custom'){
-    
-    
-    value = "pathway"
-    
-    annotations = read_tsv(collection)
-    colnames(annotations) = c("genesymbol", "pathway")
-    
-  }else{
-    
-    annotations = OmnipathR::import_omnipath_annotations(
-      resources = database,
-      proteins = nodeAtt$Node,
-      wide = TRUE)
-    
-    if(database == 'MSigDB'){
-      value = "geneset"
-      
-      annotations = annotations %>%
-        dplyr::filter(collection %in% select_collection)
-      
-      
-    }else{value = "pathway"}
-    
-  }
-  
-  gsea_sets = list(success = nodeAtt %>% 
-                     dplyr::filter(ZeroAct != 100) %>%
-                     dplyr::select(Node) %>%
-                     dplyr::pull(),
-                   bg = nodeAtt$Node,
-                   gs = annotations %>%
-                     dplyr::select(genesymbol, !!as.name(value)))
-  
-  gsea_analysis = piano::runGSAhyper(genes = gsea_sets$success,
-                                     universe = gsea_sets$bg,
-                                     gsc = piano::loadGSC(gsea_sets$gs))
-  
-  gsea_analysis_df = gsea_analysis$resTab %>%
-    as.data.frame() %>%
-    tibble::rownames_to_column(var = "pathway") %>%
-    dplyr::select(1:3) %>%
-    as.data.frame() %>% 
-    tibble::tibble() %>%
-    dplyr::arrange((!!as.name('Adjusted p-value'))) 
-  
-  return(list( annot = annotations, pea = gsea_analysis_df ))  
-}
-
 #Calculate all pathways
 calculate_all_paths <- function(carnival_result){
   # create digraph
@@ -188,6 +137,8 @@ reverselog_trans <- function(base = exp(1)) {
 
 #get subset to add labels to
 get_labels <- function(df, nlabel, npaths, threshold){
+  col_called = setdiff(colnames(df), c("Node", "pvalue", "AdjPvalu", "ZeroAct", "UpAct", "DownAct", "AvgAct", "NodeType"))
+  colnames(df)[which(colnames(df)==col_called)] = "pathway"
   pathways = df %>%
     dplyr::select(pathway, AdjPvalu) %>%
     unique.data.frame() %>%
@@ -195,7 +146,7 @@ get_labels <- function(df, nlabel, npaths, threshold){
     dplyr::arrange(AdjPvalu) %>%
     dplyr::pull(var = pathway)
   
-  if(length(pathways) > npaths){
+  if(length(pathways) >= npaths){
     pathways = pathways[1:npaths]
   }  
   
@@ -212,6 +163,8 @@ get_labels <- function(df, nlabel, npaths, threshold){
     dplyr::slice(1:nlabel)
   
   lbls = rbind.data.frame(aux_up, aux_dwn)
+  
+  colnames(lbls)[which(colnames(lbls)=="pathway")] = col_called
   
   return(lbls)
 }
@@ -237,4 +190,28 @@ progessDATA <- function(data, contrast_data = F, upload_expr, type_analysis){
   
   return(data)
   
+}
+
+#function to get the background nodes and edges to plot networks
+backgroundNET  <- function(selected_nodes, nodes, edges){
+  background_nodes =  nodes %>%
+    apply(1, function(r, x){
+      if( !r["id"] %in% x ){
+        # r["color"] = sub(",1)", ",0.03)", r["color"], fixed=T)
+        r["color.background"] = sub(",1)", ",0.03)", r["color.background"], fixed=T)
+        r["color.border"] = sub(",1)", ",0.03)", r["color.border"], fixed=T)
+        }
+      return(r)}, selected_nodes) %>% 
+    t() %>% 
+    data.frame()
+
+background_edges = edges %>%
+  apply(1, function(r, x){
+    if( !all((r["from"] %in% x), (r["to"] %in% x)) ){
+      r["color"] = "rgba(248,248,255,0.9)"};
+    return(r)}, selected_nodes) %>% 
+  t() %>% 
+  data.frame()
+
+return(list(nodes = background_nodes, edges = background_edges))
 }
