@@ -84,12 +84,20 @@ nodes_cosmos <- reactive({
                                            type == "metab_enzyme" ~ "square",
                                            TRUE ~ "circle")) %>%
     dplyr::mutate(title = paste0("<p><b>", label, "</b><br> (", AvgAct, ")</p>")) %>%
-    dplyr::mutate(color = findInterval(AvgAct, 
+    dplyr::mutate(color.background = findInterval(AvgAct, 
                                        seq(from = min(COSMOS()[[2]]$AvgAct), to = max(COSMOS()[[2]]$AvgAct), 
                                            length.out = 100))) %>%
-    dplyr::mutate(color = pal[color]) %>%
-    dplyr::mutate(color = plotly::toRGB(color, alpha = 1)) %>%
-    dplyr::mutate(shadow = measured == 1)
+    dplyr::mutate(color.background = pal[color.background]) %>%
+    dplyr::mutate(color.background = plotly::toRGB(color.background, alpha = 1)) %>%
+    dplyr::mutate(shadow = measured == 1) %>%
+    dplyr::mutate(color.border = "rgba(128,128,128,1)")
+})
+
+paths_cosmos <- reactive({
+  req(COSMOS())
+  cosmos = COSMOS()
+  names(cosmos) = c("weightedSIF", "nodesAttributes")
+  paths = calculate_all_paths(cosmos)
 })
 
 # Dynamic widgets / RenderUI ----------------------------------------------
@@ -104,6 +112,25 @@ output$down_cosmos = renderUI({
               label = "Select Download",
               choices = choices,
               selected = 1)
+})
+
+output$select_node_cosmos = renderUI({
+  req(COSMOS())
+  
+  choices = COSMOS()[[2]] %>% 
+    dplyr::filter(ZeroAct != 1) %>%
+    dplyr::select(Nodes) %>%
+    dplyr::pull() %>%
+    stringr::str_sort(numeric = T) %>%
+    unique()
+  
+  choices = c("select Node", choices)
+  
+  pickerInput(inputId = "select_node_cosmos",
+              label = "Path to Node:",
+              choices = choices,
+              options = list("live-search" = TRUE),
+              selected = "select Node")
 })
 
 # Plots ---------------------------------------------------
@@ -124,11 +151,47 @@ output$network_cosmos <- renderVisNetwork({
   # render network
   visNetwork::visNetwork(nodes_cosmos(), edges_cosmos(), height = 1600, width = 1600) %>%
     visNetwork::visIgraphLayout() %>%
-    visNetwork::visOptions(highlightNearest = TRUE,
-                           nodesIdSelection = list(enabled = TRUE,
-                                                   style = "width: 200px; height: 26px;\n background: #f8f8f8;\n color: darkblue;\n border:none;\n outline:none;")) %>%
-    visNetwork::visLegend(addEdges = ledges, addNodes = lnodes,
-                          width = 0.1, position = "right", useGroups = FALSE)
+    visNetwork::visEdges(arrows = 'to') %>%
+    visNetwork::visLegend(addEdges = ledges, 
+                          addNodes = lnodes,
+                          width = 0.1, 
+                          position = "left", 
+                          useGroups = FALSE)
+})
+
+observeEvent(input$select_node_cosmos,{
+  
+  if(input$select_node_cosmos == "select Node"){
+    visNetwork::visNetworkProxy("network_cosmos") %>%
+      visNetwork::visUpdateNodes(nodes = nodes_cosmos()) %>%
+      visNetwork::visUpdateEdges(edges = edges_cosmos())
+  }else{
+    
+    selected_nodes = lapply(paths_cosmos(), function(p, n){
+      if( !any(p == n) ){#"ACLY"
+       p = NULL 
+      }
+      return(p)
+    }, input$select_node_cosmos)
+    
+    selected_nodes = do.call(c, selected_nodes) %>% unique()
+    
+    background = backgroundNET(selected_nodes, nodes_cosmos(), edges_cosmos())
+    
+    selected_edges = background$edges %>%
+      dplyr::filter(grepl(",1)", color, fixed = T)) %>%
+      dplyr::pull(id)
+    
+    message(head(selected_edges))
+    
+    visNetwork::visNetworkProxy("network_cosmos") %>%
+      visNetwork::visUpdateNodes(nodes = background$nodes) %>%
+      visNetwork::visUpdateEdges(edges = background$edges) %>%
+      visNetwork::visSetSelection(nodesId = selected_nodes,
+                                  edgesId = selected_edges) %>%
+      visNetwork::visFit(nodes = selected_nodes)
+  }
+  
 })
 
 # Download Handler --------------------------------------------------------
