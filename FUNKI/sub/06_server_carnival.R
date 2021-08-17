@@ -11,9 +11,16 @@ C = reactive({
         organism = "Human"
       }else {organism = input$select_organism}
       
+      data = progessDATA(data = expr(),
+                         contrast_data = input$contrast_data,
+                         input$upload_expr,
+                         input$type_analysis)
+      if( ncol(data)  > 1 ){
+        data =  data %>% dplyr::select(!!as.name(input$select_sample_carnival))
+      }
+      
       #dorthea
       if(input$dorothea == "doro"){
-        data = expr() %>% dplyr::select(!!as.name(input$select_sample_carnival))
         param_doro = list("organism" = organism,
                           "confidence_level" = input$selected_conf_level,
                           "minsize" = input$minsize, 
