@@ -15,7 +15,7 @@ ui = function(request) {
       collapsible=T,
       footer = column(12, align="center", 
                       div(img(src="logo_funki.png",width="60", height="30"), 
-                                              "FUNKI-App 2021 (v1.0.0-beta)",
+                                              "FUNKI-App 2021 (v2.0.0)",
                           img(src="logo_saezlab.png",width="30", height="30"))),
       source("sub/01_ui_welcome.R")$value,
       source("sub/02_ui_upload.R")$value,
