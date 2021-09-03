@@ -142,6 +142,7 @@ tabPanel(
       tags$img(src = "logo_dorothea.png",
                height = "80px")
     ),
+    bsTooltip(id = "doro_param", title = "DoRothEA", placement = "bottom", trigger = "hover", options = NULL),
     conditionalPanel(
       condition =  ("input.doro_param"),
       h4("DoRothEA"),
@@ -211,6 +212,7 @@ tabPanel(
       tags$img(src = "logo_progeny.png",
                height = "80px")
     ),
+    bsTooltip(id = "progeny_param", title = "PROGENy", placement = "bottom", trigger = "hover", options = NULL),
     conditionalPanel(
       condition =  ("input.progeny_param"),
       h4("PROGENy"),
@@ -251,6 +253,60 @@ tabPanel(
 
         )
       ),
+    # Kinact ------------------
+    tags$button(
+      id = "kinact_param",
+      class = "btn action-button",
+      tags$img(src = "logo_kinact.png",
+               height = "80px")
+    ),
+    bsTooltip(id = "kinact_param", title = "KinAct", placement = "bottom", trigger = "hover", options = NULL),
+    conditionalPanel(
+      condition =  ("input.kinact_param"),
+      h4("KinAct"),
+      fluidRow(
+        column(5, align="center",
+               numericInput(inputId = "minsize_kinact",
+                            label = h5("Regulon's minimal size",
+                                       tags$style(type = "text/css", "#q2d_regulon {vertical-align: top;}"),
+                                       bsButton("q2d_regulon", label = "", icon = icon("question"),
+                                                style = "info", size = "extra-small")),
+                            min = 1, max = NA, value = 5
+               ),
+               bsPopover(id = "q2d_regulon",
+                         title = "Minimal size of the regulon",
+                         content = "Minimun number of genes targeted by a kinase.",
+                         placement = "right",
+                         trigger = "click",
+                         options = list(container = "body")
+               )
+        ),
+        column(5, align="center",
+               selectInput(inputId = "method_kinact",
+                           label = h5("Method for computing signatures",
+                                      tags$style(type = "text/css", "#q2d_method {vertical-align: top;}"),
+                                      bsButton("q2d_method", label = "", icon = icon("question"),
+                                               style = "info", size = "extra-small")),
+                           choices = c("scale" = "scale",
+                                       "rank" = "rank",
+                                       "mad" = "mad",
+                                       "ttest" = "ttest",
+                                       "none" = "none"),
+                           selected = "none"
+               ),
+               bsPopover(id = "q2d_method",
+                         title = "Method for computing signature",
+                         content = "Method for computing the single sample signatures.",
+                         placement = "right",
+                         trigger = "click",
+                         options = list(container = "body")
+               )
+        ),
+        column(1, align="center",
+               actionButton("an_kinact", "Run KinAct") )
+      )
+    ),
+
     # Carnival ------------------
     tags$button(
       id = "carnival_param",
@@ -258,6 +314,7 @@ tabPanel(
       tags$img(src = "logo_CARNIVAL.png",
                height = "80px")
     ),
+    bsTooltip(id = "carnival_param", title = "CARNIVAL", placement = "bottom", trigger = "hover", options = NULL),
     conditionalPanel(
       condition =  ("input.carnival_param"),
       h4("CARNIVAL"),
@@ -405,6 +462,7 @@ tabPanel(
       tags$img(src = "logo_cosmos.png",
                height = "80px")
     ),
+    bsTooltip(id = "cosmos_param", title = "COSMOS", placement = "bottom", trigger = "hover", options = NULL),
     conditionalPanel(
       condition =  ("input.cosmos_param"),
       h4("COSMOS"),
@@ -491,59 +549,6 @@ tabPanel(
         ),
         column(1, align="center", actionButton("an_cosmos", "Run COSMOS"))
       )
-    ),
-    # Kinact ------------------
-    tags$button(
-      id = "kinact_param",
-      class = "btn action-button",
-      tags$img(src = "logo_kinact.png",
-               height = "80px")
-    ),
-    conditionalPanel(
-      condition =  ("input.kinact_param"),
-      h4("KinAct"),
-      fluidRow(
-        column(5, align="center",
-               numericInput(inputId = "minsize_kinact",
-                            label = h5("Regulon's minimal size",
-                                       tags$style(type = "text/css", "#q2d_regulon {vertical-align: top;}"),
-                                       bsButton("q2d_regulon", label = "", icon = icon("question"),
-                                                style = "info", size = "extra-small")),
-                            min = 1, max = NA, value = 5
-               ),
-               bsPopover(id = "q2d_regulon",
-                         title = "Minimal size of the regulon",
-                         content = "Minimun number of genes targeted by a kinase.",
-                         placement = "right",
-                         trigger = "click",
-                         options = list(container = "body")
-               )
-        ),
-        column(5, align="center",
-               selectInput(inputId = "method_kinact",
-                           label = h5("Method for computing signatures",
-                                      tags$style(type = "text/css", "#q2d_method {vertical-align: top;}"),
-                                      bsButton("q2d_method", label = "", icon = icon("question"),
-                                               style = "info", size = "extra-small")),
-                           choices = c("scale" = "scale",
-                                       "rank" = "rank",
-                                       "mad" = "mad",
-                                       "ttest" = "ttest",
-                                       "none" = "none"),
-                           selected = "none"
-               ),
-               bsPopover(id = "q2d_method",
-                         title = "Method for computing signature",
-                         content = "Method for computing the single sample signatures.",
-                         placement = "right",
-                         trigger = "click",
-                         options = list(container = "body")
-               )
-        ),
-        column(1, align="center",
-               actionButton("an_kinact", "Run KinAct") )
-      )
     )
   )
-  
 )
