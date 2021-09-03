@@ -16,8 +16,8 @@ server = function(input, output, session) {
   filename_parsed = strsplit(sub(".*\\b(filename=\\w*.csv).*", "\\1", filename), "=")[[1]][2]
   
   aux = unlist(strsplit(gsub(".csv", "", filename_parsed, fixed = T) , split = "_"))[-c(1, 2)]
-  organism = aux[2]
-  top = as.numeric(aux[3])
+  organism = aux[1]
+  top = as.numeric(aux[2])
   
   # Dynamic widgets / RenderUI ----------------------------------------------
   
