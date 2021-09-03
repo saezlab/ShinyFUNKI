@@ -21,7 +21,7 @@ C = reactive({
       
       #dorthea
   if(input$dorothea == "doro"){
-    data = expr() %>% dplyr::select(!!as.name(input$select_sample_carnival))
+#    data = expr() %>% dplyr::select(!!as.name(input$select_sample_carnival))
         param_doro = list("organism" = organism,
                           "confidence_level" = input$selected_conf_level,
                           "minsize" = input$minsize, 
