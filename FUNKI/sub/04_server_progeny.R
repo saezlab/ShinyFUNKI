@@ -1,39 +1,51 @@
 # Reactive Computations ---------------------------------------------------
-P = eventReactive({
-  input$an_progeny
-  },{
-    if(!is.null(input$an_progeny)){
-      withProgress(message = "Calculate PROGENy matrix", value = 1, {
-        
-        if (input$example_data){
-          organism = "Human"
-        }else {organism = input$select_organism}
-        
-        expr() %>%
-          run_progeny(organism = organism, 
-                      top = input$perm, 
-                      perm = input$top)
-      })
-    }
+
+prog = uploadResultsObjSever("upload_progeny_results")
+
+P = reactive({
+
+  if(input$an_progeny){
+    withProgress(message = "Calculate PROGENy matrix", value = 1, {
+
+      if(input$examples){
+        organism = "Human"
+      }else {organism = input$select_organism}
+      
+      data = progessDATA(data = expr(),
+                         contrast_data = input$contrast_data,
+                         input$upload_expr,
+                         input$type_analysis)
+      prog_result = data %>%
+        run_progeny(organism = organism,
+                    top = input$perm,
+                    perm = input$top)
+
+      if(ncol(data) == 1){rownames(prog_result) = colnames(data)}
+    })
+
+  }else{
+    prog_result = prog()
+  }
+
+  return(prog_result)
 })
 
 # Dynamic widgets / RenderUI ----------------------------------------------
 
 # select contrast/sample
 output$select_contrast_progeny = renderUI({
-  if (!is.null(P())) {
+  req(P())
     choices = rownames(P()) 
     
     pickerInput(inputId = "select_contrast_progeny",
                 label = "Select Sample/Contrast",
                 choices = choices,
                 selected = choices[1])
-  }
 })
 
 # select pathway
 output$select_pathway = renderUI({
-  if (!is.null(input$select_contrast_progeny)) {
+  req(P(), input$select_contrast_progeny)
     choices = colnames(P()) %>%
       str_sort(numeric = T)
     
@@ -53,33 +65,46 @@ output$select_pathway = renderUI({
       options = list("live-search" = TRUE),
       selected = default_selected[1]
     )
-    
-  }
+
+})
+
+#download handler
+output$down_progeny = renderUI({
+  req(P())
+  choices = list("PROGENy scores" = 1, 
+                 "Barplot for Sample" = 2, 
+                 "Scatterplot" = 3)#,
+                 # "Heatmap" = 4)
+  pickerInput(inputId = "down_proge",
+              label = "Select Download",
+              choices = choices,
+              selected = 1)
 })
 
 # Bar plot with the TFs for a condition------------------------------------
 
 barplot_nes_reactive_progeny = reactive ({
-  if (!is.null(input$select_contrast_progeny) & 
-      !is.null(P())) {
-    p <- P() %>%
+  req(P(), input$select_contrast_progeny)
+  P() %>%
       t() %>%
       as.data.frame() %>%
       rownames_to_column(var = "pathways") %>%
       barplot_nes_progeny(smpl = input$select_contrast_progeny)
-  }
   
 })
 
 scatter_reactive = reactive({
-  if (!is.null(input$select_contrast_progeny) &
-      !is.null(input$select_pathway) &
-      !is.null(P())) {
-    
+  req(P(), input$select_pathway, input$select_contrast_progeny)
+  
+  validate(
+    need(expr(), 
+         "The plot cannot be showed because the expression file is not included. Please, upload it in the Data and Parameters section.")
+  )
+
     if (input$example_data){
       organism = "Human"
     }else {organism = input$select_organism}
-
+    
     prog_matrix <- progeny::getModel(organism = organism, top =  input$top) %>%
       tibble::rownames_to_column("GeneID") %>%
       dplyr::select(GeneID, input$select_pathway)
@@ -99,37 +124,35 @@ scatter_reactive = reactive({
     scat_plots <- scater_pathway(df = inputProgeny_df,
                                  weight_matrix = prog_matrix,
                                  title = title)
-  }
-  
+
 })
 
 # Render Tables -----------------------------------------------------------
 # Progent-activities
 output$progeny_table = DT::renderDataTable({
-  
   req(P())
   
-    results_progeny = P() %>%
-      t() %>%
-      as.data.frame() %>%
-      round(digits = 3) %>%
-      rownames_to_column(var = "Pathways")
-    
-    result_matrix = DT::datatable(
-      results_progeny,
-      extensions = "Buttons",
-      filter = "top",
-      options = list(
-        paging = TRUE,
-        searching = TRUE,
-        fixedColumns = TRUE,
-        autoWidth = TRUE,
-        ordering = TRUE,
-        pageLength = 14,
-        dom = 'tB',
-        buttons = c('csv', 'excel'))
-    )
-
+  results_progeny = P() %>%
+    t() %>%
+    as.data.frame() %>%
+    round(digits = 3) %>%
+    rownames_to_column(var = "Pathways")
+  
+  result_matrix = DT::datatable(
+    results_progeny,
+    extensions = "Buttons",
+    filter = "top",
+    options = list(
+      paging = TRUE,
+      searching = TRUE,
+      fixedColumns = TRUE,
+      autoWidth = TRUE,
+      ordering = TRUE,
+      pageLength = 14,
+      dom = 'tB',
+      buttons = c('csv', 'excel'))
+  )
+  
 })
 
 # Render Plots ------------------------------------------------------------
@@ -146,72 +169,36 @@ output$scatter = renderPlot({
 
 # Heatmap for all samples and pathways
 output$heatmap_progeny = plotly::renderPlotly({
-  if(!is.null(P())){
+  req(P())
     P() %>%
       heatmap_scores()
-  }
-
 })
 
 # Download Handler --------------------------------------------------------
-
-# All in a tar
-output$download_progeny_analysis = downloadHandler(
-  filename = "footprint_progeny_saezLab.tar.gz",
-  content = function(x) {
-    fdir = "footprint_progeny_saezLab"
-    
-    if (dir.exists(fdir)) {
-      do.call(file.remove, list(list.files(fdir, full.names = TRUE)))
-    } else{
-      dir.create(fdir)
-    }
-    
-    fnames = c(
-      paste0("barplot_progeny_", input$select_contrast_progeny, ".png"),
-      paste0("scatter_density_progeny_", input$select_contrast_progeny, "_", input$select_pathway, ".png"),
-      "heatmap_progeny.png"
-    )
-    
-    ggsave(file.path(fdir, fnames[1]), barplot_nes_reactive_progeny(), device = "png")
-    ggsave(file.path(fdir, fnames[2]), scatter_reactive(), device = "png")
-    ggsave(file.path(fdir, fnames[3]),
-           heatmap_scores(df = P()),
-           device = "png")
-    write.csv(P(),
-              file.path(fdir, "pathways_progeny_scores.csv"),
-              quote = F)
-    tar(x, files = fdir, compression = "gzip")
-  }
-)
-
-output$download_scatter = downloadHandler(
-  filename = paste0(
-    "scatter_density_progeny_",
-    input$select_contrast_progeny,
-    "_",
-    input$select_pathway,
-    ".png"
-  ),
-  content = function(x) {
-    ggsave(x, scatter_reactive(), device = "png")
-    
-  }
-)
-
-output$download_barplot = downloadHandler(
-  filename = paste0("barplot_progeny_", input$select_contrast_progeny, ".png"),
+progeny_download = observeEvent({
+  input$down_proge
+},{
+  req(P())
   
-  content = function(x) {
-    ggsave(x, barplot_nes_reactive(), device = "png")
-    
+  if(input$down_proge == 1){
+    a = list(fname = "progeny_pathwayScores_nes.csv",
+             cont = function(file){
+               write.csv(P(),
+                         file,
+                         quote = F)
+             })
+  }else if(input$down_proge == 2){
+    a = list(fname = function(){paste0("barplot_progeny_pathways", "_", input$select_contrast_progeny, ".png")},
+             cont = function(file){ggsave(file, barplot_nes_reactive_progeny(), device = "png")})
+  }else if(input$down_proge == 3){
+    a = list(fname = function(){paste0("scatterplot_progeny_", input$select_pathway, "_", input$select_contrast_progeny, ".png")},
+             cont = function(file){ggsave(file, scatter_reactive(), device = "png")})
+  }else if(input$down_proge == 4){
+    a = list(fname = function(){paste0("heatmap_progeny.png")},
+             cont = function(file){
+               ggsave(file, heatmap_scores(df = P()), device = "png")
+             })
   }
-)
-
-output$download_heatmap = downloadHandler(
-  filename = "heatmap_progeny.png",
-  content = function(x) {
-    ggsave(x,  heatmap_scores(df = P()), device = "png")
-    
-  }
-)
+  
+  downloadObjSever("download_progeny", filename = a$fname, content = a$cont)
+})

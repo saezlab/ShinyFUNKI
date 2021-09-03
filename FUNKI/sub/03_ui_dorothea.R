@@ -1,35 +1,29 @@
 tabPanel(
   title="DoRothEA", value = "DoRothEA",
   # Row controlling the widgets
-  fluidRow(
-    column(6, align = "center",
-      sidebarLayout(
-        sidebarPanel(
-          width = 12,
-          uiOutput("select_contrast_dorothea"),
-          uiOutput("select_tf"),
-          downloadButton(
-            "download_dorothea_analysis",
-            "Download DoRothEA scores and figures"
-          ),
-        ),
-        mainPanel(width = 0)
-      )
-    ),
-    
-    column(
-      6,
-      sidebarLayout(
-        sidebarPanel(
-          width = 12,
-          uiOutput("select_top_n_hits"),
-          uiOutput("select_top_n_labels")
-        ),
-        mainPanel(width = 0)
-      )
-    )
+  
+  # Visuales previous results --------
+  conditionalPanel(
+    condition = ("input.an_dorothea == 0"),
+    uploadResultsObjUI(id = "upload_dorothea_results", 
+                       label = "Upload DoRothEA results", 
+                       title_bs = "Upload DoRothEA results", 
+                       content = "Visualise the DoRothEA results that you already have. The format should be a csv file with samples in columns and genes in rows")
   ),
-  hr(),
+  
+  shinyWidgets::dropdown(
+    label = "Visualisation parameters",
+    uiOutput("select_contrast_dorothea"),
+    uiOutput("select_tf"),
+    uiOutput("select_top_n_hits"),
+    uiOutput("select_top_n_labels"),
+    uiOutput("down_doro"),
+    downloadObjUI(id = "download_dorothea"),
+    circle = TRUE,
+    status = "primary",
+    inputId = "dorotea_control",
+    icon = icon("sliders"), width = "300px"
+  ),
   
   fluidRow(
     column(4, plotly::plotlyOutput("tf_bar")),
@@ -47,4 +41,3 @@ tabPanel(
   # Table visualization
   DT::dataTableOutput("dorothea_table")
 )
-    
