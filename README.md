@@ -1,10 +1,16 @@
 ## Welcome to the FUNKI application
 FUNKI is a multi-omic functional integration and analysis platform. It provides a standardised pipeline to process and perform functional analysis on transcriptomic, proteomic, phosphoproteomic and metabolomic datasets. The analysis can be performed both on a single type of omic data and on multi-omic dataset by integrating them in supervised and unsupervised manners.
 
+![FUNKI abstract](/images/graphical_abstract.png)
+
 ## Installation and use
 
-FUNKI has beed developed to run locally.
-Thus, there are different options to use this server to fit all possible users: 
+FUNKI is accessible through https://funki.shinyapps.io/funki/ or to run locally.
+
+| :warning:        | Online version does NOT support CARNIVAL/COSMOS to be run with *cplex* or *cbc*. This software is licenced-based, so the LOCAL version of FUNKI is advided (previous installation of the selected software)      |
+|---------------|:------------------------|
+
+To run FUNKI locally, there are different options to fit all possible users: 
 
 1. Run FUNKI directly from GitHub
 
@@ -12,7 +18,9 @@ In an R session, run the line below to launch FUNKI:
 
 ```shiny::runGitHub(repo = "ShinyFUNKI", username = "saezlab", subdir = "FUNKI")``` 
 
-Note: Make sure all required packages are installed beforfehand.
+| :point_up:    | Remember to have all required packages installed beforehand! |
+|---------------|:------------------------|
+
 The ```renv.lock``` lockfile (```renv``` packaged) has recorded the state of this project’s private library.
 It can be used to restore the state of that library as required by calling ```renv::restore()```.
 
@@ -42,7 +50,9 @@ To create a container just run:
 
 And there it is, running on ```localhost:3838```
 
-Note: To use CARNIVAL with *cplex* or *cbc*, the software should be installed within the imagine.
+
+| :point_up:    | Remember to install *cplex* or *cbc* to use CARNIVAL/COSMOS with these softwares! |
+|---------------|:------------------------|
 
 ## Implemented Approaches
 
