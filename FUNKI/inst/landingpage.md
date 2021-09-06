@@ -1,11 +1,17 @@
 ## Welcome to the FUNKI application
 FUNKI is a multi-omic functional integration and analysis platform. It provides a standardize pipeline to process and perform functional analysis on transcriptomic, proteomic, phosphoproteomic and metabolomic datasets. The analysis can be performed both on a single type of omic data and on multi-omic dataset by integrating them in supervised and unsupervised manners.
 
+---
+
+<i class="fas fa-exclamation-triangle"></i> The **online version** of FUNKI for **CARNIVAL/COSMOS ONLY runs** the freely available **[lpSolve R-package](https://cran.r-project.org/web/packages/lpSolve/index.html)**. For **large cases**, we advise users to use the **[LOCAL version](https://github.com/saezlab/ShinyFUNKI)** of FUNKI with either [CPLEX](https://www.ibm.com/products/ilog-cplex-optimization-studio) (freely available through Academic Initiative) or [CBC](https://projects.coin-or.org/Cbc) (open source and freely available for any user).
+
+---
+
 ### Implemented Approaches
 FUNKI has currently implemented the following approaches:
 
 #### DoRothEA
-[DoRothEA](https://saezlab.github.io/DoRothEA/) (Discriminant Regulon Expression Analysis) is a resource that links transcription factors (TFs) with their downstream targets ( [Garcia-Alonso et al., 2018, 2019](http://europepmc.org/abstract/MED/31340985)  ). The unity of a TF and its targets is called regulon. The regulons are built from four different strategies: (i) manually curated interaction repositories, (ii) interactions derived from ChIP-seq binding data, (iii) in silico predictions of TF binding on gene promoters, and (iv) reverse-engineered regulons from gene expression datasets.
+[DoRothEA](https://saezlab.github.io/DoRothEA/) (Discriminant Regulon Expression Analysis) is a resource that links transcription factors (TFs) with their downstream targets ( [Garcia-Alonso et al., 2018, 2019](http://europepmc.org/abstract/MED/31340985) ). The unity of a TF and its targets is called regulon. The regulons are built from four different strategies: (i) manually curated interaction repositories, (ii) interactions derived from ChIP-seq binding data, (iii) in silico predictions of TF binding on gene promoters, and (iv) reverse-engineered regulons from gene expression datasets.
 The TFs activities are computed from gene expression by performing an enrichment analysis ( [Alvarez et al., 2016](https://www.nature.com/articles/ng.3593) ), where the regulons are the underlying gene-sets. The users can select the confidence level (A to E based on the type of the supporting evidence of given interactions) for each regulon, as well as their minimum size and the method to perform the enrichment analysis. The organism selection, human or mice, is selected when the data are uploaded ( [Holland, Szalai, et al., 2020](http://europepmc.org/abstract/MED/31525460) ). This method can also be used with single-cell data ( [Holland, Tanevski, et al., 2020](https://europepmc.org/article/MED/32051003) ). The computation yields a matrix with the normalised enrichment scores for each TF across all samples. This result is then visualised in the form of a heatmap, barplots and a network showing a TF with all its targets.
 
 #### PROGENy
