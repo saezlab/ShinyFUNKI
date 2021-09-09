@@ -5,6 +5,7 @@ FUNKI is a multi-omic functional integration and analysis platform. It provides 
 
 <i class="fas fa-exclamation-triangle"></i> The **online version** of FUNKI for **CARNIVAL/COSMOS ONLY runs** the freely available **[lpSolve R-package](https://cran.r-project.org/web/packages/lpSolve/index.html)**. For **large cases**, we advise users to use the **[LOCAL version](https://github.com/saezlab/ShinyFUNKI)** of FUNKI with either [CPLEX](https://www.ibm.com/products/ilog-cplex-optimization-studio) (freely available through Academic Initiative) or [CBC](https://projects.coin-or.org/Cbc) (open source and freely available for any user).
 
+<i class="fas fa-exclamation-triangle"></i> Current version is free for academic purposes. If you wish to use it commercially, contact us.
 ---
 
 ### Implemented Approaches
