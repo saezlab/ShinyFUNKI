@@ -1,17 +1,21 @@
 server = function(input, output, session) {
   # Load data from VRE
-  query <- parseQueryString(isolate(session$clientData$url_search))
+  query = parseQueryString(isolate(session$clientData$url_search))
   
   # Expression matrix
-  progeny_input <- read.csv(query$expression_matrix, row.names = 1)
+  expression_matrix = query$expression_matrix
+  progeny_input = read.csv(expression_matrix, row.names = 1)
   
   # Scores
-  progeny_result = read.csv(query$progeny_scores, row.names = 1)
+  progeny_scores = query$progeny_scores
+  progeny_result = read.csv(progeny_scores, row.names = 1)
   rownames(progeny_result) = gsub(".", "-", rownames(progeny_result), fixed = T)
   
-  aux = unlist(strsplit(gsub(
-    ".csv", "", query$progeny_scores, fixed = T
-  ) , split = "_"))[-c(1, 2)]
+  # Get filename from progeny_scores
+  filename = getURL(progeny_scores, header = T)
+  filename_parsed = strsplit(sub(".*\\b(filename=\\w*.csv).*", "\\1", filename), "=")[[1]][2]
+  
+  aux = unlist(strsplit(gsub(".csv", "", filename_parsed, fixed = T) , split = "_"))[-c(1, 2)]
   organism = aux[1]
   top = as.numeric(aux[2])
   

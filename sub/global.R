@@ -8,6 +8,7 @@ library(ggrepel)
 library(cowplot)
 library(pheatmap)
 library(plotly)
+library(RCurl)
 
 # Shiny options
 enableBookmarking(store = "server")

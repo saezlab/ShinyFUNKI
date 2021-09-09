@@ -31,7 +31,8 @@ packageList <-
     "ggrepel",
     "cowplot",
     "pheatmap",
-    "plotly"
+    "plotly",
+    "RCurl"
   )
 
 renv::install(packageList)
