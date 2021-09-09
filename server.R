@@ -1,16 +1,22 @@
 server = function(input, output, session) {
   # Load data from VRE
-  query <-parseQueryString(isolate(session$clientData$url_search))
+  query = parseQueryString(isolate(session$clientData$url_search))
   
   # Expression matrix
-  dorothea_input <- read.csv(query$expression_matrix, row.names = 1)
+  expression_matrix = query$expression_matrix
+  dorothea_input = read.csv(expression_matrix, row.names = 1)
   
   # Scores
-  dorothea_result = read.csv(query$dorothea_scores, row.names = 1)
+  dorothea_scores = query$dorothea_scores
+  dorothea_result = read.csv(dorothea_scores, row.names = 1)
   data(dorothea_hs, package = "dorothea")
   
+  # Get filename from dorothea_scores
+  filename = getURL(dorothea_scores, header = T)
+  filename_parsed = strsplit(sub(".*\\b(filename=\\w*.csv).*", "\\1", filename), "=")[[1]][2]
+  
   # Get confidence levels
-  confidence_level = unlist(strsplit(gsub(".csv", "", query$dorothea_scores, fixed = T) , split = "_"))
+  confidence_level = unlist(strsplit(gsub(".csv", "", filename_parsed, fixed = T) , split = "_"))
   confidence_level = unlist(strsplit(confidence_level[length(confidence_level)] , split = ""))
   
   # Dynamic widgets / RenderUI ----------------------------------------------

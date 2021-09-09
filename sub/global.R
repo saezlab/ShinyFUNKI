@@ -8,7 +8,7 @@ library(reshape2)
 library(tidygraph)
 library(ggraph)
 library(plotly)
-library(jsonlite)
+library(RCurl)
 
 # Shiny options
 enableBookmarking(store = "server")

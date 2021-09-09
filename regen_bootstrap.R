@@ -32,7 +32,8 @@ packageList <-
     "reshape2",
     "tidygraph",
     "ggraph",
-    "plotly"
+    "plotly",
+    "RCurl"
   )
 
 renv::install(packageList)

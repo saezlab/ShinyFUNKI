@@ -15,6 +15,12 @@ ui = function(request) {
           width = 75
         ),
         img(
+          src = "logo_funki.png",
+          align = "right",
+          height = 75,
+          width = 150
+        ),
+        img(
           src = "logo_dorothea.png",
           align = "right",
           height = 75,
