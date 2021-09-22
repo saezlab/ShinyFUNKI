@@ -3,20 +3,25 @@ carni = uploadResultsObjSever("upload_carnival_results")
 
 # CARNIVAL
 C = reactive({
-  
+  print("entrando en analysis")
   if(input$an_carnival){
     withProgress(message = "Running CARNIVAL...", value = 1, {
-      
-  if (input$example_data){
+
+      if (input$example_data){
         organism = "Human"
-  }else {organism = input$select_organism}
+      }else {organism = input$select_organism}
       
-      data = progessDATA(data = expr(),
-                         contrast_data = input$contrast_data,
-                         input$upload_expr,
-                         input$type_analysis)
-      if( ncol(data)  > 1 ){
-        data =  data %>% dplyr::select(!!as.name(input$select_sample_carnival))
+      if(!is.null(expr())){
+        data = progessDATA(data = expr(),
+                           contrast_data = input$contrast_data,
+                           input$upload_expr,
+                           input$type_analysis)
+        if( ncol(data)  > 1 ){
+          data =  data %>% dplyr::select(!!as.name(input$select_sample_carnival))
+        }
+        
+      }else{
+        data = NULL
       }
       
       #dorthea
@@ -27,7 +32,7 @@ C = reactive({
                           "minsize" = input$minsize, 
                           "method" = input$method)
       }else{
-        data = NULL
+
         param_doro = input$upload_tfs$datapath
       }
       
@@ -53,8 +58,11 @@ C = reactive({
       }else{targets = input$inputs_targets}
       
       # CARNIVAL parameters
+  warning(solverpath)
+  warning(input$solver)
   if (input$solver == "lpSolve"){
         solverpath = NULL
+        warning(solverpath)
       }
       
       carnival_results = run_carnival( data = data,
