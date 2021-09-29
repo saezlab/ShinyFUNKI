@@ -42,7 +42,7 @@ run_progeny <- function(data, organism = "Human", top = 100, perm = 100, ...){
   
   progeny_scores <- data %>%
     as.matrix() %>%
-    progeny::progeny(., z_scores = FALSE, 
+    progeny::progeny(., z_scores = TRUE, 
                      organism = organism,
                      top = top,
                      perm = perm)
