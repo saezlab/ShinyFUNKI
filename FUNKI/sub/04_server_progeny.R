@@ -17,8 +17,8 @@ P = reactive({
                          input$type_analysis)
       prog_result = data %>%
         run_progeny(organism = organism,
-                    top = input$perm,
-                    perm = input$top)
+                    top = input$top,
+                    perm = input$perm)
 
       if(ncol(data) == 1){rownames(prog_result) = colnames(data)}
     })
