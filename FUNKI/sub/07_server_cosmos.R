@@ -8,7 +8,13 @@ COSMOS = reactive({
     withProgress(message="Running COSMOS", value=1, {
       
       if(input$cosnet == "def"){
-        PKN = as.data.frame(read_csv("data/models/cosmos_PKN.csv"))
+        if(any(input$example_data, input$contrast_data)){
+          PKN = as.data.frame(read_csv("data/models/cosmos_PKN_example.csv"))
+        }
+        else{
+          PKN = as.data.frame(read_csv("data/models/cosmos_PKN.csv"))
+        }
+        
       }else{
         PKN = as.data.frame(read_csv(input$upload_cosnet)) 
       }
