@@ -5,7 +5,7 @@ FUNKI is a multi-omic functional integration and analysis platform. It provides 
 
 ## Installation and use
 
-FUNKI is accessible through https://funki.shinyapps.io/funki/ or to run locally.
+FUNKI is accessible through https://saezlab.shinyapps.io/funki/ or to run locally.
 
 | :warning:        | Online version does NOT support CARNIVAL/COSMOS to be run with *cplex* or *cbc*. This software is licenced-based, so the LOCAL version of FUNKI is advided (previous installation of the selected software)      |
 |---------------|:------------------------|
