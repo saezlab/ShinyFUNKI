@@ -3,13 +3,8 @@ carni = uploadResultsObjSever("upload_carnival_results")
 
 # CARNIVAL
 C = reactive({
-  print("entrando en analysis")
   if(input$an_carnival){
     withProgress(message = "Running CARNIVAL...", value = 1, {
-
-      if (input$example_data){
-        organism = "Human"
-      }else {organism = input$select_organism}
       
       if(!is.null(expr())){
         data = progessDATA(data = expr(),
@@ -24,19 +19,24 @@ C = reactive({
         data = NULL
       }
       
-      #dorthea
-  if(input$dorothea == "doro"){
-#    data = expr() %>% dplyr::select(!!as.name(input$select_sample_carnival))
+      if(any(input$example_data, input$contrast_data)){
+        organism = "Human"
+      }else{
+        organism = input$select_organism
+      }
+      
+      #dorothea
+      if(input$dorothea == "doro"){
         param_doro = list("organism" = organism,
                           "confidence_level" = input$selected_conf_level,
                           "minsize" = input$minsize, 
                           "method" = input$method)
       }else{
-
+        
         param_doro = input$upload_tfs$datapath
       }
       
-      #progeny
+      # progeny
       if(!is.null(input$progeny)){
         if(input$progeny == "prog"){
           param_prog = list("organism" = organism, 
@@ -47,22 +47,29 @@ C = reactive({
         }
       }else{param_prog = NULL}
       
-      #network
-  if(input$omnipath == "omni"){
+      # network
+      if(input$omnipath == "omni"){
         net = list("net_complex" = input$net_complex, 
                    "net_type" = "gene")#input$net_type)
       }else{net = input$upload_network$datapath}
+      
       #targets
       if( input$inputs_targets == "up"){
         targets = input$upload_targets$datapath
       }else{targets = input$inputs_targets}
       
-      # CARNIVAL parameters
-  warning(solverpath)
-  warning(input$solver)
-  if (input$solver == "lpSolve"){
+      if (input$solver == "lpSolve"){
         solverpath = NULL
-        warning(solverpath)
+        if(input$example_data){
+          input$select_sample_carnival
+          net = "data/models/carnival_PKN_example.csv"
+          param_doro = "data/examples/carnival_dorothea_contrast.csv"
+          param_prog = NULL
+        }else if(input$contrast_data){
+          net = "data/models/carnival_PKN_contrast.csv"
+          param_doro = "data/examples/carnival_dorothea_contrast.csv"
+          param_prog = NULL
+        }
       }
       
       carnival_results = run_carnival( data = data,
@@ -165,9 +172,13 @@ paths <- reactive({
 
 omnipath_resources <- reactive({
   req(C())
-  if(input$pathEnrich_database == 'Omnipath'){
-    OmnipathR::import_omnipath_annotations(proteins = C()$nodesAttribute$Node, wide = TRUE) 
-  }
+  if(!is.null(input$pathEnrich_database)){
+    if(input$pathEnrich_database == 'Omnipath'){
+      or = OmnipathR::import_omnipath_annotations(proteins = C()$nodesAttribute$Node, wide = TRUE)
+    }
+  }else{or = NULL}
+  
+  return(or)
 })
 
 # Dynamic widgets / RenderUI ----------------------------------------------
@@ -192,53 +203,60 @@ output$select_node = renderUI({
 
 output$select_resource_omnipath = renderUI({
   req(omnipath_resources())
-  
-  choices = names(omnipath_resources())
-  
-  pickerInput(inputId = "select_resource_omnipath",
-              label = NULL,
-              choices = choices,
-              options = list("live-search" = TRUE),
-              selected = "SIGNOR")
+  if(!is.null(omnipath_resources())){
+    choices = names(omnipath_resources())
+    
+    pickerInput(inputId = "select_resource_omnipath",
+                label = NULL,
+                choices = choices,
+                options = list("live-search" = TRUE),
+                selected = "SIGNOR")
+  }
 })
 
 output$set_resource_pea = renderUI({
   req(omnipath_resources(),
       input$select_resource_omnipath)
   
-  columns_names = names(omnipath_resources()[[input$select_resource_omnipath]])
-  
-  if(length(columns_names) > 4){
-    choices = columns_names[4:length(columns_names)]
-    pickerInput(inputId = "set_resource_pea",
-                label = NULL,
-                choices = choices,
-                selected = NULL)
+  if(!is.null(omnipath_resources())){
+    columns_names = names(omnipath_resources()[[input$select_resource_omnipath]])
+    
+    if(length(columns_names) > 4){
+      choices = columns_names[4:length(columns_names)]
+      pickerInput(inputId = "set_resource_pea",
+                  label = NULL,
+                  choices = choices,
+                  selected = NULL)
+      }
   }
 })
 
 output$pathEnrich_msigDB_collection = renderUI({
   shiny::req(omnipath_resources(),
              input$select_resource_omnipath)
-  if(input$select_resource_omnipath == 'MSigDB'){
-    choices = omnipath_resources()[[input$select_resource_omnipath]] %>%
-      dplyr::select(collection) %>% 
-      dplyr::pull() %>%
-      unique()
-    
-    pickerInput(inputId = "pathEnrich_msigDB_collection",
-                label = NULL,
-                choices = choices)
-    
+  if(!is.null(omnipath_resources())){
+    if(input$select_resource_omnipath == 'MSigDB'){
+      choices = omnipath_resources()[[input$select_resource_omnipath]] %>%
+        dplyr::select(collection) %>% 
+        dplyr::pull() %>%
+        unique()
+      
+      pickerInput(inputId = "pathEnrich_msigDB_collection",
+                  label = NULL,
+                  choices = choices)
+      
+    }
   }
   
 })
 
 output$pathEnrich_custom = renderUI({
-  if (input$pathEnrich_database == 'Custom') {
-    
-    fileInput("upload_custom", label = NULL, accept = ".tsv")
-    
+  if(!is.null(input$pathEnrich_database)){
+    if (input$pathEnrich_database == 'Custom') {
+      
+      fileInput("upload_custom", label = NULL, accept = ".tsv")
+      
+    }
   }
 })
 
@@ -379,11 +397,13 @@ output$volcano_pea = renderPlot({
 output$omnipath_resource = DT::renderDataTable({
   shiny::req(omnipath_resources(),
              input$select_resource_omnipath)
-  columns_names = names(omnipath_resources()[[input$select_resource_omnipath]])
-  if( length(columns_names) > 4 ){
-    df = omnipath_resources()[[input$select_resource_omnipath]]
-    df = df[1:3,4:ncol(df)]
-    DT::datatable(df)
+  if(!is.null(omnipath_resources())){
+    columns_names = names(omnipath_resources()[[input$select_resource_omnipath]])
+    if( length(columns_names) > 4 ){
+      df = omnipath_resources()[[input$select_resource_omnipath]]
+      df = df[1:3,4:ncol(df)]
+      DT::datatable(df)
+    }
   }
 })
 
