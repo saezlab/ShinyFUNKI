@@ -477,7 +477,7 @@ tabPanel(
                             inline = TRUE),
                bsPopover(id = "q1c_cosnet",
                          title = "Network",
-                         content = "Prior knowledge network (PKN).",
+                         content = "A .csv file containing the Prior knowledge network (PKN). Should be three columns, with first row of csv file being source, interaction, target",
                          placement = "right",
                          trigger = "click",
                          options = list(container = "body")
@@ -496,7 +496,7 @@ tabPanel(
                             inline = TRUE),
                bsPopover(id = "q2c_layer1",
                          title = "Activities of Layer 1",
-                         content = "Numerical vector, where names are nodes identifiers as in the network and values are from 1, 0, -1. Continuous data will be discretized using the sign function.",
+                         content = "A .csv file with two rows. First rows should be signaling node names, second row should be activity scores (Such as TF activity score). Names should be consistent with the network. Continuous data will be discretized using the sign function.",
                          placement = "right",
                          trigger = "click",
                          options = list(container = "body")
@@ -515,7 +515,7 @@ tabPanel(
                             inline = TRUE),
                bsPopover(id = "q3c_layer2",
                          title = "Activities of Layer 2",
-                         content = "Numerical vector, where names are nodes identifiers as in the network and values are from 1, 0, -1. Continuous data will be discretized using the sign function.",
+                         content = "A .csv file with two rows. First rows should be metabolic node names, second row should be metabolite values (such as t-values or normalised intensities). Names should be consistent with the network. Continuous data will be discretized using the sign function.",
                          placement = "right",
                          trigger = "click",
                          options = list(container = "body")
