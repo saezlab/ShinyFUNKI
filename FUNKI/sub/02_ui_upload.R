@@ -427,7 +427,7 @@ tabPanel(
                                        tags$style(type = "text/css", "#q2c_solver {vertical-align: top;}"),
                                        bsButton("q2c_solver", label = "", icon = icon("question"), style = "info", size = "extra-small")),
                             choices = c("lpSolve" = "lpSolve", "cplex" = "cplex", "cbc" = "cbc"), 
-                            selected = "cplex",
+                            selected = "lpSolve",
                             inline = TRUE),
                bsPopover(id = "q2c_solver", 
                          title = "Solver",
