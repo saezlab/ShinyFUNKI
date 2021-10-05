@@ -16,19 +16,19 @@ COSMOS = reactive({
         }
         
       }else{
-        PKN = as.data.frame(read_csv(input$upload_cosnet)) 
+        PKN = as.data.frame(read_csv(input$upload_cosnet$datapath)) 
       }
       
       if(input$layer1 == 'l1'){
         layer_1 <- as.data.frame(read_csv("data/examples/signaling_input_COSMOS.csv"))
       }else{
-        layer_1 <- as.data.frame(read_csv(input$upload_layer1))
+        layer_1 <- as.data.frame(read_csv(input$upload_layer1$datapath))
       }
       
       if(input$layer2 == 'l2'){
         layer_2 <- as.data.frame(read_csv("data/examples/metab_input_COSMOS_newPKN.csv"))
       }else{
-        layer_2 <- as.data.frame(read_csv(input$upload_layer2))
+        layer_2 <- as.data.frame(read_csv(input$upload_layer2$datapath))
       }
       
       # CARNIVAL parameters
