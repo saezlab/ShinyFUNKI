@@ -3,7 +3,7 @@ doro = uploadResultsObjSever("upload_dorothea_results")
 
 D = reactive({
   if(input$an_dorothea){
-    withProgress(message = "Calculate TF activities...", value = 1, {
+    showModal(modalDialog("Running DoRothEA", footer = NULL))
       if(input$examples){
         organism = "Human"
       }else {organism = input$select_organism}
@@ -15,7 +15,7 @@ D = reactive({
                      confidence_level = input$selected_conf_level, 
                      minsize = input$minsize, 
                      method = input$method)
-    })
+      removeModal()
     
   }else{
     dorothea_result = doro()

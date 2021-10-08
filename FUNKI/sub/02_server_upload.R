@@ -110,12 +110,14 @@ observe({
 #Select sample for CARNIVAL analysis
 # select contrast/sample
 output$select_sample_carnival = renderUI({
-  if (!is.null(expr())) {
-    choices = colnames(expr()) 
-    
-    pickerInput(inputId = "select_sample_carnival",
-                label = "Select Sample/Contrast",
-                choices = choices,
-                selected = choices[1])
+  req(expr())
+  choices = colnames(expr())
+  if(input$solver == 'lpSolve'){
+    choices = "X06h_post_infection"
   }
+  pickerInput(inputId = "select_sample_carnival",
+              label = "Select Sample/Contrast",
+              choices = choices,
+              selected = choices[1])
+  
 })

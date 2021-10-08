@@ -3,14 +3,14 @@ kin = uploadResultsObjSever("upload_kinact_results")
 
 K = reactive({
   if(input$an_kinact){
-    withProgress(message = "Calculate KinAct matrix...", value = 1, {
+    showModal(modalDialog("Running KinAct", footer = NULL))
       
       kinact_result = run_kinact(data = expr(), 
                                  organism = "Human", 
                                  minsize = input$minsize_kinact, 
                                  method = input$method_kinact)
       
-    })
+    removeModal()
     
   }else{
     kinact_result = kin()

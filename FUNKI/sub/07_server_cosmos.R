@@ -5,7 +5,7 @@ cos = uploadResultsObjSever("upload_cosmos_results")
 COSMOS = reactive({
   
   if(input$an_cosmos){
-    withProgress(message="Running COSMOS", value=1, {
+    showModal(modalDialog("Running COSMOS. This may take a while", footer = NULL))
       
       if(input$cosnet == "def"){
         if(any(input$example_data, input$contrast_data)){
@@ -48,7 +48,7 @@ COSMOS = reactive({
                            solver = input$solver_cosmos, 
                            solver_path = solverpath_cosmos,
                            runtime = c(200,200,1000,1000))
-    })
+    removeModal()
   }else{
     cosmos = cos()
   }

@@ -5,7 +5,7 @@ prog = uploadResultsObjSever("upload_progeny_results")
 P = reactive({
 
   if(input$an_progeny){
-    withProgress(message = "Calculate PROGENy matrix", value = 1, {
+    showModal(modalDialog("Running PROGENy", footer = NULL))
 
       if(input$examples){
         organism = "Human"
@@ -21,7 +21,7 @@ P = reactive({
                     perm = input$perm)
 
       if(ncol(data) == 1){rownames(prog_result) = colnames(data)}
-    })
+    removeModal()
 
   }else{
     prog_result = prog()
