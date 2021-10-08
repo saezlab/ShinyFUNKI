@@ -4,8 +4,8 @@ carni = uploadResultsObjSever("upload_carnival_results")
 # CARNIVAL
 C = reactive({
   if(input$an_carnival){
-    withProgress(message = "Running CARNIVAL...", value = 1, {
-      
+    showModal(modalDialog("Running CARNIVAL. This may take a while", footer = NULL))
+
       if(!is.null(expr())){
         data = progessDATA(data = expr(),
                            contrast_data = input$contrast_data,
@@ -61,9 +61,8 @@ C = reactive({
       if (input$solver == "lpSolve"){
         solverpath = NULL
         if(input$example_data){
-          input$select_sample_carnival
           net = "data/models/carnival_PKN_example.csv"
-          param_doro = "data/examples/carnival_dorothea_contrast.csv"
+          param_doro = "data/examples/carnival_dorothea_example.csv"
           param_prog = NULL
         }else if(input$contrast_data){
           net = "data/models/carnival_PKN_contrast.csv"
@@ -79,11 +78,12 @@ C = reactive({
                                        progeny = param_prog,
                                        solver = list(spath = solverpath,
                                                      solver = input$solver))
-    })
+    removeModal()
     
   } else{
     carnival_results = carni()
   }
+  return(carnival_results)
 })
 
 # Pathway enrichment analysis
@@ -113,12 +113,13 @@ PEA = eventReactive({
   }
   
   # GSA
-  withProgress(message = "Running Enrichment...", value = 1, {
+  showModal(modalDialog("Running Enrichment", footer = NULL))
     
-    pathEnreach(nodeAtt = C()$nodesAttributes, 
+  pea = pathEnreach(nodeAtt = C()$nodesAttributes, 
                 database = database)
-  })
   
+  removeModal()
+  return(pea)
 })
 
 #objects for visualisation
@@ -174,10 +175,11 @@ omnipath_resources <- reactive({
   req(C())
   if(!is.null(input$pathEnrich_database)){
     if(input$pathEnrich_database == 'Omnipath'){
+      showModal(modalDialog("Loading options from Omnipath. This may take a while", footer = NULL))
       or = OmnipathR::import_omnipath_annotations(proteins = C()$nodesAttribute$Node, wide = TRUE)
     }
   }else{or = NULL}
-  
+  removeModal()
   return(or)
 })
 
