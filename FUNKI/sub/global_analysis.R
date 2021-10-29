@@ -17,6 +17,8 @@ library(progeny)
 library(CARNIVAL)
 library(OmnipathR)
 library(cosmosR)
+library(org.Hs.eg.db)
+library(AnnotationDbi)
 
 # shiny options
 enableBookmarking(store = "server")

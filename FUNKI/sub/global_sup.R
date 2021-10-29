@@ -215,3 +215,35 @@ background_edges = edges %>%
 
 return(list(nodes = background_nodes, edges = background_edges))
 }
+
+##A function to convert a vector of gene identifiers to symbold
+convert_genes_ids <- function(genes, identifier_type)
+{
+  out <- tryCatch(
+    {
+      if(sum(is.na(genes)) > 0)
+      {
+        print("NAs found in gene identifiers, please fix it. Gene mapping cancelled.")
+        return(genes)
+      }
+      
+      mapping <- unlist(AnnotationDbi::mapIds(org.Hs.eg.db::org.Hs.eg.db, genes, "SYMBOL", identifier_type))
+      print(paste(length(mapping[is.na(mapping)])," identifiers could not be mapped to gene symbole.", sep =""))
+      
+      dubs <- mapping[duplicated(mapping)]
+      if(!is.null(dubs))
+      {
+        dubs <- dubs[complete.cases(dubs)]
+        mapping[mapping %in% dubs] <- NA
+        print(paste(length(dubs)," genes have ambiguous maping to gene symbole and were removed.", sep =""))
+      }
+      return(mapping)
+    },
+    error=function(cond)
+    {
+      print(cond)
+      print("No mapping was made because of above error. Genes returned with their original identifiers.")
+      return(genes)
+    })
+  return(out)
+}
