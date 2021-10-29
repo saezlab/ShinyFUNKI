@@ -216,14 +216,19 @@ background_edges = edges %>%
 return(list(nodes = background_nodes, edges = background_edges))
 }
 
-##A function to convert a vector of gene identifiers to symbold
+##A function to convert a vector of gene identifiers to symbol
+#Accepted identifier_type values are : "ACCNUM","ALIAS", "ENSEMBL",
+#"ENSEMBLPROT","ENSEMBLTRANS","ENTREZID","ENZYME","EVIDENCE",
+#"EVIDENCEALL","GENENAME","GENETYPE","GO","GOALL","IPI", "MAP","OMIM",
+#"ONTOLOGY", "ONTOLOGYALL","PATH", "PFAM", "PMID", "PROSITE",
+#"REFSEQ","SYMBOL","UCSCKG","UNIPROT" 
 convert_genes_ids <- function(genes, identifier_type)
 {
   out <- tryCatch(
     {
       if(sum(is.na(genes)) > 0)
       {
-        print("NAs found in gene identifiers, please fix it. Gene mapping cancelled.")
+        print("NAs found in gene identifiers, please fix it. Gene returned with their orginal identifiers.")
         return(genes)
       }
       
