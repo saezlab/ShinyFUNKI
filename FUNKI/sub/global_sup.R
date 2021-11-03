@@ -170,14 +170,36 @@ get_labels <- function(df, nlabel, npaths, threshold){
 }
 
 #function to handle if the data come from example or upload to make it suitable for the analysis
-progessDATA <- function(data, contrast_data = F, upload_expr, type_analysis){
+progessDATA <- function(data, contrast_data = F, upload_expr, type_analysis, 
+                        gene_id_type = NULL, running_method = "cosmos"){
   
+  #change ids to correct ones
+  if(all(!is.null(gene_id_type), gene_id_type != "Gene ID")){
+    data = convert_genes_ids(data$ID, gene_id_type) %>% 
+      as.matrix() %>% 
+      as.data.frame() %>% 
+      tibble::rownames_to_column(var = "ID") %>% 
+      dplyr::rename(newID = V1) %>%
+      merge.data.frame(., data, by = "ID", all.y = T) %>%
+      dplyr::select(!ID) %>%
+      dplyr::rename(ID = newID) %>%
+      tidyr::drop_na() %>%
+      unique.data.frame()
+  }
+  
+  if(running_method != "cosmos"){
+    data = data %>%
+      tibble::column_to_rownames(var = "ID")
+  }
+  
+  #select ID and t columns for contrast analysis
   if( any( contrast_data | all(!is.null(upload_expr) & !is.null(type_analysis)) ) ){
-    upcon = T
+    
+    upcon = F
     
     if(!is.null(type_analysis)){
-      if(type_analysis == "multi"){
-        upcon = F
+      if(type_analysis == "contrast"){
+        upcon = T
       }
     }
     
