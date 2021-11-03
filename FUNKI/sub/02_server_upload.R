@@ -14,21 +14,17 @@ expr = reactive({
               !input$phospho_data & !input$example_data)
   
   if(input$example_data){
-    expDATA = read_csv("data/examples/example_data.csv") %>% 
-      dplyr::select(contrast, gene, logFC) %>% 
-      tidyr::pivot_wider(names_from = contrast, values_from = logFC) %>%
-      data.frame() %>%
-      tibble::column_to_rownames(var = "gene")
-      
+    expDATA = read_csv("data/examples/multipleconditions_data.csv")
   }else if(input$phospho_data){
-    expDATA = read.csv("data/examples/phospho_data.csv", row.names = 1, header = TRUE)
+    expDATA = read_csv("data/examples/phospho_data.csv")
   }else if(input$contrast_data){
-    expDATA = read.delim("data/examples/contrast_cosmos.csv", header = T, sep  =  ',') %>%
-      tibble() %>%
-      dplyr::mutate(ID = as.character(ID)) %>%
-      arrange(HGNC, -adj.P.Val) %>%
-      filter(duplicated(HGNC) == FALSE) %>%
-      tibble::column_to_rownames(var = "HGNC")
+    expDATA = read_csv("data/examples/contrast_data.csv") %>%
+      dplyr::mutate(ID = as.character(ID))
+      # tibble() %>%
+      # dplyr::mutate(ID = as.character(ID)) %>%
+      # arrange(HGNC, -adj.P.Val) %>%
+      # filter(duplicated(HGNC) == FALSE) %>%
+      # tibble::column_to_rownames(var = "HGNC")
 
  }else {
     
@@ -37,7 +33,7 @@ expr = reactive({
     if (is.null(inFile)){
       return(NULL)
     } else{
-      expDATA = read.csv(inFile, row.names = 1, header = TRUE)
+      expDATA = read_csv(inFile)
     }
   }
   return(expDATA)
@@ -45,7 +41,18 @@ expr = reactive({
 
 output$expr = DT::renderDataTable({
   shiny::req(expr())
-  DT::datatable(expr(), option = list(autoWidth = TRUE, pageLength = 5)) %>%
+  DT::datatable(expr(), 
+                filter = "none",
+                extensions = "Buttons",
+                rownames = FALSE,
+                option = list(
+                  paging = TRUE,
+                  searching = FALSE,
+                  fixedColumns = TRUE,
+                  autoWidth = TRUE,
+                  dom = 'tB',
+                  pageLength = 5,
+                  buttons = c('csv', 'excel'))) %>%
     formatSignif(which(map_lgl(expr(), is.numeric)))
 })
 
