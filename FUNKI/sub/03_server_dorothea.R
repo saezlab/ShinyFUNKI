@@ -9,14 +9,15 @@ D = reactive({
       }else {organism = input$select_organism}
       dorothea_result = progessDATA(data = expr(),
                                     contrast_data = input$contrast_data,
-                                    input$upload_expr,
-                                    input$type_analysis) %>%
+                                    upload_expr = input$upload_expr,
+                                    type_analysis = input$type_analysis,
+                                    gene_id_type = input$gene_id_type,
+                                    running_method = "dorothea") %>%
         run_dorothea(organism = organism, 
                      confidence_level = input$selected_conf_level, 
                      minsize = input$minsize, 
                      method = input$method)
       removeModal()
-    
   }else{
     dorothea_result = doro()
   }
@@ -157,7 +158,12 @@ network_tf_reactive = reactive({
   
   
   plot_network(
-    data = expr(), 
+    data = progessDATA(data = expr(),
+                       contrast_data = input$contrast_data,
+                       upload_expr = input$upload_expr,
+                       type_analysis = input$type_analysis,
+                       gene_id_type = input$gene_id_type,
+                       running_method = "dorothea"), 
     footprint_result = D(),
     regulon = aux,
     sample = input$select_contrast,
