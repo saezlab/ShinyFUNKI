@@ -52,20 +52,44 @@ tabPanel(
                     
              ),
            ),
-           radioButtons("type_analysis", 
-                        label = h5("Type of analysis",
-                                   tags$style(type = "text/css", "#q3_typeanalysis {vertical-align: top;}"),
-                                   bsButton("q3_typeanalysis", label = "", icon = icon("question"), style = "info", size = "extra-small")),
-                        choices = c("Multiple conditions" = "multi", "Contrast" = "contrast"), 
-                        selected = character(0),
-                        inline = TRUE),
-           bsPopover(id = "q3_typeanalysis",
-                     title = "Type of analysis",
-                     content = "Type of upload data. If the data come from a differential expression analysis, select contrast. If it contains multiple samples to analyse, select multiple conditions.",
-                     placement = "right", 
-                     trigger = "click", 
-                     options = list(container = "body")
-                     ),
+           
+           fluidRow(
+             column(7, align = "center",
+                    radioButtons("type_analysis", 
+                                 label = h5("Type of analysis",
+                                            tags$style(type = "text/css", "#q3_typeanalysis {vertical-align: top;}"),
+                                            bsButton("q3_typeanalysis", label = "", icon = icon("question"), style = "info", size = "extra-small")),
+                                 choices = c("Multiple conditions" = "multi", "Contrast" = "contrast"), 
+                                 selected = character(0),
+                                 inline = TRUE),
+                    bsPopover(id = "q3_typeanalysis",
+                              title = "Type of analysis",
+                              content = "Type of upload data. If the data come from a differential expression analysis, select contrast. If it contains multiple samples to analyse, select multiple conditions.",
+                              placement = "right", 
+                              trigger = "click", 
+                              options = list(container = "body")
+                    )
+             ),
+             column(5, align = "center",
+                    selectInput("gene_id_type", 
+                                label = h5("Gene ID type",
+                                           tags$style(type = "text/css", "#q2_geneID {vertical-align: top;}"),
+                                           bsButton("q2_geneID", label = "", icon = icon("question"), style = "info", size = "extra-small")),
+                                choices = c("Gene ID", "ACCNUM","ALIAS", "ENSEMBL", "ENSEMBLPROT","ENSEMBLTRANS","ENTREZID",
+                                            "ENZYME","EVIDENCE","EVIDENCEALL","GENENAME","GENETYPE","GO","GOALL",
+                                            "IPI", "MAP","OMIM", "ONTOLOGY", "ONTOLOGYALL","PATH",
+                                            "PFAM", "PMID", "PROSITE","REFSEQ","SYMBOL","UCSCKG","UNIPROT"),
+                                selected = "Gene ID"),
+                    bsPopover(id = "q2_geneID", title = "Gene ID type",
+                              content = "Gene ID. Select the type of ID provided in the data.",
+                              placement = "right", 
+                              trigger = "click", 
+                              options = list(container = "body")
+                    )
+                    
+             ),
+           ),
+           
            # select example data -----
            actionButton(
              inputId = "examples",
