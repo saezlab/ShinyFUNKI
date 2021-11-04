@@ -27,7 +27,7 @@ tabPanel(
                     ),
                     
                     bsPopover(id = "q2_data", title = "Upload data",
-                              content = "file with comma-separated-values. If there are multiple conditions, samples in columns and gene (HGNC symbol) in rows. If contrasts, HGNC symbol as row names and at least a column called t with the statistic value from the differential expression analysis. For COSMOS analysis, a column called ID with entrez ids should be provided (it the default networks is going to be used).",
+                              content = "file with comma-separated-values. An ID column containing the gene names should be always provided. For multible conditions, samples should be in the colums. For contrast, also a column called t with the statistic value from the differential expression analysis.",
                               placement = "right", 
                               trigger = "click", 
                               options = list(container = "body")
@@ -86,7 +86,6 @@ tabPanel(
                               trigger = "click", 
                               options = list(container = "body")
                     )
-                    
              ),
            ),
            

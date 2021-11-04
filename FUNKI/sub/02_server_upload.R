@@ -20,12 +20,6 @@ expr = reactive({
   }else if(input$contrast_data){
     expDATA = read_csv("data/examples/contrast_data.csv") %>%
       dplyr::mutate(ID = as.character(ID))
-      # tibble() %>%
-      # dplyr::mutate(ID = as.character(ID)) %>%
-      # arrange(HGNC, -adj.P.Val) %>%
-      # filter(duplicated(HGNC) == FALSE) %>%
-      # tibble::column_to_rownames(var = "HGNC")
-
  }else {
     
     inFile = input$upload_expr$datapath
