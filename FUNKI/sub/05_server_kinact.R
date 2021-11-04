@@ -5,10 +5,18 @@ K = reactive({
   if(input$an_kinact){
     showModal(modalDialog("Running KinAct", footer = NULL))
       
-      kinact_result = run_kinact(data = expr(), 
-                                 organism = "Human", 
-                                 minsize = input$minsize_kinact, 
-                                 method = input$method_kinact)
+      kinact_result = progessDATA(data = expr(),
+                                  contrast_data = F,
+                                  upload_expr = input$upload_expr,
+                                  type_analysis = NULL,
+                                  gene_id_type = input$gene_id_type,
+                                  running_method = "kinact") %>% 
+        run_kinact(organism = "Human",
+                   minsize = input$minsize_kinact,
+                   method = input$method_kinact)
+      
+      
+      print(head(kinact_result))
       
     removeModal()
     
@@ -64,7 +72,7 @@ output$select_top_targets = renderUI({
   targets = kinact_regulon_human %>%
     dplyr::filter(kinase == input$select_kinase) %>%
     dplyr::select(target) %>%
-    dplyr::filter(target %in% rownames(expr())) %>%
+    dplyr::filter(target %in% expr()$ID_site) %>%
     nrow()
     
   sliderInput(
@@ -138,8 +146,13 @@ network_kinase_reactive = reactive({
          "The plot cannot be showed because the expression file is not included. Please, upload it in the Data and Parameters section.")
   )
   
-  plot_network(
-    data = expr(), 
+  progessDATA(data = expr(),
+              contrast_data = input$contrast_data,
+              upload_expr = input$upload_expr,
+              type_analysis = input$type_analysis,
+              gene_id_type = input$gene_id_type,
+              running_method = "kinact") %>%
+  plot_network(.,
     footprint_result = K(),
     regulon = kinact_regulon_human,
     sample = input$select_contrast_kinact,
