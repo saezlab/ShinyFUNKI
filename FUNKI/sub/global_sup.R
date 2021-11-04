@@ -173,13 +173,18 @@ get_labels <- function(df, nlabel, npaths, threshold){
 progessDATA <- function(data, contrast_data = F, upload_expr, type_analysis, 
                         gene_id_type = NULL, running_method = "cosmos"){
   
+  if (running_method == "kinact"){
+    data = data %>%
+      dplyr::rename(ID = ID_site)
+  }
+  
   #change ids to correct ones
   if(all(!is.null(gene_id_type), gene_id_type != "Gene ID")){
     
     if (running_method == "kinact"){
       
       data = data %>%
-        tidyr::separate(col = "ID_site", into = c("ID", "site"))
+        tidyr::separate(col = "ID", into = c("ID", "site"))
       
       data = convert_genes_ids(data$ID, gene_id_type) %>% 
         as.matrix() %>% 
