@@ -260,12 +260,12 @@ return(list(nodes = background_nodes, edges = background_edges))
 }
 
 ##A function to convert a vector of gene identifiers to symbol
-#Accepted identifier_type values are : "ACCNUM","ALIAS", "ENSEMBL",
+#Accepted identifier_type and target_ID values are : "ACCNUM","ALIAS", "ENSEMBL",
 #"ENSEMBLPROT","ENSEMBLTRANS","ENTREZID","ENZYME","EVIDENCE",
 #"EVIDENCEALL","GENENAME","GENETYPE","GO","GOALL","IPI", "MAP","OMIM",
 #"ONTOLOGY", "ONTOLOGYALL","PATH", "PFAM", "PMID", "PROSITE",
 #"REFSEQ","SYMBOL","UCSCKG","UNIPROT" 
-convert_genes_ids <- function(genes, identifier_type)
+convert_genes_ids <- function(genes, identifier_type, target_ID = "SYMBOL")
 {
   out <- tryCatch(
     {
@@ -275,7 +275,7 @@ convert_genes_ids <- function(genes, identifier_type)
         return(genes)
       }
       
-      mapping <- unlist(AnnotationDbi::mapIds(org.Hs.eg.db::org.Hs.eg.db, genes, "SYMBOL", identifier_type))
+      mapping <- unlist(AnnotationDbi::mapIds(org.Hs.eg.db::org.Hs.eg.db, genes, target_ID, identifier_type))
       print(paste(length(mapping[is.na(mapping)])," identifiers could not be mapped to gene symbole.", sep =""))
       
       dubs <- mapping[duplicated(mapping)]
