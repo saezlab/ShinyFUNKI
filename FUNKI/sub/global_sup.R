@@ -199,6 +199,18 @@ progessDATA <- function(data, contrast_data = F, upload_expr, type_analysis,
         dplyr::select(ID, activity) %>%
         unique.data.frame()
       
+    }else if(running_method == "cosmos"){
+      data = convert_genes_ids(data$ID, gene_id_type, target_ID = "ENTREZID") %>% 
+        as.matrix() %>% 
+        as.data.frame() %>% 
+        tibble::rownames_to_column(var = "ID") %>% 
+        dplyr::rename(newID = V1) %>%
+        merge.data.frame(., data, by = "ID", all.y = T) %>%
+        dplyr::select(!ID) %>%
+        dplyr::rename(ID = newID) %>%
+        tidyr::drop_na() %>%
+        unique.data.frame() 
+      
     }else{
       data = convert_genes_ids(data$ID, gene_id_type) %>% 
         as.matrix() %>% 
