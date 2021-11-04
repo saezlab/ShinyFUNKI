@@ -175,16 +175,37 @@ progessDATA <- function(data, contrast_data = F, upload_expr, type_analysis,
   
   #change ids to correct ones
   if(all(!is.null(gene_id_type), gene_id_type != "Gene ID")){
-    data = convert_genes_ids(data$ID, gene_id_type) %>% 
-      as.matrix() %>% 
-      as.data.frame() %>% 
-      tibble::rownames_to_column(var = "ID") %>% 
-      dplyr::rename(newID = V1) %>%
-      merge.data.frame(., data, by = "ID", all.y = T) %>%
-      dplyr::select(!ID) %>%
-      dplyr::rename(ID = newID) %>%
-      tidyr::drop_na() %>%
-      unique.data.frame()
+    
+    if (running_method == "kinact"){
+      
+      data = data %>%
+        tidyr::separate(col = "ID_site", into = c("ID", "site"))
+      
+      data = convert_genes_ids(data$ID, gene_id_type) %>% 
+        as.matrix() %>% 
+        as.data.frame() %>% 
+        tibble::rownames_to_column(var = "ID") %>% 
+        dplyr::rename(newID = V1) %>%
+        merge.data.frame(., data, by = "ID", all.y = T) %>%
+        tidyr::drop_na() %>%
+        dplyr::select(!ID) %>%
+        dplyr::rename(ID = newID) %>%
+        dplyr::mutate(ID = paste(ID, site, sep = "_")) %>%
+        dplyr::select(ID, activity) %>%
+        unique.data.frame()
+      
+    }else{
+      data = convert_genes_ids(data$ID, gene_id_type) %>% 
+        as.matrix() %>% 
+        as.data.frame() %>% 
+        tibble::rownames_to_column(var = "ID") %>% 
+        dplyr::rename(newID = V1) %>%
+        merge.data.frame(., data, by = "ID", all.y = T) %>%
+        dplyr::select(!ID) %>%
+        dplyr::rename(ID = newID) %>%
+        tidyr::drop_na() %>%
+        unique.data.frame() 
+    }
   }
   
   if(running_method != "cosmos"){
