@@ -9,8 +9,11 @@ C = reactive({
       if(!is.null(expr())){
         data = progessDATA(data = expr(),
                            contrast_data = input$contrast_data,
-                           input$upload_expr,
-                           input$type_analysis)
+                           upload_expr = input$upload_expr,
+                           type_analysis = input$type_analysis,
+                           gene_id_type = input$gene_id_type,
+                           running_method = "carnival")
+
         if( ncol(data)  > 1 ){
           data =  data %>% dplyr::select(!!as.name(input$select_sample_carnival))
         }
