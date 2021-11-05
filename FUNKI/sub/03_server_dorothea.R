@@ -291,4 +291,20 @@ doro_download = observeEvent({
   }
   
   downloadObjSever("download_dorothea", filename = a$fname, content = a$cont)
+  downloadReportSever("dorothea_report", 
+                      fname = "report_dorothea.html", 
+                      parameters = list(selected_conf_level = input$selected_conf_level, 
+                                        minsize = input$minsize, 
+                                        method = input$method,
+                                        organism = "Human",
+                                        selected_tf = input$select_tf,
+                                        numberTFs = input$select_top_n_hits,
+                                        selected_sample = input$select_contrast,
+                                        sample_plot = barplot_nes_reactive_dorothea(),
+                                        tf_plot = barplot_tf_reactive(),
+                                        network_plot = network_tf_reactive(),
+                                        heatmap_plot = heatmap_df_reactive() %>%
+                                          heatmap_scores()
+                                        ))
+  
 })
