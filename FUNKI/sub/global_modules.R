@@ -89,7 +89,7 @@ downloadReportUI <- function(id) {
   downloadButton(ns("report"), label = "Generate report")
 }
 
-downloadReportSever <- function(id, fname, parameters) {
+downloadReportSever <- function(id, fname, parameters, report) {
   moduleServer(
     id,
     function(input, output, session){
@@ -100,8 +100,8 @@ downloadReportSever <- function(id, fname, parameters) {
           # Copy the report file to a temporary directory before processing it, in
           # case we don't have write permissions to the current working dir (which
           # can happen when deployed).
-          tempReport <- file.path(tempdir(), "dorothea_report.Rmd")
-          file.copy("data/reports/dorothea_report.Rmd", tempReport, overwrite = TRUE)
+          tempReport <- file.path(tempdir(), report)
+          file.copy(paste0("data/reports/", report), tempReport, overwrite = TRUE)
           
           # Set up parameters to pass to Rmd document
           # params <- parameters #list(n = input$slider)
