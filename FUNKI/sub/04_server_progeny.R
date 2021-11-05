@@ -208,4 +208,17 @@ progeny_download = observeEvent({
   }
   
   downloadObjSever("download_progeny", filename = a$fname, content = a$cont)
+  downloadReportSever("progeny_report", 
+                      fname = "report_progeny.html",
+                      report = "progeny_report.Rmd",
+                      parameters = list(
+                        top = input$top,
+                        perm = input$perm,
+                        organism = input$select_organism,
+                        selected_sample = input$select_contrast_progeny,
+                        selected_pathway = input$select_pathway,
+                        sample_plot = barplot_nes_reactive_progeny(),
+                        heatmap_plot = heatmap_scores(P()),
+                        scatter_plot = scatter_reactive()
+                      ))
 })
