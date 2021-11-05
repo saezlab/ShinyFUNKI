@@ -19,6 +19,7 @@ tabPanel(
     uiOutput("select_top_n_labels"),
     uiOutput("down_doro"),
     downloadObjUI(id = "download_dorothea"),
+    downloadReportUI(id = "dorothea_report"),
     circle = TRUE,
     status = "primary",
     inputId = "dorotea_control",
