@@ -293,10 +293,11 @@ doro_download = observeEvent({
   downloadObjSever("download_dorothea", filename = a$fname, content = a$cont)
   downloadReportSever("dorothea_report", 
                       fname = "report_dorothea.html", 
+                      report = "dorothea_report.Rmd",
                       parameters = list(selected_conf_level = input$selected_conf_level, 
                                         minsize = input$minsize, 
                                         method = input$method,
-                                        organism = "Human",
+                                        organism = input$select_organism,
                                         selected_tf = input$select_tf,
                                         numberTFs = input$select_top_n_hits,
                                         selected_sample = input$select_contrast,
