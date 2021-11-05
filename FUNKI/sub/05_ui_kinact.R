@@ -19,6 +19,7 @@ tabPanel(
     uiOutput("select_top_targets"),
     uiOutput("down_kinact"),
     downloadObjUI(id = "download_kinact"),
+    downloadReportUI(id = "kinact_report"),
     circle = TRUE,
     status = "primary",
     inputId = "kinact_control",

@@ -15,9 +15,6 @@ K = reactive({
                    minsize = input$minsize_kinact,
                    method = input$method_kinact)
       
-      
-      print(head(kinact_result))
-      
     removeModal()
     
   }else{
@@ -244,4 +241,19 @@ kinact_download = observeEvent({
   }
   
   downloadObjSever("download_kinact", filename = a$fname, content = a$cont)
+  downloadReportSever("kinact_report", 
+                      fname = "report_kinact.html",
+                      report = "kinact_report.Rmd",
+                      parameters = list(
+                                        minsize = input$minsize_kinact,
+                                        method = input$method_kinact,
+                                        organism = input$select_organism,
+                                        selected_kinase = input$select_kinase,
+                                        numberKinases = input$select_top_targets,
+                                        selected_sample = input$select_contrast_kinact,
+                                        sample_plot = barplot_nes_reactive_kinact(),
+                                        tf_plot = barplot_kinase_reactive(),
+                                        network_plot = network_kinase_reactive(),
+                                        heatmap_plot = K() %>% t() %>% data.frame() %>% heatmap_scores()
+                      ))
 })
