@@ -51,7 +51,7 @@ COSMOS = reactive({
                            PKN = PKN, 
                            solver = input$solver_cosmos, 
                            solver_path = solverpath_cosmos,
-                           runtime = c(200,200,1000,1000))
+                           runtime = c(200,1000,200,1000))
     removeModal()
   }else{
     cosmos = cos()
