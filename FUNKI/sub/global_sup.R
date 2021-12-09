@@ -200,7 +200,7 @@ progessDATA <- function(data, contrast_data = F, upload_expr, type_analysis,
         unique.data.frame()
       
     }else if(running_method == "cosmos"){
-      data = convert_genes_ids(data$ID, gene_id_type, target_ID = "ENTREZID") %>% 
+        data = convert_genes_ids(data$ID, gene_id_type, target_ID = "ENTREZID") %>% 
         as.matrix() %>% 
         as.data.frame() %>% 
         tibble::rownames_to_column(var = "ID") %>% 
@@ -242,9 +242,16 @@ progessDATA <- function(data, contrast_data = F, upload_expr, type_analysis,
     }
     
     if(any(contrast_data | upcon)){
-      data = data %>%
-        dplyr::select(t) %>%
-        unique.data.frame()
+      if(running_method != "cosmos"){
+        data = data %>%
+          dplyr::select(t) %>%
+          unique.data.frame()
+      } else {
+        data = data %>%
+          dplyr::select(ID,t) %>%
+          unique.data.frame()
+      }
+      
     }
   }
   

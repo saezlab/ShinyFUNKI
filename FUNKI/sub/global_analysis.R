@@ -282,7 +282,7 @@ run_COSMOS <- function(layer_1,
   }
   
   #RNA_input
-  if(!class(layer_2) == "numeric")
+  if(!class(RNA_data) == "numeric")
   {
     RNA_input <- RNA_data[,"t"]
     names(RNA_input) <- paste0("X",RNA_data$ID)
