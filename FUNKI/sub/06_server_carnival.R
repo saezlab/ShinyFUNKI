@@ -465,6 +465,95 @@ carnival_download = observeEvent({
   }
   
   downloadObjSever("download_carnival", filename = a$fname, content = a$cont)
+  
+  # Report
+  if(input$an_carnival){
+    parameters_list = list(
+      organism = dplyr::if_else(any(input$example_data, input$contrast_data),
+                                "- organism: Human",
+                                paste0("- organism: ", input$select_organism)),
+      doro_custom = dplyr::if_else(input$dorothea != "doro",
+                            paste0(" not run. The TFs were provided by the user in the file ",
+                                   input$upload_tfs$datapath, "."),
+                            " run using the following parameters:"),
+      confidence_level = dplyr::if_else(input$dorothea != "doro", 
+                                "",
+                                paste0("- confidence_level: ", 
+                                       paste(input$selected_conf_level, collapse = ","))),
+      method = dplyr::if_else(input$dorothea != "doro",
+                                "",
+                                paste0("- method: ", input$method)),
+      minsize = dplyr::if_else(input$dorothea != "doro",  
+                                "", 
+                                paste0("- min size: ", input$minsize)),
+      top = dplyr::if_else(all(!is.null(input$progeny), input$progeny == "prog"),  
+                           paste0("- top: ", input$top),
+                           ""),
+      perm = dplyr::if_else(all(!is.null(input$progeny), input$progeny == "prog"),  
+                           paste0("- Permutations: ", input$perm),
+                           ""),
+      omni = dplyr::if_else(input$omnipath == "omni",  
+                            "loaded from OmniPath.",
+                            paste0(" provided by the user in the file ",
+                                   input$upload_network$datapath, ".")),
+      solver = input$solver,
+      targets = dplyr::if_else(input$inputs_targets == "up",
+                               paste0(" provided by the user in the file ",
+                                      input$upload_network$datapath, "."),
+                               paste0(" selected from Omnipath. The option was: ", 
+                               input$inputs_targets))
+    )
+    
+    if(!is.null(input$progeny)){
+      parameters_list$pro_custom = dplyr::if_else(input$progeny == "prog",
+                                                  " run using the following parameters:",
+                                                  paste0(" not run. The weights were provided by the user in the file ",
+                                                             input$upload_progeny$datapath, "."))
+    }
+    
+  }else{
+    parameters_list = list(analysis_expl = "The analysis was **NOT RUN**, the results were uploaded.")
+  } 
+  
+  parameters_list$carnival_network = visNetwork::visNetwork(nodes_carnival(), 
+                                                            edges(), 
+                                                            height = "500px", width = "100%") %>%
+    visNetwork::visIgraphLayout() %>%
+    visNetwork::visEdges(arrows = 'to')
+  
+  # Params from Enrichment
+  
+  if(input$run_PEA){
+    
+    parameters_list$pea_custom = dplyr::if_else(input$pathEnrich_database == "Custom",
+                                                paste0("the user has selected the resource on the file: ",
+                                                       input$upload_custom$datapath),
+                                                paste0("the resource ", input$select_resource_omnipath,
+                                                       " has been selected from OmniPath."))
+    parameters_list$pea_explanation = paste0("The data can be visualised on bar and volcano plots.",
+                                             "The cutoff for the adjusted p-value is: ", input$p_value)
+    
+    parameters_list$pea_expl_barplot = paste0("The barplot shows the pathways over the adjusted p-value in log scale.",
+                                              "The number of different pathways/sets visualised are: ",
+                                              input$pea_nPaths, ".")
+    
+    parameters_list$pea_expl_volcano = paste0("For each of these ", input$pea_nPaths, " pathways/sets, ",
+                                              input$pea_nGenes, " genes are labeled per each pathway/set.",
+                                              "The number of different pathways/sets visualised are: ",
+                                              input$pea_nPaths, ".",
+                                              "The volcano plot shows the genes/proteins of the reconstructed network. ",
+                                              "The colored dots indicate the pathway/set in which the genes/proteins are involved. ")
+    
+    parameters_list$volcano = volcano_pea_reactive()
+    parameters_list$barplot = barplot_pea_reactive()
+    parameters_list$active_pea = "TRUE"
+    
+  }
+  downloadReportSever("carnival_report", 
+                      fname = "report_carnival.html", 
+                      report = "carnival_report.Rmd",
+                      parameters = parameters_list
+  )
 })
 
 pea_download = observeEvent({
