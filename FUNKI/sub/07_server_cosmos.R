@@ -229,4 +229,34 @@ cosmos_download = observeEvent({
   }
   
   downloadObjSever("download_cosmos", filename = a$fname, content = a$cont)
+  
+  # Report
+  
+  if(input$an_cosmos){
+    parameters_list = list(
+      network = dplyr::if_else(input$cosnet == "def",
+                               "provided by FUNKI.",
+                               paste0("provided by the user in the file", input$upload_cosnet$datapath)),
+      solver = input$solver_cosmos,
+      layer1 = dplyr::if_else(input$layer1 == 'l1',
+                              "provided by FUNKI.",
+                              paste0("provided by the user in the file", input$upload_layer1$datapath)),
+      layer2 = dplyr::if_else(input$layer2 == 'l2',
+                              "provided by FUNKI.",
+                              paste0("provided by the user in the file", input$input$upload_layer2$datapath))
+    )
+  }else{
+    parameters_list = list(analysis_expl = "The analysis was **NOT RUN**, the results were uploaded.")
+  }
+  
+  parameters_list$cosmos_network = visNetwork::visNetwork(nodes_cosmos(), 
+                                              edges_cosmos(), 
+                                              height = 1600, width = 1600) %>%
+    visNetwork::visIgraphLayout() %>%
+    visNetwork::visEdges(arrows = 'to')
+  
+  downloadReportSever("cosmos_report", 
+                      fname = "report_cosmos.html", 
+                      report = "cosmos_report.Rmd",
+                      parameters = parameters_list)
 })
