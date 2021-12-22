@@ -2,16 +2,12 @@
 title: "COSMOS Analysis Report"
 output: html_document
 params:
-  minsize: NA
-  method: NA
-  organism: NA
-  selected_kinase: NA
-  selected_sample: NA
-  numberKinases: NA
-  sample_plot: NA
-  tf_plot: NA
-  network_plot: NA
-  carnival_network: NA
+  analysis_expl: ""
+  network: "**NOT** selected/loaded."
+  solver: "**NOT** selected."
+  layer1: "**NOT** selected."
+  layer2: "**NOT** selected."
+  cosmos_network: NA
 ---
 
 COSMOS is a tool to integrate multiomic data with a prior knowledge network spanning signaling, gene regulation and metabolism ( [Dugourd et al. 2021](http://europepmc.org/abstract/MED/33502086) ). It uses the ILP formulation of CARNIVAL to connect two sets of upstream and downstream molecular features (e.i. kinase activities, TF activities, deregulated metabolites, enzyme fluxes, genetic or drug perturbations, etc…) with a signed directed transomic network. 
@@ -20,13 +16,17 @@ This resulting network is essentially a set of coherent mechanistic hypotheses t
 
 ### The analysis
 
-The selected parameters:
+`r params$analysis_expl`
 
-- organism: `r params$organism`
-- min size: `r params$minsize`
-- solver: `r params$solver`
+The **layer 1** was `r params$layer1`
 
-The code:
+The **layer 2** was `r params$layer2`
+
+The **network** (_netObj_) was `r params$network`
+
+The **solver** was `r params$solver`
+
+#### The code
 
 ```{r, eval=FALSE}
   carnival_result = runCARNIVAL( inputObj = iniciators,
@@ -40,37 +40,10 @@ The code:
                                  poolrelGAP = 0 )
 ```
 
-### The results
+### The results: Network visualisation
 
-CARNIVAL produces a set of networks that can be directly visualised. 
-
-```{r, echo=FALSE, fig.width=10}
-params$carnival_network
-```
-
-
-A pathway enrichment analysis can be run over the results. Then, these data can be visualised on bar and volcano plots.
-
-The heatmap provides a comprehensive overview of all contrasts/samples.
-This heatmap includes the top `r params$numberKinases` selected TFs for the sample **`r params$selected_sample`** compared with the rest of the samples.
+COSMOS produces a set of networks that can be directly visualised. 
 
 ```{r, echo=FALSE, fig.width=10}
-params$heatmap_plot
-```
-
-The bar plots show the activity of **`r params$selected_kinase`** for all given contrasts/samples;
-and the top `r params$numberKinases` regulated TFs for sample **`r params$selected_sample`**.
-
-```{r, echo=FALSE}
-params$tf_plot
-
-params$sample_plot
-```
-
-The interactions of `r params$selected_kinase` with its targets is shown in a network plot for sample `r params$selected_sample`.
-
-Blue nodes indicate that the target is over-expressed and red nodes indicate that the target is down-regulated. The color of the edges represent the effect of the TF on its target (either activation or repression). The number of shown nodes can be changed by the corresponding widget.
-
-```{r, echo=FALSE}
-params$network_plot
+params$cosmos_network
 ```
