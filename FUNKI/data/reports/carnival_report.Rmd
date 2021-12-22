@@ -1,0 +1,96 @@
+---
+title: "CARNIVAL Analysis Report"
+output: html_document
+params:
+  analysis_expl: ""
+  doro_custom: "**NOT** run."
+  organism: ""
+  minsize: ""
+  confidence_level: ""
+  method: ""
+  pro_custom: "**NOT** included in the analysis."
+  top: ""
+  perm: ""
+  omni: "**NOT** loaded."
+  targets: "**NOT** selected."
+  solver: "**NOT** selected"
+  pea_custom: "the enrichment part has **NOT** been run."
+  pea_explanation: ""
+  pea_expl_barplot: ""
+  pea_expl_volcano: ""
+  carnival_network: NA
+  barplot: NA
+  volcano: NA
+  active_pea: "FALSE"
+---
+    
+[CARNIVAL](https://saezlab.github.io/CARNIVAL/) (CAusal Reasoning for Network identification using Integer VALue programming) reconstructs signalling networks from downstream TF activities by finding the upstream regulators ( [Liu et al., 2019](https://www.nature.com/articles/s41540-019-0118-z) ). Given a directed prior-knowledge network (PKN) of protein-protein interactions, which can also be signed, CARNIVAL identifies a subnetwork that explains the activities of transcription factors through potential perturbed intermediate genes.
+
+### The analysis
+
+`r params$analysis_expl`
+
+**DoRotEA** (_measObj_) was `r params$doro_custom`
+
+`r params$organism`
+
+`r params$minsize`
+
+`r params$confidence_level`
+
+`r params$method`
+
+**PROGENy** weights (_weightObj_) was `r params$pro_custom`
+
+`r params$perm`
+`r params$top`
+
+The **network** (_netObj_) was `r params$omni`
+
+The **perturbation nodes** (inputObj) were `r params$targets`
+
+The selected **solver** was `r params$solver`.
+
+#### The code
+  
+  ```{r, eval=FALSE}
+carnival_result = runCARNIVAL( inputObj = iniciators,
+                               measObj = tfList, 
+                               netObj = cNET, 
+                               weightObj = progenylist, 
+                               solverPath = solver$spath, 
+                               solver = solver$solver,
+                               timelimit = 7200,
+                               mipGAP = 0,
+                               poolrelGAP = 0 )
+```
+
+### The results
+
+#### Network visualisation
+
+CARNIVAL produces a weigthed network that can be directly visualised. 
+
+```{r, echo=FALSE, fig.width=10}
+params$carnival_network
+```
+
+#### Enrichment analysis
+
+A pathway/set enrichment analysis can be run over the results.
+
+For this analysis, `r params$pea_custom`
+
+`r params$pea_explanation`
+
+`r params$pea_expl_barplot`
+
+```{r, echo=FALSE, fig.width=10, eval=as.logical(params$active_pea), error=FALSE, message=FALSE, warning=FALSE}
+params$barplot
+```
+
+`r params$pea_expl_volcano`
+
+```{r, echo=FALSE, eval=as.logical(params$active_pea), error=FALSE, message=FALSE, warning=FALSE}
+params$volcano
+```
