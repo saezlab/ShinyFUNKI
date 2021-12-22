@@ -28,6 +28,10 @@ expr = reactive({
       return(NULL)
     } else{
       expDATA = read_csv(inFile)
+      if("ID" %in% names(expDATA))
+      {
+        expDATA$ID <- as.character(expDATA$ID)
+      }
     }
   }
   return(expDATA)
