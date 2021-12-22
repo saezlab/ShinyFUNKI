@@ -1,0 +1,232 @@
+%\VignetteIndexEntry{03 - Additional plots for: Independent filtering increases power for detecting differentially expressed genes, Bourgon et al., PNAS (2010)}
+%\VignettePackage{genefilter}
+%\VignetteEngine{knitr::knitr}
+
+% To compile this document
+% library('knitr'); rm(list=ls()); knit('independent_filtering_plots.Rnw')
+
+\documentclass[10pt]{article}
+
+<<knitr, echo=FALSE, results="hide">>=
+library("knitr")
+opts_chunk$set(tidy=FALSE,dev="png",fig.show="hide",
+               fig.width=4,fig.height=4.5,dpi=240,
+               message=FALSE,error=FALSE,warning=FALSE)
+@ 
+
+<<style, eval=TRUE, echo=FALSE, results="asis">>=
+BiocStyle:::latex()
+@
+
+\usepackage{xstring}
+\newcommand{\thetitle}{Additional plots for: Independent filtering increases power for detecting differentially expressed genes, Bourgon et al., PNAS (2010)}
+
+\title{\thetitle}
+\author{Richard Bourgon and Wolfgang Huber}
+
+\begin{document}
+
+<<setup, echo=FALSE>>=
+options( width = 80 )
+@ 
+
+% Make title
+\maketitle
+\tableofcontents
+\vspace{.25in}
+
+
+%%%%%%%% Main text
+
+\section{Introduction}
+
+This vignette illustrates use of some functions in the
+\emph{genefilter} package that provide useful diagnostics 
+for independent filtering~\cite{BourgonIndependentFiltering}:
+
+\begin{itemize}
+  \item \texttt{kappa\_p} and \texttt{kappa\_t}
+  \item \texttt{filtered\_p} and \texttt{filtered\_R}
+  \item \texttt{filter\_volcano}
+  \item \texttt{rejection\_plot}
+\end{itemize}
+
+\section{Data preparation}
+
+Load the ALL data set and the \emph{genefilter} package:
+
+<<libraries>>=
+library("genefilter")
+library("ALL")
+data("ALL")
+@
+
+Reduce to just two conditions, then take a small subset of arrays from these,
+with 3 arrays per condition:
+
+<<sample_data, cache=TRUE>>=
+bcell <- grep("^B", as.character(ALL$BT))
+moltyp <- which(as.character(ALL$mol.biol) %in% 
+                c("NEG", "BCR/ABL"))
+ALL_bcrneg <- ALL[, intersect(bcell, moltyp)]
+ALL_bcrneg$mol.biol <- factor(ALL_bcrneg$mol.biol)
+n1 <- n2 <- 3
+set.seed(1969)
+use <- unlist(tapply(1:ncol(ALL_bcrneg), 
+                     ALL_bcrneg$mol.biol, sample, n1))
+subsample <- ALL_bcrneg[,use]
+@
+
+We now use functions from \emph{genefilter} to compute overall standard devation
+filter statistics as well as standard two-sample $t$ and releated statistics.
+
+<<stats, cache=TRUE>>=
+S <- rowSds( exprs( subsample ) )
+temp <- rowttests( subsample, subsample$mol.biol )
+d <- temp$dm
+p <- temp$p.value
+t <- temp$statistic
+@ 
+
+
+\section{Filtering volcano plot}
+
+Filtering on overall standard deviation and then using a standard $t$-statistic
+induces a lower bound of fold change, albeit one which varies somewhat with the
+significance of the $t$-statistic. The \texttt{filter\_volcano} function allows
+you to visualize this effect.
+
+<<filter_volcano, include=FALSE>>=
+S_cutoff <- quantile(S, .50)
+filter_volcano(d, p, S, n1, n2, alpha=.01, S_cutoff)
+@ 
+The output is shown in the left panel of Fig.~\ref{fig:volcano}.
+
+\begin{figure}[tb]
+\begin{center}
+\includegraphics[width=0.49\textwidth]{figure/filter_volcano-1}
+\includegraphics[width=0.49\textwidth]{figure/kappa-1}
+\caption{Left panel: plot produced by the \texttt{filter\_volcano} function.
+Right panel: graph of the \texttt{kappa\_t} function.}
+\label{fig:volcano}
+\end{center}
+\end{figure}
+
+The \texttt{kappa\_p} and \texttt{kappa\_t} functions, used to make the volcano
+plot, compute the fold change bound multiplier as a function of either a
+$t$-test $p$-value or the $t$-statistic itself. The actual induced bound on the
+fold change is $\kappa$ times the filter's cutoff on the overall standard
+deviation. Note that fold change bounds for values of $|T|$ which are close to 0
+are not of practical interest because we will not reject the null hypothesis
+with test statistics in this range.
+
+<<kappa, include=FALSE>>=
+t <- seq(0, 5, length=100)
+plot(t, kappa_t(t, n1, n2) * S_cutoff, 
+     xlab="|T|", ylab="Fold change bound", type="l")
+@
+The plot is shown in the right panel of Fig.~\ref{fig:volcano}.
+
+
+
+\section{Rejection count plots}
+
+\subsection{Across $p$-value cutoffs}
+
+The \texttt{filtered\_p} function permits easy simultaneous calculation of
+unadjusted or adjusted $p$-values over a range of filtering thresholds
+($\theta$). Here, we return to the full ``BCR/ABL'' versus ``NEG'' data set, and
+compute adjusted $p$-values using the method of Benjamini and Hochberg, for a
+range of different filter stringencies.
+
+\begin{figure}[tb]
+\begin{center}
+\includegraphics[width=0.49\textwidth]{figure/rejection_plot-1}
+\includegraphics[width=0.49\textwidth]{figure/filtered_R_plot-1}
+\caption{Left panel: plot produced by the \texttt{rejection\_plot} function.
+Right panel: graph of \texttt{theta}.}
+\label{fig:rej}
+\end{center}
+\end{figure}
+
+
+<<table>>=
+table(ALL_bcrneg$mol.biol)
+@
+
+<<filtered_p>>=
+S2 <- rowVars(exprs(ALL_bcrneg))
+p2 <- rowttests(ALL_bcrneg, "mol.biol")$p.value
+theta <- seq(0, .5, .1)
+p_bh <- filtered_p(S2, p2, theta, method="BH")
+@
+
+<<p_bh>>=
+head(p_bh)
+@ 
+
+The \texttt{rejection\_plot} function takes sets of $p$-values corresponding to
+different filtering choices --- in the columns of a matrix or in a list --- and
+shows how rejection count ($R$) relates to the choice of cutoff for the
+$p$-values. For these data, over a reasonable range of FDR cutoffs, increased
+filtering corresponds to increased rejections.
+
+<<rejection_plot>>=
+rejection_plot(p_bh, at="sample",
+               xlim=c(0,.3), ylim=c(0,1000),
+               main="Benjamini & Hochberg adjustment")
+@
+The plot is shown in the left panel of Fig.~\ref{fig:rej}.
+
+
+
+
+\subsection{Across filtering fractions}
+
+If we select a fixed cutoff for the adjusted $p$-values, we can also look more
+closely at the relationship between the fraction of null hypotheses filtered and
+the total number of discoveries. The \texttt{filtered\_R} function wraps
+\texttt{filtered\_p} and just returns rejection counts. It requires a $p$-value
+cutoff. 
+
+<<filtered_R>>=
+theta <- seq(0, .80, .01)
+R_BH <- filtered_R(alpha=.10, S2, p2, theta, method="BH")
+@
+
+<<R_BH>>=
+head(R_BH)
+@
+
+Because overfiltering (or use of a filter which is inappropriate for the
+application domain) discards both false and true null hypotheses, very large
+values of $\theta$ reduce power in this example:
+
+<<filtered_R_plot>>=
+plot(theta, R_BH, type="l",
+     xlab=expression(theta), ylab="Rejections",
+     main="BH cutoff = 0.1")
+@
+The plot is shown in the right panel of Fig.~\ref{fig:rej}.
+
+
+
+%%%%%%%% Session info
+
+\section*{Session information}
+
+<<sessionInfo, results='asis', echo=FALSE>>=
+sessionInfo() |> toLatex()
+@
+
+
+\begin{thebibliography}{10}
+\bibitem{BourgonIndependentFiltering}
+Richard Bourgon, Robert Gentleman and Wolfgang Huber.
+\newblock Independent filtering increases power for detecting differentially
+expressed genes.
+\end{thebibliography}
+
+
+
+\end{document}

@@ -1,0 +1,43 @@
+Package: Category
+Title: Category Analysis
+Version: 2.58.0
+Authors@R: c(
+    person("Robert", "Gentleman", role="aut"),
+    person("Seth", "Falcon", role="ctb"),
+    person("Deepayan", "Sarkar", role="ctb"),
+    person("Robert", "Castelo", role="ctb"),
+    person("Bioconductor Package Maintainer",
+        email = "maintainer@bioconductor.org", role="cre"))
+Description: A collection of tools for performing category (gene set
+    enrichment) analysis.
+License: Artistic-2.0
+Depends: methods, stats4, BiocGenerics, AnnotationDbi, Biobase, Matrix
+Imports: utils, stats, graph, RBGL, GSEABase, genefilter, annotate, DBI
+Suggests: EBarrays, ALL, Rgraphviz, RColorBrewer, xtable (>= 1.4-6),
+        hgu95av2.db, KEGGREST, karyoploteR, geneplotter, limma,
+        lattice, RUnit, org.Sc.sgd.db, GOstats, GO.db
+LazyLoad: Yes
+Collate: AllClasses.R AllGenerics.R categoryToEntrezBuilder-methods.R
+        categoryName-methods.R hyperg-methods.R hyperGTest-methods.R
+        linearMTest-methods.R DatPkg-accessors.R ChrBandTree.R
+        tree_visitor.R cb_test.R initialize-methods.R
+        HyperGParams-accessors.R LinearMParams-accessors.R
+        HyperGResult-accessors.R LinearMResult-accessors.R
+        ChrMapHyperGResult-accessors.R ChrMapLinearMResult-accessors.R
+        show-methods.R universeBuilder-methods.R utils.R MAPcode.R
+        catcode.R cateGOryMatrix.R gseaperm.R summary-methods.R mouse.R
+biocViews: Annotation, GO, Pathways, GeneSetEnrichment
+git_url: https://git.bioconductor.org/packages/Category
+git_branch: RELEASE_3_13
+git_last_commit: 5a966e0
+git_last_commit_date: 2021-05-19
+Date/Publication: 2021-05-19
+NeedsCompilation: no
+Packaged: 2021-05-19 22:43:12 UTC; biocbuild
+Author: Robert Gentleman [aut],
+  Seth Falcon [ctb],
+  Deepayan Sarkar [ctb],
+  Robert Castelo [ctb],
+  Bioconductor Package Maintainer [cre]
+Maintainer: Bioconductor Package Maintainer <maintainer@bioconductor.org>
+Built: R 4.1.0; ; 2021-05-20 13:32:16 UTC; unix

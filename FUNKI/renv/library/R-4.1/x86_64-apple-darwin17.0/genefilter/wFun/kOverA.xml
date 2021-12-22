@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+ <wFun xmlns:bt="http://www.bioconductor.org/WINVOKE">
+	<funName>kOverA</funName>
+	<funArgList>
+		<funArg>
+			<argName>k</argName>
+			<argDefault></argDefault>
+			<argType>numeric</argType>
+			<argLocation>main</argLocation>
+			<argWidgetType>TypeIn</argWidgetType>
+			<argRequired>TRUE</argRequired>
+		</funArg>
+		<funArg>
+			<argName>A</argName>
+			<argDefault>100</argDefault>
+			<argType>numeric</argType>
+			<argLocation>main</argLocation>
+			<argWidgetType>TypeIn</argWidgetType>
+			<argRequired>FALSE</argRequired>
+		</funArg>
+		<funArg>
+			<argName>na.rm</argName>
+			<argDefault>TRUE</argDefault>
+			<argType>logical</argType>
+			<argLocation>main</argLocation>
+			<argWidgetType>Radio</argWidgetType>
+			<argRequired>FALSE</argRequired>
+		</funArg>
+	</funArgList>
+</wFun>

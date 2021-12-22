@@ -1,0 +1,111 @@
+%\VignetteIndexEntry{02 - How to find genes whose expression profile is similar to that of specified genes}
+%\VignetteDepends{Biobase, genefilter}
+%\VignetteKeywords{Expression Analysis}
+%\VignettePackage{genefilter}
+\documentclass{article}
+\usepackage{hyperref}
+
+\textwidth=6.2in
+\textheight=8.5in
+\oddsidemargin=.1in
+\evensidemargin=.1in
+\headheight=-.3in
+
+\newcommand{\classdef}[1]{%
+  {\em #1}
+}
+
+\begin{document}
+\title{How to find genes whose expression profile is similar to that of specified genes}
+
+\maketitle
+
+\section*{Introduction}
+
+In some cases you have certain genes of interest and you would like to
+find other genes that are {\em close} to the genes of interest.
+This can be done using the \verb+genefinder+ function.
+
+You need to specify either the index position of the genes you want
+(which row of the expression array the gene is in) or the name
+(consistent with the \verb+featureNames+ of the ExpressionSet).
+
+A vector of names can be specified and matches for all will be
+computed. The number of matches and the distance measure used can all
+be specified.
+The examples will be carried out using the artificial data set,
+\verb+sample.ExpressionSet+.
+
+Two other options for \verb+genefinder+ are \verb+scale+ and \verb+method+.
+The \verb+scale+ option controls the scaling of the rows (this is
+often desirable) while the \verb+method+ option controls the distance
+measure used between genes. The possible values and their meanings are
+listed at the end of this document.
+
+<<>>=
+ library("Biobase")
+ library("genefilter")
+ data(sample.ExpressionSet)
+ igenes<- c(300,333,355,419) ##the interesting genes
+ closeg <- genefinder(sample.ExpressionSet, igenes, 10, 
+       method="euc", scale="none")
+ names(closeg)
+@
+
+The Affymetrix identifiers (since these were originally Affymetrix
+data) are \verb+31539_r_at+, \verb+31572_at+, \verb+31594_at+ and
+\verb+31658_at+.
+We can find the nearest genes (by index) for any of these by simply
+accessing the relevant component of \verb+closeg+.
+
+<<>>=
+closeg$"31539_r_at"
+Nms1 <- featureNames(sample.ExpressionSet)[closeg$"31539_r_at"$indices]
+Nms1
+@
+%$
+You could then take these names (from \verb+Nms1+) and the {\em
+  annotate} package and explore them further. See the various HOWTO's
+  in annotate to see how to further explore your data.
+Examples include finding and searching all PubMed abstracts associated
+  with these data. Finding and downloading associated sequence information.
+The data can also be visualized using the {\em geneplotter} package
+  (again there are a number of HOWTO documents there).
+
+
+\section*{Parameter Settings}
+
+The \verb+scale+ parameter can take the following values:
+\begin{description}
+\item[none] No scaling is done.
+\item[range] Scaling is done by $(x_i - x_{(1)})/(x_{(n)}- x_{(1)})$.
+\item[zscore] Scaling is done by $(x_i - \bar{x})/ s_x$. Where $s_x$
+  is the standard deviation.
+\end{description}
+
+The \verb+method+ parameter can take the following values:
+\begin{description}
+\item[euclidean] Euclidean distance is used.
+\item[maximum]  Maximum distance between any two elements of x and y
+          (supremum norm).
+\item[manhattan] Absolute distance between the two vectors (1 norm).
+
+ \item[canberra] The $\sum (|x_i - y_i| / |x_i + y_i|)$.  Terms with zero
+          numerator and denominator are omitted from the sum and
+          treated as if the values were missing.
+\item[binary] (aka asymmetric binary): The vectors are regarded as
+          binary bits, so non-zero elements are {\em on} and zero elements
+          are {\em off}.  The distance is the proportion of bits in which
+          only one is on amongst those in which at least one is on.
+\end{description}
+
+\section*{Session Information}
+
+The version number of R and packages loaded for generating the vignette were:
+
+<<echo=FALSE,results=tex>>=
+toLatex(sessionInfo())
+@
+
+\end{document}
+

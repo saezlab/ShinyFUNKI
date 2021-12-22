@@ -1,0 +1,17 @@
+## Save these in case I need to process this file again:
+## Start by downloading this file: 
+## http://www.UniProt.org/docs/speclist
+
+## Then remove the header and footer
+
+## then grep out lines for synonyms and  (with -v)
+grep -v "C=" species1.txt > species2.txt
+grep -v "S=" species2.txt > species3.txt
+
+## then use perl one liners to clean up and extract information we want.
+## perl -pe 's/(^.*):(.*)/$1\n/s' sList.txt > IDs.txt
+## perl -pe 'tr/ /\t/s' IDs.txt > IDs2.txt
+
+## In particular this one gets what we want (tax IDs with formal names):
+perl -pe 's/^(.+)\W(.+)\W(.+): N=(.*)/$3\t$4/s' sList.txt > Names.txt
+

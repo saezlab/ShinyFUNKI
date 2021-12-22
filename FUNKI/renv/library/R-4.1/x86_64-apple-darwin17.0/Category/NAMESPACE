@@ -1,0 +1,221 @@
+import(methods)
+importFrom(utils, find, tail)
+importFrom(stats, chisq.test, coef, formula, lm, phyper, pnorm, runif,
+           setNames)
+importFrom(stats4, summary)
+importFrom(Matrix, Matrix)
+
+importFrom(BiocGenerics,
+           annotation,
+           "annotation<-",
+           organism)
+
+importClassesFrom(graph,
+                  graph)
+
+importClassesFrom(GSEABase,
+                  OBOCollection)
+
+importMethodsFrom(AnnotationDbi,
+                  as.list,
+                  colnames,
+                  dbmeta,
+                  eapply,
+                  exists,
+                  get,
+                  ls,
+                  mget,
+                  ncol,
+                  nrow,
+                  revmap,
+                  sample,
+                  keys,
+                  select,
+                  dbconn,
+                  columns)
+
+importMethodsFrom(Biobase,
+                  annotation,
+                  "annotation<-",
+                  description)
+
+importMethodsFrom(GSEABase,
+                  geneIds,
+                  "geneIds<-",
+                  ontology,
+                  geneIdType,
+                  incidence,
+                  GeneSetCollection,
+                  GeneSet)
+
+importMethodsFrom(annotate,
+                  organism)
+
+importMethodsFrom(genefilter,
+                  rowttests)
+
+importMethodsFrom(graph,
+                  edges,
+                  leaves,
+                  nodeData,
+                  "nodeData<-",
+                  "nodeDataDefaults<-",
+                  nodes,
+                  numNodes,
+                  subGraph)
+
+importMethodsFrom(DBI, dbGetQuery, dbListFields)
+
+importMethodsFrom(Matrix,
+                  as.vector,
+                  "%*%",
+                  dimnames,
+                  "[<-")
+
+importFrom(AnnotationDbi,
+           toSQLStringSet)
+
+importFrom(Biobase,
+           contents,
+           lcPrefix,
+           lcPrefixC,
+           listLen,
+           reverseSplit,
+           subListExtract)
+
+importFrom(GSEABase,
+           EntrezIdentifier)
+
+importFrom(RBGL,
+           dijkstra.sp,
+           tsort)
+
+importFrom(annotate,
+           allValidKeys,
+           aqListGOIDs,
+           filterGOByOntology,
+           getAnnMap)
+
+importFrom(graph,
+           ftM2graphNEL,
+           reverseEdgeDirections)
+
+export(
+       ".doHyperGTest",
+       "applyByCategory",
+       "cateGOry",
+       "cb_children",
+       "cb_contingency",
+       "cb_parse_band_Hs",
+       "cb_parse_band_Mm",
+       "cb_sigBands",
+       "cb_test",
+       "ChrBandTreeFromGraph",
+       "DatPkgFactory",
+       "exampleLevels",
+       "findAMstats",
+       "geneIds",
+       "geneIds<-",
+       "getPathNames",
+       "gseattperm",
+       "hyperg",
+       "makeChrBandGraph",
+       "makeChrBandInciMat",
+       "makeChrBandGSC",
+       "makeEBcontr",
+       "NewChrBandTree",
+       "MAPAmat",
+       "ontology",
+       "probes2MAP",
+       "probes2Path",
+       "ttperm",
+       "OBOCollectionDatPkg",
+       "OBOHyperGParams",
+       "GSEAGOHyperGParams",
+       "GSEAKEGGHyperGParams")
+
+exportClasses("DatPkg",
+              "AffyDatPkg",
+              "YeastDatPkg",
+              "Org.XX.egDatPkg",
+              "OBOCollectionDatPkg",
+              "HyperGParams",
+              "GOHyperGParams",
+              "KEGGHyperGParams",
+              "PFAMHyperGParams",
+              "ChrMapHyperGParams",
+
+              "HyperGResultBase",
+              "HyperGResult",
+              "ChrMapHyperGResult",
+              "ChrBandTree",
+              "KEGGHyperGResult",
+              "PFAMHyperGResult",
+
+              "LinearMParams",
+              "ChrMapLinearMParams",
+
+              "LinearMResultBase",
+              "LinearMResult",
+              "ChrMapLinearMResult")
+
+exportMethods("hyperGTest",
+              "linearMTest",
+
+              "universeBuilder",
+              "categoryToEntrezBuilder",
+
+              "categoryName",
+              "makeValidParams",
+
+              "organism",
+
+              ## accessors for HyperGResult and LinearMResult
+              "chrGraph",
+              "pvalues",
+              "effectSize",
+              "geneCounts",
+              "universeCounts",
+              "universeMappedCount",
+              "geneMappedCount",
+              "annotation",
+              "annotation<-",
+              "DatPkgFactory",
+              "geneIds",
+              "geneIds<-",
+              "geneIdsByCategory",
+              "geneIdUniverse",
+              "testName",
+              "pvalueCutoff",
+              "pvalueCutoff<-",
+              "testDirection",
+              "testDirection<-",
+              "description",
+              "universeGeneIds",
+              "ontology",
+              "ontology<-",
+              "conditional",
+              "conditional<-",
+              "oddsRatios",
+              "expectedCounts",
+              "htmlReport",
+              "sigCategories",
+
+              ## accessors for DatPkg
+              "ID2GO",
+              "ID2EntrezID",
+              "GO2AllProbes",
+              "ID2KEGG",
+              "KEGG2AllProbes",
+              
+              "initialize",
+              "show",
+              "summary",
+
+              ## accessors for ChrBandTree
+              "allGeneIds",
+              "childrenOf",
+              "level2nodes",
+              "lgeneIds",
+              "parentOf",
+              "treeLevels")

@@ -1,0 +1,29 @@
+Package: genefilter
+Title: genefilter: methods for filtering genes from high-throughput
+        experiments
+Version: 1.74.0
+Author: Robert Gentleman, Vincent J. Carey, Wolfgang Huber, Florian Hahne
+Description: Some basic functions for filtering genes.
+Maintainer: Bioconductor Package Maintainer
+ <maintainer@bioconductor.org>
+Suggests: class, hgu95av2.db, tkWidgets, ALL, ROC, RColorBrewer,
+        BiocStyle, knitr
+Imports: BiocGenerics, AnnotationDbi, annotate, Biobase, graphics,
+        methods, stats, survival, grDevices
+License: Artistic-2.0
+LazyLoad: yes
+LazyData: yes
+Collate: AllClasses.R AllGenerics.R all.R dist2.R eSetFilter.R fastT.R
+        filter_volcano.R filtered_p.R genefinder.R half.range.mode.R
+        kappa_p.R nsFilter.R rejection_plot.R rowROC-accessors.R
+        rowSds.R rowpAUCs-methods.R rowttests-methods.R shorth.R zzz.R
+biocViews: Microarray
+VignetteBuilder: knitr
+git_url: https://git.bioconductor.org/packages/genefilter
+git_branch: RELEASE_3_13
+git_last_commit: de81c30
+git_last_commit_date: 2021-05-19
+Date/Publication: 2021-05-19
+NeedsCompilation: yes
+Packaged: 2021-05-19 23:52:27 UTC; biocbuild
+Built: R 4.1.0; x86_64-apple-darwin17.0; 2021-05-20 14:07:24 UTC; unix

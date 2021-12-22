@@ -1,0 +1,25 @@
+Package: doParallel
+Type: Package
+Title: Foreach Parallel Adaptor for the 'parallel' Package
+Version: 1.0.16
+Authors@R: c(person("Michelle", "Wallig", role="cre", email="Michelle.Wallig@microsoft.com"),
+             person("Microsoft", "Corporation", role=c("aut", "cph")),
+             person("Steve", "Weston", role="aut"),
+             person("Dan", "Tenenbaum", role="ctb"))
+Description: Provides a parallel backend for the %dopar% function using
+        the parallel package.
+Depends: R (>= 2.14.0), foreach(>= 1.2.0), iterators(>= 1.0.0),
+        parallel, utils
+Suggests: caret, mlbench, rpart, RUnit
+Enhances: compiler
+License: GPL-2
+NeedsCompilation: no
+Packaged: 2020-10-14 19:48:08 UTC; hongo
+Author: Michelle Wallig [cre],
+  Microsoft Corporation [aut, cph],
+  Steve Weston [aut],
+  Dan Tenenbaum [ctb]
+Maintainer: Michelle Wallig <Michelle.Wallig@microsoft.com>
+Repository: CRAN
+Date/Publication: 2020-10-16 06:20:10 UTC
+Built: R 4.1.0; ; 2021-05-26 18:17:33 UTC; unix

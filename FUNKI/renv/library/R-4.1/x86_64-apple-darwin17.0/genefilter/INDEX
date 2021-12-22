@@ -1,0 +1,42 @@
+Anova                   A filter function for Analysis of Variance
+coxfilter               A filter function for univariate Cox
+                        regression.
+cv                      A filter function for the coefficient of
+                        variation.
+dist2                   Calculate an n-by-n matrix by applying a
+                        function to all pairs of columns of an m-by-n
+                        matrix.
+eSetFilter              A function to filter an eSet object
+filter_volcano          Volcano plot for overall variance filtering
+filtered_p              Compute and adjust p-values, with filtering
+filterfun               Creates a first FALSE exiting function from the
+                        list of filter functions it is given.
+findLargest             Find the Entrez Gene ID corresponding to the
+                        largest statistic
+gapFilter               A filter to select genes based on there being a
+                        gap.
+genefilter              A function to filter genes.
+genefilter-deprecated   Deprecated functions in package 'genefilter'
+genefinder              Finds genes that have similar patterns of
+                        expression.
+genescale               Scales a matrix or vector.
+half.range.mode         Mode estimation for continuous data
+kOverA                  A filter function for k elements larger than A.
+kappa_p                 Compute proportionality constant for fold
+                        change bound.
+maxA                    A filter function to filter according to the
+                        maximum.
+nsFilter                Filtering of Features in an ExpressionSet
+pOverA                  A filter function to filter according to the
+                        proportion of elements larger than A.
+rejection_plot          Plot rejections vs. p-value cutoff
+rowFtests               t-tests and F-tests for rows or columns of a
+                        matrix
+rowROC-class            Class "rowROC"
+rowSds                  Row variance and standard deviation of a
+                        numeric array
+rowpAUCs-methods        Rowwise ROC and pAUC computation
+shorth                  A location estimator based on the shorth
+tdata                   A small test dataset of Affymetrix Expression
+                        data.
+ttest                   A filter function for a t.test

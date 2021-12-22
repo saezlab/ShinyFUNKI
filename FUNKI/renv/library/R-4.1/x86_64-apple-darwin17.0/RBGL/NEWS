@@ -1,0 +1,26 @@
+25 Feb 2018
+============
+Address concerns with BiocCheck, specifically adding value{} and some enhancements to examples
+Update edmondsOptimumBranching to use atofigh github source: https://github.com/atofigh/edmonds-alg
+
+14 June 2012
+============
+  boost header sources to 1.49, likely to drop layout support, mods to incremental.components
+
+Nov 30, 2005
+============
+New functions:
+  "is.triangulated",
+  "maxClique"
+
+Oct 15, 2005
+============
+New functions:
+ "articulationPoints",
+ "biConnComp",
+ "floyd.warshall.all.pairs.sp",
+ "fruchtermanReingoldForceDirectedLayout",
+ "highlyConnSG",
+ "randomGraphLayout",
+ "sequential.vertex.coloring", 
+
