@@ -1,0 +1,64 @@
+---
+title: "PROGENy Analysis Report"
+output: html_document
+params:
+  top: NA
+  perm: NA
+  organism: NA
+  selected_sample: NA
+  selected_pathway: NA
+  sample_plot: NA
+  heatmap_plot: NA
+  scatter_plot: NA
+---
+
+[PROGENy](https://saezlab.github.io/progeny/) (Pathway RespOnsive GENes) is a footprint method developed to infer pathway activity from gene expression data ([Schubert et al., 2018](http://europepmc.org/abstract/MED/29295995)). 
+The scores are calculated using a linear models with weights based on consensus gene signatures obtained from publicly available perturbation experiments. 
+
+### The analysis
+
+The selected parameters:
+
+- organism: `r params$organism`
+- Number of top genes: `r params$top` (particularly important for the single-cell data as it counteracts the typical low gene coverage of this data type)
+- Number of permutations: `r params$perm`
+
+The code:
+
+```{r, eval=FALSE}
+data %>%
+  as.matrix() %>%
+  progeny::progeny(., 
+                   z_scores = TRUE, 
+                   organism = organism,
+                   top = top,
+                   perm = perm)
+```
+
+### The results
+
+PROGENy returns a matrix of pathway activity scores across all samples.
+The heatmap provides a comprehensive overview of all contrasts/samples across all pathways.
+
+```{r, echo=FALSE, fig.width=10}
+params$heatmap_plot
+```
+
+The bar plots show the activity of all pathways sample **`r params$selected_sample`**.
+
+```{r, echo=FALSE}
+params$sample_plot
+```
+
+The scatter plot contains marginal distribution (in the form of an arrangeGrob object) for the **`r params$selected_pathway`** pathway and sample/contrast **`r params$selected_sample`**. 
+
+The scatter plot has progeny weights as x-axis and the gene level stat used to compute progeny score as the y-axis. 
+The marginal distribution of the gene level stats is displayed on the right of the plot to give visual support of the significance of each gene contributing to the progeny pathway score. 
+The red and blue represent the positive and negative contribution of genes to the progeny pathway, respectively. 
+For each gene contribution, 4 cases are possible, as the combinations of the sign of the gene level stat and the sign of the gene level weight. 
+Positive weight will lead to a positive(blue)/negative(red) gene contribution if the gene level stat is positive/negative. 
+Negative weight will lead to a negative(red)/positive(blue) gene contribution if the gene level stat is positive/negative.
+
+```{r, echo=FALSE, warning=FALSE}
+params$scatter_plot
+```
