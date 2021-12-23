@@ -8,4 +8,8 @@ relative_links:
 include:
   - index.md
   - installation.md
+  - tut1_dorothea.md
+  - tut2_progeny.md
+  - tut3_kinact.md
+  - tut4_carnival.md
   - tut5_cosmos.md
