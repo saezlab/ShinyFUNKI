@@ -18,7 +18,7 @@ tabPanel(
              column(7, align = "center",
                     # data upload -----
                     fileInput("upload_expr", 
-                              label = h5("Upload data (.csv)",
+                              label = h5("Upload (.csv) file (max. 50 MB)",
                                          tags$style(type = "text/css", "#q2_data {vertical-align: top;}"),
                                          bsButton("q2_data", label = "", icon = icon("question"), style = "info", size = "extra-small")),
                               accept = c("text/csv",
@@ -27,7 +27,7 @@ tabPanel(
                     ),
                     
                     bsPopover(id = "q2_data", title = "Upload data",
-                              content = "file with comma-separated-values. If there are multiple conditions, samples in columns and gene (HGNC symbol) in rows. If contrasts, HGNC symbol as row names and at least a column called t with the statistic value from the differential expression analysis. For COSMOS analysis, a column called ID with entrez ids should be provided (it the default networks is going to be used).",
+                              content = "file with comma-separated-values. If there are multiple conditions, samples in columns and gene (HGNC symbol) in rows. If contrasts, HGNC symbol as row names and at least a column called t with the statistic value from the differential expression analysis. For COSMOS analysis, a column called ID with entrez ids should be provided (it the default networks is going to be used). Please contact us if you wish to upload more data than the current upload limit.",
                               placement = "right", 
                               trigger = "click", 
                               options = list(container = "body")
