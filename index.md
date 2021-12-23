@@ -4,7 +4,7 @@ FUNKI is a multi-omic functional integration and analysis platform.
 It provides a standardised pipeline to process and perform functional analysis on transcriptomic, proteomic, phosphoproteomic and metabolomic datasets. 
 The analysis can be performed both on a single type of omic data and on multi-omic dataset by integrating them in supervised and unsupervised manners.
 
-![video](Funki_overview.mp4)
+![FUNKI abstract](/scs/graphical_abstract.png)
 
 ## Implemented Approaches
 
@@ -25,6 +25,4 @@ The users can select the minimum size of each regulon, as well as the method tha
 The PKN can be provided by the user, or imported from Omnipath directly within FUNKI ( [Türei et al., 2016, 2016](http://europepmc.org/abstract/MED/27898060) ). Similarly, the user can directly upload the activity of transcription factors, but those can also be calculated using DoRothEA from the expression data. When large initial networks are used, mapping key nodes with values is advised. Thus, the user can upload them or get advantage of the PROGENy scores for this task. As the previous methods, it can run on mouse or human samples. When using mouse data, the network must always be provided. CARNIVAL produces a set of networks that can be directly visualised. A pathway enrichment analysis can be run over the results. Then, these data can be visualised on bar and volcano plots.
 
 #### COSMOS
-COSMOS is a tool to integrate multiomic data with a prior knowledge network spanning signaling, gene regulation and metabolism ( [Dugourd et al. 2021](http://europepmc.org/abstract/MED/33502086) ). It uses the ILP formulation of CARNIVAL to connect two sets of upstream and downstream molecular features (e.i. kinase activities, TF activities, deregulated metabolites, enzyme fluxes, genetic or drug perturbations, etc…) with a signed directed transomic network. This resulting network is essentially a set of coherent mechanistic hypotheses that can explain how the measured deregulation may explain each other. Subsets of this network centered on user-defined nodes can be viewed in the shiny app. The network can also be downloaded as a pair of sif and attribute csv files. These files can be imported in tools such as cytoscape to visualise the full network.
-
-![FUNKI abstract](/scs/graphical_abstract.png)
+[COSMOS](saezlab.github.io/cosmosr/) is a tool to integrate multiomic data with a prior knowledge network spanning signaling, gene regulation and metabolism ( [Dugourd et al. 2021](http://europepmc.org/abstract/MED/33502086) ). It uses the ILP formulation of CARNIVAL to connect two sets of upstream and downstream molecular features (e.i. kinase activities, TF activities, deregulated metabolites, enzyme fluxes, genetic or drug perturbations, etc…) with a signed directed transomic network. This resulting network is essentially a set of coherent mechanistic hypotheses that can explain how the measured deregulation may explain each other. Subsets of this network centered on user-defined nodes can be viewed in the shiny app. The network can also be downloaded as a pair of sif and attribute csv files. These files can be imported in tools such as cytoscape to visualise the full network.
