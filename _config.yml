@@ -1,4 +1,10 @@
-theme: jekyll-theme-leap-day
+theme: 
+jekyll-theme-leap-day
+plugins:
+  - jekyll-relative-links
+relative_links:
+  enabled: true
+  collections: true
 include:
   - index.md
   - installation.md
