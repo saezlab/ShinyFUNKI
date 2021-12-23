@@ -1,1 +1,5 @@
 theme: jekyll-theme-leap-day
+include:
+  - index.md
+  - installation.md
+  - tut5_cosmos.md
