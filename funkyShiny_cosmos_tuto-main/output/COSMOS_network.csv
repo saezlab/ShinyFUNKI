@@ -1,0 +1,14 @@
+,Node1,Sign,Node2,Weight
+1,MYC,1,LDHB,1
+2,Enzyme0__LDHB,1,Metab__1060___x____,1
+3,Enzyme0__LDHB_LDHA,1,Metab__1060___c____,1
+4,LDHB,1,Enzyme0__LDHB,1
+5,LDHB,1,Enzyme0__LDHB_LDHA,1
+6,CDK2,-1,FOXO4,1
+7,FOXO4,1,IDH1,1
+8,Enzyme0__BBD,1,Metab__1110___c____,0.5
+9,Enzyme0__IDH1,1,Metab__51___c____,1
+10,Metab__51___c____,1,Enzyme0__BBD,0.5
+11,IDH1,1,Enzyme0__IDH1,1
+12,Enzyme0__TMLD,1,Metab__1110___c____,0.5
+13,Metab__51___c____,1,Enzyme0__TMLD,0.5
