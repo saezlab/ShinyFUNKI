@@ -171,7 +171,7 @@ get_labels <- function(df, nlabel, npaths, threshold){
 
 #function to handle if the data come from example or upload to make it suitable for the analysis
 progessDATA <- function(data, contrast_data = F, upload_expr, type_analysis, 
-                        gene_id_type = NULL, running_method = "cosmos"){
+                        gene_id_type = NULL, running_method = "cosmos", select_statistic = "t"){
   
   if (running_method == "kinact"){
     data = data %>%
@@ -244,12 +244,12 @@ progessDATA <- function(data, contrast_data = F, upload_expr, type_analysis,
     if(any(contrast_data | upcon)){
       if(running_method != "cosmos"){
         data = data %>%
-          dplyr::select(t) %>%
+          dplyr::select(!!as.name(select_statistic)) %>%
           unique.data.frame()
         
       } else {
         aux = data %>%
-          dplyr::select(ID,t) %>%
+          dplyr::select(ID,!!as.name(select_statistic)) %>%
           unique.data.frame() %>%
           dplyr::mutate(ID = paste0("X", ID)) %>%
           as.data.frame()

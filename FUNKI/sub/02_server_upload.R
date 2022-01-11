@@ -78,7 +78,7 @@ observeEvent(input$an_dorothea, {
   # When the button is clicked, wrap the code in a call to `withBusyIndicatorServer()`
   withBusyIndicatorServer("an_dorothea", {
     Sys.sleep(1)
-    if (input$gene_id_type == "Select gene ID") {
+    if (all(!is.null(input$upload_expr$datapath), input$gene_id_type == "Select gene ID")) {
       stop("Select an appropiate gene ID")
       
     }else{
@@ -92,7 +92,7 @@ observeEvent(input$an_progeny, {
   # When the button is clicked, wrap the code in a call to `withBusyIndicatorServer()`
   withBusyIndicatorServer("an_progeny", {
     Sys.sleep(1)
-    if (input$gene_id_type == "Select gene ID") {
+    if (all(!is.null(input$upload_expr$datapath), input$gene_id_type == "Select gene ID")) {
       stop("Select an appropiate gene ID")
       
     }else{
@@ -106,7 +106,7 @@ observeEvent(input$an_carnival, {
   # When the button is clicked, wrap the code in a call to `withBusyIndicatorServer()`
   withBusyIndicatorServer("an_carnival", {
     Sys.sleep(1)
-    if (input$gene_id_type == "Select gene ID") {
+    if (all(!is.null(input$upload_expr$datapath), input$gene_id_type == "Select gene ID")) {
       stop("Select an appropiate gene ID")
       
     }else{
@@ -120,7 +120,7 @@ observeEvent(input$an_kinact, {
   # When the button is clicked, wrap the code in a call to `withBusyIndicatorServer()`
   withBusyIndicatorServer("an_kinact", {
     Sys.sleep(1)
-    if (input$gene_id_type == "Select gene ID") {
+    if (all(!is.null(input$upload_expr$datapath), input$gene_id_type == "Select gene ID")) {
       stop("Select an appropiate gene ID")
       
     }else{
@@ -135,7 +135,7 @@ observeEvent(input$an_cosmos, {
   # When the button is clicked, wrap the code in a call to `withBusyIndicatorServer()`
   withBusyIndicatorServer("an_cosmos", {
     Sys.sleep(1)
-    if (input$gene_id_type == "Select gene ID") {
+    if (all(!is.null(input$upload_expr$datapath), input$gene_id_type == "Select gene ID")) {
       stop("Select an appropiate gene ID")
       
     }else{
@@ -170,5 +170,24 @@ output$select_sample_carnival = renderUI({
               label = "Select Sample/Contrast",
               choices = choices,
               selected = choices[1])
-  
 })
+  
+# select condition from contrast
+output$select_statistic_contrast = renderUI({
+    req(expr())
+    if(any(input$type_analysis == 'contrast', input$contrast_data)){
+      choices = colnames(expr())
+      choices = choices[-which(choices == "ID")]
+      pickerInput(inputId = "select_statistic_contrast",
+                  label = "Select Statistic",
+                  choices = choices,
+                  selected = choices[1])
+      }
+})    
+  
+#for conditional panel
+output$fileUploaded <- reactive({
+    return(!is.null(input$upload_expr$datapath))
+  })
+outputOptions(output, 'fileUploaded', suspendWhenHidden=FALSE)
+  
