@@ -53,7 +53,7 @@ The selected **solver** was `r params$solver`.
 
 #### The code
   
-  ```{r, eval=FALSE}
+```{r, eval=FALSE}
 carnival_result = runCARNIVAL( inputObj = iniciators,
                                measObj = tfList, 
                                netObj = cNET, 
