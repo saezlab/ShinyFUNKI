@@ -29,15 +29,13 @@ The **solver** was `r params$solver`
 #### The code
 
 ```{r, eval=FALSE}
-  carnival_result = runCARNIVAL( inputObj = iniciators,
-                                 measObj = tfList, 
-                                 netObj = cNET, 
-                                 weightObj = progenylist, 
-                                 solverPath = solver$spath, 
-                                 solver = solver$solver,
-                                 timelimit = 7200,
-                                 mipGAP = 0,
-                                 poolrelGAP = 0 )
+  cosmos <- run_COSMOS(layer_1 = layer_1, 
+                       layer_2 = layer_2, 
+                       RNA_data = data_vec, 
+                       PKN = PKN, 
+                       solver = input$solver_cosmos, 
+                       solver_path = solverpath_cosmos,
+                       runtime = c(200,1000,200,1000))
 ```
 
 ### The results: Network visualisation
