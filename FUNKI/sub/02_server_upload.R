@@ -75,8 +75,17 @@ observeEvent({
 
 # jump to visualise results
 observeEvent(input$an_dorothea, {
-  updateTabsetPanel(session, inputId = "menu",
-                    selected = "DoRothEA")
+  # When the button is clicked, wrap the code in a call to `withBusyIndicatorServer()`
+  withBusyIndicatorServer("an_dorothea", {
+    Sys.sleep(1)
+    if (input$gene_id_type == "Select gene ID") {
+      stop("Select an appropiate gene ID")
+      
+    }else{
+      updateTabsetPanel(session, inputId = "menu",
+                        selected = "DoRothEA")
+    }
+  })
 })
 
 observeEvent(input$an_progeny, {
@@ -89,10 +98,25 @@ observeEvent(input$an_carnival, {
                     selected = "CARNIVAL")
 })
 
+# observeEvent(input$an_kinact, {
+#   updateTabsetPanel(session, inputId = "menu",
+#                     selected = "KinAct")
+# })
+
 observeEvent(input$an_kinact, {
-  updateTabsetPanel(session, inputId = "menu",
-                    selected = "KinAct")
+  # When the button is clicked, wrap the code in a call to `withBusyIndicatorServer()`
+  withBusyIndicatorServer("an_kinact", {
+    Sys.sleep(1)
+    if (input$gene_id_type == "Select gene ID") {
+      stop("Select an appropiate gene ID")
+      
+    }else{
+      updateTabsetPanel(session, inputId = "menu",
+                        selected = "KinAct")
+    }
+  })
 })
+
 
 observeEvent(input$an_cosmos, {
   updateTabsetPanel(session, inputId = "menu",

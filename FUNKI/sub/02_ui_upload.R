@@ -75,7 +75,7 @@ tabPanel(
                                 label = h5("Gene ID type",
                                            tags$style(type = "text/css", "#q2_geneID {vertical-align: top;}"),
                                            bsButton("q2_geneID", label = "", icon = icon("question"), style = "info", size = "extra-small")),
-                                choices = c("Gene ID", "ACCNUM","ALIAS", "ENSEMBL", "ENSEMBLPROT","ENSEMBLTRANS","ENTREZID",
+                                choices = c("Select gene ID", "ACCNUM","ALIAS", "ENSEMBL", "ENSEMBLPROT","ENSEMBLTRANS","ENTREZID",
                                             "ENZYME","EVIDENCE","EVIDENCEALL","GENENAME","GENETYPE","GO","GOALL",
                                             "IPI", "MAP","OMIM", "ONTOLOGY", "ONTOLOGYALL","PATH",
                                             "PFAM", "PMID", "PROSITE","REFSEQ","SYMBOL","UCSCKG","UNIPROT"),
@@ -225,7 +225,14 @@ tabPanel(
                )
         ),
         column(1, align="center",
-               actionButton("an_dorothea", "Run DoRothEA") )
+               withBusyIndicatorUI(
+                 actionButton(
+                   "an_dorothea",
+                   "Run DoRothEA",
+                   class = "btn-primary"
+                 )
+               )
+               )
       )
     ),
     # Progeny ------------------
@@ -326,7 +333,14 @@ tabPanel(
                )
         ),
         column(1, align="center",
-               actionButton("an_kinact", "Run KinAct") )
+               withBusyIndicatorUI(
+                 actionButton(
+                   "an_kinact",
+                   "Run KinAct",
+                   class = "btn-primary"
+                 )
+               )
+               )
       )
     ),
 
