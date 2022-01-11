@@ -16,7 +16,7 @@ This maybe of particular interest for the user to prepare the input dataset.
 Either for hte multiple condition file, or for the differential gene expression, an _ID_ column must be provided.
 This holds the information about the gene identifier.
 For the multiple condition file, the rest of the columns will be treated as different conditions.
-and for the differential expression file, at least a column named _statistic_ must be provided.
+For the differential expression file, at least a column named _statistic_ must be provided.
 This statistic column could be t-values, logFc, z-scores or even p-values.
 
 Remember to indicate the **type of analysis**.
@@ -50,10 +50,3 @@ In the results tab, you can use the control widgets to browse around the results
 
 To download the result, the user can either download each of the figues and the analysis by selecting the **type of download** and then click on the download button.
 The user can also download an integrated report with all the parameters, code and results of the analysis by clicking on **Generate report**.
-
-
- 
-
-
-
-
