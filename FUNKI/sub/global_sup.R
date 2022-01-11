@@ -179,12 +179,12 @@ progessDATA <- function(data, contrast_data = F, upload_expr, type_analysis,
   }
   
   #change ids to correct ones
-  if(all(!is.null(gene_id_type), gene_id_type != "Gene ID")){
+  if(all(!is.null(gene_id_type), gene_id_type != "Select gene ID")){
     
     if (running_method == "kinact"){
       
       data = data %>%
-        tidyr::separate(col = "ID", into = c("ID", "site"))
+        tidyr::separate(col = "ID", into = c("ID", "site"), sep = "_")
       
       data = convert_genes_ids(data$ID, gene_id_type) %>% 
         as.matrix() %>% 
@@ -209,8 +209,8 @@ progessDATA <- function(data, contrast_data = F, upload_expr, type_analysis,
         dplyr::select(!ID) %>%
         dplyr::rename(ID = newID) %>%
         tidyr::drop_na() %>%
-        unique.data.frame() 
-      
+        unique.data.frame()
+
     }else{
       data = convert_genes_ids(data$ID, gene_id_type) %>% 
         as.matrix() %>% 
@@ -246,10 +246,16 @@ progessDATA <- function(data, contrast_data = F, upload_expr, type_analysis,
         data = data %>%
           dplyr::select(t) %>%
           unique.data.frame()
+        
       } else {
-        data = data %>%
+        aux = data %>%
           dplyr::select(ID,t) %>%
-          unique.data.frame()
+          unique.data.frame() %>%
+          dplyr::mutate(ID = paste0("X", ID)) %>%
+          as.data.frame()
+
+        data = aux[,2]
+        names(data) = aux[,1]
       }
       
     }
