@@ -278,7 +278,13 @@ tabPanel(
                )
         ),
         column(1, align="center",
-               actionButton("an_progeny", "Run PROGENy")
+               withBusyIndicatorUI(
+                 actionButton(
+                   "an_progeny",
+                   "Run PROGENy",
+                   class = "btn-primary"
+                 )
+               )
         )
 
         )
@@ -488,7 +494,13 @@ tabPanel(
                                   multiple = FALSE),
                  # fileInput("solverPath", label = "Select path to execute cbc/cplex file")
                ),
-               actionButton("an_carnival", "Run CARNIVAL")
+               withBusyIndicatorUI(
+                 actionButton(
+                   "an_carnival",
+                   "Run CARNIVAL",
+                   class = "btn-primary"
+                 )
+               )
         )
       )
     ),
@@ -584,7 +596,15 @@ tabPanel(
                                   multiple = FALSE),
                ),
         ),
-        column(1, align="center", actionButton("an_cosmos", "Run COSMOS"))
+        column(1, align="center", 
+               withBusyIndicatorUI(
+                 actionButton(
+                   "an_cosmos",
+                   "Run COSMOS",
+                   class = "btn-primary"
+                 )
+               )
+               )
       )
     )
   )

@@ -89,19 +89,32 @@ observeEvent(input$an_dorothea, {
 })
 
 observeEvent(input$an_progeny, {
-  updateTabsetPanel(session, inputId = "menu",
-                    selected = "PROGENy")
+  # When the button is clicked, wrap the code in a call to `withBusyIndicatorServer()`
+  withBusyIndicatorServer("an_progeny", {
+    Sys.sleep(1)
+    if (input$gene_id_type == "Select gene ID") {
+      stop("Select an appropiate gene ID")
+      
+    }else{
+      updateTabsetPanel(session, inputId = "menu",
+                        selected = "PROGENy")
+    }
+  })
 })
 
 observeEvent(input$an_carnival, {
-  updateTabsetPanel(session, inputId = "menu",
-                    selected = "CARNIVAL")
+  # When the button is clicked, wrap the code in a call to `withBusyIndicatorServer()`
+  withBusyIndicatorServer("an_carnival", {
+    Sys.sleep(1)
+    if (input$gene_id_type == "Select gene ID") {
+      stop("Select an appropiate gene ID")
+      
+    }else{
+      updateTabsetPanel(session, inputId = "menu",
+                        selected = "CARNIVAL")
+    }
+  })
 })
-
-# observeEvent(input$an_kinact, {
-#   updateTabsetPanel(session, inputId = "menu",
-#                     selected = "KinAct")
-# })
 
 observeEvent(input$an_kinact, {
   # When the button is clicked, wrap the code in a call to `withBusyIndicatorServer()`
@@ -119,8 +132,17 @@ observeEvent(input$an_kinact, {
 
 
 observeEvent(input$an_cosmos, {
-  updateTabsetPanel(session, inputId = "menu",
-                    selected = "COSMOS")
+  # When the button is clicked, wrap the code in a call to `withBusyIndicatorServer()`
+  withBusyIndicatorServer("an_cosmos", {
+    Sys.sleep(1)
+    if (input$gene_id_type == "Select gene ID") {
+      stop("Select an appropiate gene ID")
+      
+    }else{
+      updateTabsetPanel(session, inputId = "menu",
+                        selected = "COSMOS")
+    }
+  })
 })
 
 #get path for CARNIVAL solver
