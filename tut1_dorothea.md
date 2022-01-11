@@ -2,19 +2,23 @@
 
 This tutorial is designed to guide users through the use of DoRothEA in FUNKI.
 
-The first step is to upload your data, either a contrast experiment or multiple conditons.
-See [transcriptutorial](https://github.com/saezlab/transcriptutorial) for more info on how to obtain normalized counts of differential analysis top table output (e.i. _limma_).
+The first step is to upload your data, either the output of differential gene expression analysis or multiple conditions.
+See [transcriptutorial](https://github.com/saezlab/transcriptutorial) for more information on how to run a differential gene expression analysis using the _limma package_.
 
 ![](scs/01_upload_expression.001.png)
 
 Once the RNA data has been properly uploaded, the table is displayed on the right.
+The table content is downloadble in _csv_ or _excel_ format.
+This maybe of particular interest for the user to prepare the input dataset.
 
 ![](scs/02_display_table.002.png)
 
-When it is a multiple conditions file, 
-the ID column should include the gene ids for each of the samples (rest of the columns).
-If the file is a contrast experiment, 
-it would contain at least the ID column and a column named "t" (for t-value), as a csv file.
+Either for hte multiple condition file, or for the differential gene expression, an _ID_ column must be provided.
+This holds the information about the gene identifier.
+For the multiple condition file, the rest of the columns will be treated as different conditions.
+and for the differential expression file, at least a column named _statistic_ must be provided.
+This statistic column could be t-values, logFc, z-scores or even p-values.
+
 Remember to indicate the **type of analysis**.
 
 ![](scs/03_gene_id.002.png)
@@ -25,8 +29,8 @@ We warmly recommend _HGNC_ symbols.
 
 Next, go at the bottom of the window and click on the DoRothEA logo to display the specific parameters.
 
-* Select confidence level: The confidence assigment comprises 5 levels, ranging from A (highest) to E (lowest).
-* Regulon's minimal size: Minimun number of genes targeted by a kinase.
+* Select confidence level: The confidence assignment comprises 5 levels, ranging from A (highest) to E (lowest).
+* Regulon's minimal size: Minimum number of genes targeted by a transcription factor.
 * Method for computing signatures: Method for computing the single sample signatures.
 
 ![](scs/04_dorothea_logo.001.png)
@@ -37,7 +41,7 @@ which should take you to the results tab.
 
 ![](scs/05_running_dorothea.001.png)
 
-In the results tab, you can use the control widgets to browser around the results.
+In the results tab, you can use the control widgets to browse around the results.
 
 * **Number of Transcription Factors to display:** Show the top *n* activated and inhibited TFs (Default: 25).
 * **Number of targets to display:** Show the top *n* targets of a selected TF (Default: 5) 
