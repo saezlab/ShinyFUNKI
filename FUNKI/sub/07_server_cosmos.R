@@ -36,14 +36,21 @@ COSMOS = reactive({
         solverpath_cosmos = NULL
       }
     
-    # target_ID = "ENTREZID"
+    stat = input$select_statistic_contrast
+    geneID = input$gene_id_type
+    
+    if(input$contrast_data){
+      stat = "t"
+      geneID = "ENTREZID"
+    }
 
       data = progessDATA(data = expr(),
                          contrast_data = input$contrast_data,
                          upload_expr = input$upload_expr,
                          type_analysis = input$type_analysis,
-                         gene_id_type = input$gene_id_type,
-                         running_method = "cosmos")
+                         gene_id_type = geneID,
+                         running_method = "cosmos",
+                         select_statistic = stat)
       
       cosmos <- run_COSMOS(layer_1 = layer_1, 
                            layer_2 = layer_2, 

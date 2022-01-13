@@ -4,14 +4,15 @@ kin = uploadResultsObjSever("upload_kinact_results")
 K = reactive({
   if(input$an_kinact){
     showModal(modalDialog("Running KinAct", footer = NULL))
-      
-      kinact_result = progessDATA(data = expr(),
+
+    kinact_result = progessDATA(data = expr(),
                                   contrast_data = F,
                                   upload_expr = input$upload_expr,
                                   type_analysis = NULL,
                                   gene_id_type = input$gene_id_type,
-                                  running_method = "kinact") %>% 
-        run_kinact(organism = "Human",
+                                  running_method = "kinact",
+                                  select_statistic = input$select_statistic_contrast) %>% 
+    run_kinact(organism = "Human",
                    minsize = input$minsize_kinact,
                    method = input$method_kinact)
       
@@ -148,7 +149,8 @@ network_kinase_reactive = reactive({
               upload_expr = input$upload_expr,
               type_analysis = input$type_analysis,
               gene_id_type = input$gene_id_type,
-              running_method = "kinact") %>%
+              running_method = "kinact",
+              select_statistic = input$select_statistic_contrast) %>%
   plot_network(.,
     footprint_result = K(),
     regulon = kinact_regulon_human,

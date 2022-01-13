@@ -7,12 +7,22 @@ C = reactive({
     showModal(modalDialog("Running CARNIVAL. This may take a while", footer = NULL))
 
       if(!is.null(expr())){
+        
+        stat = input$select_statistic_contrast
+        geneID = input$gene_id_type
+        
+        if(input$contrast_data){
+          stat = "t"
+          geneID = "ENTREZID"
+        }
+        
         data = progessDATA(data = expr(),
                            contrast_data = input$contrast_data,
                            upload_expr = input$upload_expr,
                            type_analysis = input$type_analysis,
-                           gene_id_type = input$gene_id_type,
-                           running_method = "carnival")
+                           gene_id_type = geneID,
+                           running_method = "carnival",
+                           select_statistic = stat)
 
         if( ncol(data)  > 1 ){
           data =  data %>% dplyr::select(!!as.name(input$select_sample_carnival))

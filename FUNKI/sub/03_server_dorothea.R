@@ -2,18 +2,29 @@
 doro = uploadResultsObjSever("upload_dorothea_results")
 
 D = reactive({
+  
+  stat = input$select_statistic_contrast
+  geneID = input$gene_id_type
+  
   if(input$an_dorothea){
     showModal(modalDialog("Running DoRothEA", footer = NULL))
       if(input$examples){
         organism = "Human"
-      }else {organism = input$select_organism}
+      }else {
+        organism = input$select_organism
+      }
+    if(input$contrast_data){
+      stat = "t"
+      geneID = "ENTREZID"
+    }
+    
       dorothea_result = progessDATA(data = expr(),
                                     contrast_data = input$contrast_data,
                                     upload_expr = input$upload_expr,
                                     type_analysis = input$type_analysis,
-                                    gene_id_type = input$gene_id_type,
+                                    gene_id_type = geneID,
                                     running_method = "dorothea",
-                                    select_statistic = input$select_statistic_contrast) %>%
+                                    select_statistic = stat) %>%
         run_dorothea(organism = organism, 
                      confidence_level = input$selected_conf_level, 
                      minsize = input$minsize, 
@@ -148,7 +159,21 @@ network_tf_reactive = reactive({
          "The plot cannot be showed because the expression file is not included. Please, upload it in the Data and Parameters section.")
   )
   
-  if(input$select_organism == "Human"){
+  if(input$examples){
+    organism = "Human"
+  }else {
+    organism = input$select_organism
+  }
+  
+  stat = input$select_statistic_contrast
+  geneID = input$gene_id_type
+  
+  if(input$contrast_data){
+      stat = "t"
+      geneID = "ENTREZID"
+  }
+
+  if(organism == "Human"){
     aux = dorothea_hs
   }else{
     aux = dorothea_mm
@@ -157,15 +182,14 @@ network_tf_reactive = reactive({
   aux = aux %>%
     dplyr::filter(confidence %in% input$selected_conf_level)
   
-  
   plot_network(
     data = progessDATA(data = expr(),
                        contrast_data = input$contrast_data,
                        upload_expr = input$upload_expr,
                        type_analysis = input$type_analysis,
-                       gene_id_type = input$gene_id_type,
+                       gene_id_type = geneID,
                        running_method = "dorothea",
-                       select_statistic = input$select_statistic_contrast), 
+                       select_statistic = stat), 
     footprint_result = D(),
     regulon = aux,
     sample = input$select_contrast,

@@ -19,7 +19,7 @@ expr = reactive({
     expDATA = read_csv("data/examples/phospho_data.csv")
   }else if(input$contrast_data){
     expDATA = read_csv("data/examples/contrast_data.csv") %>%
-      dplyr::mutate(ID = as.character(ID))
+      dplyr::mutate(ID = as.character(ID)) 
  }else {
     
     inFile = input$upload_expr$datapath
