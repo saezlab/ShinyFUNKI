@@ -1,1 +1,14 @@
 theme: jekyll-theme-leap-day
+plugins:
+  - jekyll-relative-links
+relative_links:
+  enabled: true
+  collections: true
+include:
+  - index.md
+  - installation.md
+  - tut1_dorothea.md
+  - tut2_progeny.md
+  - tut3_kinact.md
+  - tut4_carnival.md
+  - tut5_cosmos.md
