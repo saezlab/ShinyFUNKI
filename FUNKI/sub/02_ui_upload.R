@@ -16,7 +16,7 @@ tabPanel(
            fluidRow(
              # data upload -----
              fileInput("upload_expr", 
-                              label = h5("Upload data (.csv)",
+                              label = h5("Upload data (.csv) file (max. 50 MB)",
                                          tags$style(type = "text/css", "#q2_data {vertical-align: top;}"),
                                          bsButton("q2_data", label = "", icon = icon("question"), style = "info", size = "extra-small")),
                               accept = c("text/csv",
@@ -330,11 +330,11 @@ tabPanel(
                numericInput(inputId = "minsize_kinact",
                             label = h5("Regulon's minimal size",
                                        tags$style(type = "text/css", "#q2d_regulon {vertical-align: top;}"),
-                                       bsButton("q2d_regulon", label = "", icon = icon("question"),
+                                       bsButton("q2k_regulon", label = "", icon = icon("question"),
                                                 style = "info", size = "extra-small")),
                             min = 1, max = NA, value = 5
                ),
-               bsPopover(id = "q2d_regulon",
+               bsPopover(id = "q2k_regulon",
                          title = "Minimal size of the regulon",
                          content = "Minimun number of genes targeted by a kinase.",
                          placement = "right",
@@ -346,7 +346,7 @@ tabPanel(
                selectInput(inputId = "method_kinact",
                            label = h5("Method for computing signatures",
                                       tags$style(type = "text/css", "#q2d_method {vertical-align: top;}"),
-                                      bsButton("q2d_method", label = "", icon = icon("question"),
+                                      bsButton("q2k_method", label = "", icon = icon("question"),
                                                style = "info", size = "extra-small")),
                            choices = c("scale" = "scale",
                                        "rank" = "rank",
@@ -355,7 +355,7 @@ tabPanel(
                                        "none" = "none"),
                            selected = "none"
                ),
-               bsPopover(id = "q2d_method",
+               bsPopover(id = "q2k_method",
                          title = "Method for computing signature",
                          content = "Method for computing the single sample signatures.",
                          placement = "right",
