@@ -23,7 +23,6 @@ tabPanel(
                                          "text/comma-separated-values,text/plain",
                                          ".csv")
                     ),
-                    
              bsPopover(id = "q2_data", title = "Upload data",
                               content = "file with comma-separated-values. An ID column containing the gene names should be always provided. For multible conditions, samples should be in the colums.",
                               placement = "right", 

@@ -22,7 +22,7 @@ library(AnnotationDbi)
 
 # shiny options
 enableBookmarking(store = "server")
-options(shiny.maxRequestSize=30*1024^2)
+options(shiny.maxRequestSize=50*1024^2)
 
 # Load models
 kinact_regulon_human = readRDS("data/models/kinact_regulon_human_symbol.rds")
