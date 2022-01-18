@@ -25,7 +25,7 @@ tabPanel(
                     ),
                     
              bsPopover(id = "q2_data", title = "Upload data",
-                              content = "file with comma-separated-values. An ID column containing the gene names should be always provided. For multible conditions, samples should be in the colums. For contrast, also a column called t with the statistic value from the differential expression analysis.",
+                              content = "file with comma-separated-values. An ID column containing the gene names should be always provided. For multible conditions, samples should be in the colums.",
                               placement = "right", 
                               trigger = "click", 
                               options = list(container = "body")
