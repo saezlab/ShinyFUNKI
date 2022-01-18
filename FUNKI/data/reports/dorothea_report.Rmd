@@ -37,6 +37,10 @@ The selected parameters:
 The code:
 
 ```{r, eval=FALSE}
+
+regulons <- dorothea_regulon %>%
+      dplyr::filter(confidence %in% params$selected_conf_level)
+
 dorothea::run_viper(dorothea_matrix, 
                     regulons,
                     options =  list(minsize = minsize,
