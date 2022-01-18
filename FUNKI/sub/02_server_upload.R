@@ -23,11 +23,11 @@ expr = reactive({
  }else {
     
     inFile = input$upload_expr$datapath
-    
     if (is.null(inFile)){
       return(NULL)
     } else{
       expDATA = read_csv(inFile)
+      colnames(expDATA)[grep("gene|genes", tolower(colnames(expDATA)))] = "ID"
       if("ID" %in% names(expDATA))
       {
         expDATA$ID <- as.character(expDATA$ID)
