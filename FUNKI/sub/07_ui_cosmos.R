@@ -15,9 +15,9 @@ tabPanel(
       label = "Visualisation parameters",
       inputId = "cosmos_control",
       uiOutput("select_node_cosmos"),
-      # checkboxInput("hierarchical", label = "Hierarchical layout", value = FALSE),
       uiOutput("down_cosmos"),
       downloadObjUI(id = "download_cosmos"),
+      downloadReportUI(id = "cosmos_report"),
       circle = TRUE,
       status = "primary",
       icon = icon("sliders"), width = "300px"

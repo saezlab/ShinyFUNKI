@@ -1,0 +1,81 @@
+---
+title: "DoRothEA Analysis Report"
+output: html_document
+params:
+  minsize: NA
+  method: NA
+  selected_conf_level: NA
+  organism: NA
+  selected_tf: NA
+  selected_sample: NA
+  numberTFs: NA
+  sample_plot: NA
+  tf_plot: NA
+  network_plot: NA
+  heatmap_plot: NA
+---
+
+[DoRothEA](https://saezlab.github.io/DoRothEA/) (Discriminant Regulon Expression Analysis) is a resource that links transcription factors (TFs) with their downstream targets ([Garcia-Alonso et al., 2018, 2019](http://europepmc.org/abstract/MED/31340985)). 
+The unity of a TF and its targets is called regulon. The regulons are built from four different strategies:
+
+(i) manually curated interaction repositories
+(ii) interactions derived from ChIP-seq binding data
+(iii) in silico predictions of TF binding on gene promoters
+(iv) reverse-engineered regulons from gene expression datasets. 
+
+The TFs activities are computed from gene expression by performing an enrichment analysis ([Alvarez et al., 2016](https://www.nature.com/articles/ng.3593)), where the regulons are the underlying gene-sets.
+
+### The analysis
+
+The selected parameters:
+
+- organism: `r params$organism`
+- min size: `r params$minsize`
+- method: `r params$method`
+- confidence level: `r paste(params$selected_conf_level, collapse = ",")`
+
+The code:
+
+```{r, eval=FALSE}
+
+regulons <- dorothea_regulon %>%
+      dplyr::filter(confidence %in% params$selected_conf_level)
+
+dorothea::run_viper(dorothea_matrix, 
+                    regulons,
+                    options =  list(minsize = minsize,
+                                    method = method,
+                                    eset.filter = FALSE,
+                                    cores = 1,
+                                    verbose = FALSE,
+                                    nes = TRUE))
+```
+
+### The results
+
+The computation yields a matrix with the normalised enrichment scores for each TF across all samples.
+
+The heatmap provides a comprehensive overview of all contrasts/samples.
+This heatmap includes the top `r params$numberTFs` selected TFs for the sample **`r params$selected_sample`** compared with the rest of the samples.
+
+```{r, echo=FALSE, fig.width=10}
+params$heatmap_plot
+```
+
+The bar plots show the activity of **`r params$selected_tf`** for all given contrasts/samples;
+and the top `r params$numberTFs` regulated TFs for sample **`r params$selected_sample`**.
+
+```{r, echo=FALSE}
+params$tf_plot
+
+params$sample_plot
+```
+
+The interactions of `r params$selected_tf` with its targets is shown in a network plot for sample `r params$selected_sample`.
+
+Blue nodes indicate that the target is over-expressed and red nodes indicate that the target is down-regulated. The color of the edges represent the effect of the TF on its target (either activation or repression). The number of shown nodes can be changed by the corresponding widget.
+
+```{r, echo=FALSE}
+params$network_plot
+```
+

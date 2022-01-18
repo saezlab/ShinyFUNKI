@@ -1,0 +1,47 @@
+---
+title: "COSMOS Analysis Report"
+output: html_document
+params:
+  analysis_expl: ""
+  network: "**NOT** selected/loaded."
+  solver: "**NOT** selected."
+  layer1: "**NOT** selected."
+  layer2: "**NOT** selected."
+  cosmos_network: NA
+---
+
+COSMOS is a tool to integrate multiomic data with a prior knowledge network spanning signaling, gene regulation and metabolism ( [Dugourd et al. 2021](http://europepmc.org/abstract/MED/33502086) ). It uses the ILP formulation of CARNIVAL to connect two sets of upstream and downstream molecular features (e.i. kinase activities, TF activities, deregulated metabolites, enzyme fluxes, genetic or drug perturbations, etc…) with a signed directed transomic network. 
+
+This resulting network is essentially a set of coherent mechanistic hypotheses that can explain how the measured deregulation may explain each other. Subsets of this network centered on user-defined nodes can be viewed in the shiny app. The network can also be downloaded as a pair of sif and attribute csv files. These files can be imported in tools such as cytoscape to visualise the full network.
+
+### The analysis
+
+`r params$analysis_expl`
+
+The **layer 1** was `r params$layer1`
+
+The **layer 2** was `r params$layer2`
+
+The **network** (_netObj_) was `r params$network`
+
+The **solver** was `r params$solver`
+
+#### The code
+
+```{r, eval=FALSE}
+  cosmos <- run_COSMOS(layer_1 = layer_1, 
+                       layer_2 = layer_2, 
+                       RNA_data = data_vec, 
+                       PKN = PKN, 
+                       solver = input$solver_cosmos, 
+                       solver_path = solverpath_cosmos,
+                       runtime = c(200,1000,200,1000))
+```
+
+### The results: Network visualisation
+
+COSMOS produces a set of networks that can be directly visualised. 
+
+```{r, echo=FALSE, fig.width=10}
+params$cosmos_network
+```

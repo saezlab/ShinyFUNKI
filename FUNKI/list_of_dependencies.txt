@@ -1,0 +1,44 @@
+attached base packages:
+[1] parallel  stats4    stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] org.Hs.eg.db_3.13.0  AnnotationDbi_1.54.1 IRanges_2.26.0       S4Vectors_0.30.0     Biobase_2.52.0      
+ [6] BiocGenerics_0.38.0  cosmosR_1.0.1        OmnipathR_3.0.4      CARNIVAL_1.1.0       progeny_1.14.0      
+[11] dorothea_1.4.1       visNetwork_2.0.9     patchwork_1.1.1      heatmaply_1.2.1      viridis_0.6.1       
+[16] viridisLite_0.4.0    plotly_4.9.4.1       ggrepel_0.9.1        DT_0.18              reshape2_1.4.4      
+[21] forcats_0.5.1        stringr_1.4.0        dplyr_1.0.7          purrr_0.3.4          readr_2.0.1         
+[26] tidyr_1.1.3          tibble_3.1.4         ggplot2_3.3.5        tidyverse_1.3.1      shinyjs_2.0.0       
+[31] shinyBS_0.61         shinyFiles_0.9.0     shinyWidgets_0.6.0   shiny_1.6.0         
+
+loaded via a namespace (and not attached):
+  [1] readxl_1.3.1           backports_1.2.1        BiocFileCache_2.0.0    igraph_1.2.6          
+  [5] plyr_1.8.6             lazyeval_0.2.2         GSEABase_1.54.0        splines_4.1.1         
+  [9] crosstalk_1.1.1        GenomeInfoDb_1.28.1    digest_0.6.27          foreach_1.5.1         
+ [13] htmltools_0.5.1.1      fansi_0.5.0            checkmate_2.0.0        magrittr_2.0.1        
+ [17] memoise_2.0.0          doParallel_1.0.16      mixtools_1.2.0         tzdb_0.1.2            
+ [21] Biostrings_2.60.2      annotate_1.70.0        modelr_0.1.8           vroom_1.5.4           
+ [25] prettyunits_1.1.1      lpSolve_5.6.15         colorspace_2.0-2       rappdirs_0.3.3        
+ [29] blob_1.2.2             rvest_1.0.1            xfun_0.25              haven_2.4.3           
+ [33] crayon_1.4.1           RCurl_1.98-1.4         jsonlite_1.7.2         graph_1.70.0          
+ [37] genefilter_1.74.0      survival_3.2-11        iterators_1.0.13       glue_1.4.2            
+ [41] registry_0.5-1         gtable_0.3.0           zlibbioc_1.38.0        XVector_0.32.0        
+ [45] webshot_0.5.2          kernlab_0.9-29         scales_1.1.1           DBI_1.1.1             
+ [49] Rcpp_1.0.7             progress_1.2.2         xtable_1.8-4           bit_4.0.4             
+ [53] proxy_0.4-26           htmlwidgets_1.5.3      httr_1.4.2             RColorBrewer_1.1-2    
+ [57] ellipsis_0.3.2         farver_2.1.0           XML_3.99-0.7           pkgconfig_2.0.3       
+ [61] sass_0.4.0             dbplyr_2.1.1           utf8_1.2.2             labeling_0.4.2        
+ [65] tidyselect_1.1.1       rlang_0.4.11           later_1.3.0            munsell_0.5.0         
+ [69] cellranger_1.1.0       tools_4.1.1            cachem_1.0.6           cli_3.0.1             
+ [73] generics_0.1.0         RSQLite_2.2.8          broom_0.7.9            fastmap_1.1.0         
+ [77] yaml_2.2.1             bit64_4.0.5            fs_1.5.0               bcellViper_1.28.0     
+ [81] KEGGREST_1.32.0        dendextend_1.15.1      RBGL_1.68.0            mime_0.11             
+ [85] UniProt.ws_2.32.0      xml2_1.3.2             compiler_4.1.1         rstudioapi_0.13       
+ [89] filelock_1.0.2         curl_4.3.2             png_0.1-7              e1071_1.7-8           
+ [93] reprex_2.0.1           viper_1.26.0           bslib_0.2.5.1          stringi_1.7.3         
+ [97] logger_0.2.1           lattice_0.20-44        Matrix_1.3-4           markdown_1.1          
+[101] vctrs_0.3.8            pillar_1.6.2           lifecycle_1.0.0        jquerylib_0.1.4       
+[105] data.table_1.14.0      bitops_1.0-7           seriation_1.3.0        httpuv_1.6.2          
+[109] R6_2.5.1               promises_1.2.0.1       TSP_1.1-10             KernSmooth_2.23-20    
+[113] gridExtra_2.3          codetools_0.2-18       MASS_7.3-54            assertthat_0.2.1      
+[117] Category_2.58.0        withr_2.4.2            GenomeInfoDbData_1.2.6 hms_1.1.0             
+[121] grid_4.1.1             class_7.3-19           segmented_1.3-4        lubridate_1.7.10 

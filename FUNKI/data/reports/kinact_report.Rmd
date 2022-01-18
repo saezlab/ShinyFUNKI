@@ -1,0 +1,68 @@
+---
+title: "KinAct Analysis Report"
+output: html_document
+params:
+  minsize: NA
+  method: NA
+  organism: NA
+  selected_kinase: NA
+  selected_sample: NA
+  numberKinases: NA
+  sample_plot: NA
+  tf_plot: NA
+  network_plot: NA
+  heatmap_plot: NA
+---
+
+[KinAct](http://saezlab.github.io/kinact/) is a resource linking kinases to phosphorylation sites ( [Wirbel et al., 2018](https://link.springer.com/protocol/10.1007%2F978-1-4939-7493-1_6 ). 
+It is fully integrated into Omnipath due to the addition of kinase-substrate interaction resources ( [Türei et al., 2021, 2016](http://europepmc.org/abstract/MED/27898060) ). 
+Kinase activity estimation is performed using the same algorithm as DoRothEA to estimate activity scores ( [Alvarez et al., 2016](https://www.nature.com/articles/ng.3593) ). Instead of TF-target interactions, KinAct uses collections of kinase-substrate interactions and phosphoproteomic data instead of transcriptomic data.
+
+### The analysis
+
+The selected parameters:
+
+- organism: `r params$organism`
+- min size: `r params$minsize`
+- method: `r params$method`
+
+The code:
+
+```{r, eval=FALSE}
+dorothea::run_viper(kinase_matrix, 
+                    kinact_regulon_human,
+                    options =  list(minsize = minsize,
+                                    method = method,
+                                    eset.filter = FALSE,
+                                    cores = 1,
+                                    verbose = FALSE,
+                                    nes = TRUE))
+```
+
+### The results
+
+The computation yields a matrix with the normalised enrichment scores for each Kinase across all samples.
+
+The heatmap provides a comprehensive overview of all contrasts/samples.
+This heatmap includes the top `r params$numberKinases` selected TFs for the sample **`r params$selected_sample`** compared with the rest of the samples.
+
+```{r, echo=FALSE, fig.width=10}
+params$heatmap_plot
+```
+
+The bar plots show the activity of **`r params$selected_kinase`** for all given contrasts/samples;
+and the top `r params$numberKinases` regulated TFs for sample **`r params$selected_sample`**.
+
+```{r, echo=FALSE}
+params$tf_plot
+
+params$sample_plot
+```
+
+The interactions of `r params$selected_kinase` with its targets is shown in a network plot for sample `r params$selected_sample`.
+
+Blue nodes indicate that the target is over-expressed and red nodes indicate that the target is down-regulated. The color of the edges represent the effect of the TF on its target (either activation or repression). The number of shown nodes can be changed by the corresponding widget.
+
+```{r, echo=FALSE}
+params$network_plot
+```

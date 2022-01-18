@@ -20,6 +20,7 @@ tabPanel(
       checkboxInput("hierarchical", label = "Hierarchical layout", value = FALSE),
       uiOutput("down_carnival"),
       downloadObjUI(id = "download_carnival"),
+      downloadReportUI(id = "carnival_report"),
       circle = TRUE,
       status = "primary",
       inputId = "carnival_control",

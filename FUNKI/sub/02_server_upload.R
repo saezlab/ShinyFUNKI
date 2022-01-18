@@ -14,30 +14,24 @@ expr = reactive({
               !input$phospho_data & !input$example_data)
   
   if(input$example_data){
-    expDATA = read_csv("data/examples/example_data.csv") %>% 
-      dplyr::select(contrast, gene, logFC) %>% 
-      tidyr::pivot_wider(names_from = contrast, values_from = logFC) %>%
-      data.frame() %>%
-      tibble::column_to_rownames(var = "gene")
-      
+    expDATA = read_csv("data/examples/multipleconditions_data.csv")
   }else if(input$phospho_data){
-    expDATA = read.csv("data/examples/phospho_data.csv", row.names = 1, header = TRUE)
+    expDATA = read_csv("data/examples/phospho_data.csv")
   }else if(input$contrast_data){
-    expDATA = read.delim("data/examples/contrast_cosmos.csv", header = T, sep  =  ',') %>%
-      tibble() %>%
-      dplyr::mutate(ID = as.character(ID)) %>%
-      arrange(HGNC, -adj.P.Val) %>%
-      filter(duplicated(HGNC) == FALSE) %>%
-      tibble::column_to_rownames(var = "HGNC")
-
+    expDATA = read_csv("data/examples/contrast_data.csv") %>%
+      dplyr::mutate(ID = as.character(ID)) 
  }else {
     
     inFile = input$upload_expr$datapath
-    
     if (is.null(inFile)){
       return(NULL)
     } else{
-      expDATA = read.csv(inFile, row.names = 1, header = TRUE)
+      expDATA = read_csv(inFile)
+      colnames(expDATA)[grep("gene|genes", tolower(colnames(expDATA)))] = "ID"
+      if("ID" %in% names(expDATA))
+      {
+        expDATA$ID <- as.character(expDATA$ID)
+      }
     }
   }
   return(expDATA)
@@ -45,7 +39,18 @@ expr = reactive({
 
 output$expr = DT::renderDataTable({
   shiny::req(expr())
-  DT::datatable(expr(), option = list(autoWidth = TRUE, pageLength = 5)) %>%
+  DT::datatable(expr(), 
+                filter = "none",
+                extensions = "Buttons",
+                rownames = FALSE,
+                option = list(
+                  paging = TRUE,
+                  searching = FALSE,
+                  fixedColumns = TRUE,
+                  autoWidth = TRUE,
+                  dom = 'tB',
+                  pageLength = 5,
+                  buttons = c('csv', 'excel'))) %>%
     formatSignif(which(map_lgl(expr(), is.numeric)))
 })
 
@@ -70,28 +75,74 @@ observeEvent({
 
 # jump to visualise results
 observeEvent(input$an_dorothea, {
-  updateTabsetPanel(session, inputId = "menu",
-                    selected = "DoRothEA")
+  # When the button is clicked, wrap the code in a call to `withBusyIndicatorServer()`
+  withBusyIndicatorServer("an_dorothea", {
+    Sys.sleep(1)
+    if (all(!is.null(input$upload_expr$datapath), input$gene_id_type == "Select gene ID")) {
+      stop("Select an appropiate gene ID")
+      
+    }else{
+      updateTabsetPanel(session, inputId = "menu",
+                        selected = "DoRothEA")
+    }
+  })
 })
 
 observeEvent(input$an_progeny, {
-  updateTabsetPanel(session, inputId = "menu",
-                    selected = "PROGENy")
+  # When the button is clicked, wrap the code in a call to `withBusyIndicatorServer()`
+  withBusyIndicatorServer("an_progeny", {
+    Sys.sleep(1)
+    if (all(!is.null(input$upload_expr$datapath), input$gene_id_type == "Select gene ID")) {
+      stop("Select an appropiate gene ID")
+      
+    }else{
+      updateTabsetPanel(session, inputId = "menu",
+                        selected = "PROGENy")
+    }
+  })
 })
 
 observeEvent(input$an_carnival, {
-  updateTabsetPanel(session, inputId = "menu",
-                    selected = "CARNIVAL")
+  # When the button is clicked, wrap the code in a call to `withBusyIndicatorServer()`
+  withBusyIndicatorServer("an_carnival", {
+    Sys.sleep(1)
+    if (all(!is.null(input$upload_expr$datapath), input$gene_id_type == "Select gene ID")) {
+      stop("Select an appropiate gene ID")
+      
+    }else{
+      updateTabsetPanel(session, inputId = "menu",
+                        selected = "CARNIVAL")
+    }
+  })
 })
 
 observeEvent(input$an_kinact, {
-  updateTabsetPanel(session, inputId = "menu",
-                    selected = "KinAct")
+  # When the button is clicked, wrap the code in a call to `withBusyIndicatorServer()`
+  withBusyIndicatorServer("an_kinact", {
+    Sys.sleep(1)
+    if (all(!is.null(input$upload_expr$datapath), input$gene_id_type == "Select gene ID")) {
+      stop("Select an appropiate gene ID")
+      
+    }else{
+      updateTabsetPanel(session, inputId = "menu",
+                        selected = "KinAct")
+    }
+  })
 })
 
+
 observeEvent(input$an_cosmos, {
-  updateTabsetPanel(session, inputId = "menu",
-                    selected = "COSMOS")
+  # When the button is clicked, wrap the code in a call to `withBusyIndicatorServer()`
+  withBusyIndicatorServer("an_cosmos", {
+    Sys.sleep(1)
+    if (all(!is.null(input$upload_expr$datapath), input$gene_id_type == "Select gene ID")) {
+      stop("Select an appropiate gene ID")
+      
+    }else{
+      updateTabsetPanel(session, inputId = "menu",
+                        selected = "COSMOS")
+    }
+  })
 })
 
 #get path for CARNIVAL solver
@@ -119,5 +170,24 @@ output$select_sample_carnival = renderUI({
               label = "Select Sample/Contrast",
               choices = choices,
               selected = choices[1])
-  
 })
+  
+# select condition from contrast
+output$select_statistic_contrast = renderUI({
+    req(expr())
+    if(any(input$type_analysis == 'contrast', input$contrast_data)){
+      choices = colnames(expr())
+      choices = choices[-which(choices == "ID")]
+      pickerInput(inputId = "select_statistic_contrast",
+                  label = "Select Statistic",
+                  choices = choices,
+                  selected = choices[1])
+      }
+})    
+  
+#for conditional panel
+output$fileUploaded <- reactive({
+    return(!is.null(input$upload_expr$datapath))
+  })
+outputOptions(output, 'fileUploaded', suspendWhenHidden=FALSE)
+  

@@ -15,6 +15,7 @@ tabPanel(
     uiOutput("select_pathway"),
     uiOutput("down_progeny"),
     downloadObjUI(id = "download_progeny"),
+    downloadReportUI(id = "progeny_report"),
     circle = TRUE,
     status = "primary",
     icon = icon("sliders"), width = "300px",

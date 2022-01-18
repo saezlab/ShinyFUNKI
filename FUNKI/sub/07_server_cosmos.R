@@ -35,11 +35,22 @@ COSMOS = reactive({
       if (input$solver_cosmos == "lpSolve"){
         solverpath_cosmos = NULL
       }
+    
+    stat = input$select_statistic_contrast
+    geneID = input$gene_id_type
+    
+    if(input$contrast_data){
+      stat = "t"
+      geneID = "ENTREZID"
+    }
 
-      data = expr() %>%
-        tibble::rownames_to_column("HGNC") %>%
-        dplyr::select(!HGNC) %>%
-        unique.data.frame()
+      data = progessDATA(data = expr(),
+                         contrast_data = input$contrast_data,
+                         upload_expr = input$upload_expr,
+                         type_analysis = input$type_analysis,
+                         gene_id_type = geneID,
+                         running_method = "cosmos",
+                         select_statistic = stat)
       
       cosmos <- run_COSMOS(layer_1 = layer_1, 
                            layer_2 = layer_2, 
@@ -47,7 +58,7 @@ COSMOS = reactive({
                            PKN = PKN, 
                            solver = input$solver_cosmos, 
                            solver_path = solverpath_cosmos,
-                           runtime = c(200,200,1000,1000))
+                           runtime = c(200,1000,200,1000))
     removeModal()
   }else{
     cosmos = cos()
@@ -225,4 +236,34 @@ cosmos_download = observeEvent({
   }
   
   downloadObjSever("download_cosmos", filename = a$fname, content = a$cont)
+  
+  # Report
+  
+  if(input$an_cosmos){
+    parameters_list = list(
+      network = dplyr::if_else(input$cosnet == "def",
+                               "provided by FUNKI.",
+                               paste0("provided by the user in the file", input$upload_cosnet$datapath)),
+      solver = input$solver_cosmos,
+      layer1 = dplyr::if_else(input$layer1 == 'l1',
+                              "provided by FUNKI.",
+                              paste0("provided by the user in the file", input$upload_layer1$datapath)),
+      layer2 = dplyr::if_else(input$layer2 == 'l2',
+                              "provided by FUNKI.",
+                              paste0("provided by the user in the file", input$input$upload_layer2$datapath))
+    )
+  }else{
+    parameters_list = list(analysis_expl = "The analysis was **NOT RUN**, the results were uploaded.")
+  }
+  
+  parameters_list$cosmos_network = visNetwork::visNetwork(nodes_cosmos(), 
+                                              edges_cosmos(), 
+                                              height = 1600, width = 1600) %>%
+    visNetwork::visIgraphLayout() %>%
+    visNetwork::visEdges(arrows = 'to')
+  
+  downloadReportSever("cosmos_report", 
+                      fname = "report_cosmos.html", 
+                      report = "cosmos_report.Rmd",
+                      parameters = parameters_list)
 })

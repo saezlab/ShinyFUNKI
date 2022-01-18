@@ -10,11 +10,22 @@ P = reactive({
       if(input$examples){
         organism = "Human"
       }else {organism = input$select_organism}
+    
+    stat = input$select_statistic_contrast
+    geneID = input$gene_id_type
+    
+    if(input$contrast_data){
+      stat = "t"
+      geneID = "ENTREZID"
+    }
       
       data = progessDATA(data = expr(),
                          contrast_data = input$contrast_data,
-                         input$upload_expr,
-                         input$type_analysis)
+                         upload_expr = input$upload_expr,
+                         type_analysis = input$type_analysis,
+                         gene_id_type = geneID,
+                         running_method = "progeny",
+                         select_statistic = stat)
       prog_result = data %>%
         run_progeny(organism = organism,
                     top = input$top,
@@ -104,12 +115,26 @@ scatter_reactive = reactive({
     if (input$example_data){
       organism = "Human"
     }else {organism = input$select_organism}
+  
+  stat = input$select_statistic_contrast
+  geneID = input$gene_id_type
+  
+  if(input$contrast_data){
+    stat = "t"
+    geneID = "ENTREZID"
+  }
     
     prog_matrix <- progeny::getModel(organism = organism, top =  input$top) %>%
       tibble::rownames_to_column("GeneID") %>%
       dplyr::select(GeneID, input$select_pathway)
     
-    inputProgeny_df <- expr() %>%
+    inputProgeny_df <- progessDATA(data = expr(),
+                                   contrast_data = input$contrast_data,
+                                   upload_expr = input$upload_expr,
+                                   type_analysis = input$type_analysis,
+                                   gene_id_type = geneID,
+                                   running_method = "progeny",
+                                   select_statistic = stat) %>%
       as.data.frame() %>%
       dplyr::select(input$select_contrast_progeny) %>%
       tibble::rownames_to_column("GeneID")
@@ -201,4 +226,17 @@ progeny_download = observeEvent({
   }
   
   downloadObjSever("download_progeny", filename = a$fname, content = a$cont)
+  downloadReportSever("progeny_report", 
+                      fname = "report_progeny.html",
+                      report = "progeny_report.Rmd",
+                      parameters = list(
+                        top = input$top,
+                        perm = input$perm,
+                        organism = input$select_organism,
+                        selected_sample = input$select_contrast_progeny,
+                        selected_pathway = input$select_pathway,
+                        sample_plot = barplot_nes_reactive_progeny(),
+                        heatmap_plot = heatmap_scores(P()),
+                        scatter_plot = scatter_reactive()
+                      ))
 })

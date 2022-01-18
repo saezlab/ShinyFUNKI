@@ -4,11 +4,17 @@ kin = uploadResultsObjSever("upload_kinact_results")
 K = reactive({
   if(input$an_kinact){
     showModal(modalDialog("Running KinAct", footer = NULL))
-      
-      kinact_result = run_kinact(data = expr(), 
-                                 organism = "Human", 
-                                 minsize = input$minsize_kinact, 
-                                 method = input$method_kinact)
+
+    kinact_result = progessDATA(data = expr(),
+                                  contrast_data = F,
+                                  upload_expr = input$upload_expr,
+                                  type_analysis = NULL,
+                                  gene_id_type = input$gene_id_type,
+                                  running_method = "kinact",
+                                  select_statistic = input$select_statistic_contrast) %>% 
+    run_kinact(organism = "Human",
+                   minsize = input$minsize_kinact,
+                   method = input$method_kinact)
       
     removeModal()
     
@@ -64,7 +70,7 @@ output$select_top_targets = renderUI({
   targets = kinact_regulon_human %>%
     dplyr::filter(kinase == input$select_kinase) %>%
     dplyr::select(target) %>%
-    dplyr::filter(target %in% rownames(expr())) %>%
+    dplyr::filter(target %in% expr()$ID_site) %>%
     nrow()
     
   sliderInput(
@@ -138,8 +144,14 @@ network_kinase_reactive = reactive({
          "The plot cannot be showed because the expression file is not included. Please, upload it in the Data and Parameters section.")
   )
   
-  plot_network(
-    data = expr(), 
+  progessDATA(data = expr(),
+              contrast_data = input$contrast_data,
+              upload_expr = input$upload_expr,
+              type_analysis = input$type_analysis,
+              gene_id_type = input$gene_id_type,
+              running_method = "kinact",
+              select_statistic = input$select_statistic_contrast) %>%
+  plot_network(.,
     footprint_result = K(),
     regulon = kinact_regulon_human,
     sample = input$select_contrast_kinact,
@@ -231,4 +243,19 @@ kinact_download = observeEvent({
   }
   
   downloadObjSever("download_kinact", filename = a$fname, content = a$cont)
+  downloadReportSever("kinact_report", 
+                      fname = "report_kinact.html",
+                      report = "kinact_report.Rmd",
+                      parameters = list(
+                                        minsize = input$minsize_kinact,
+                                        method = input$method_kinact,
+                                        organism = input$select_organism,
+                                        selected_kinase = input$select_kinase,
+                                        numberKinases = input$select_top_targets,
+                                        selected_sample = input$select_contrast_kinact,
+                                        sample_plot = barplot_nes_reactive_kinact(),
+                                        tf_plot = barplot_kinase_reactive(),
+                                        network_plot = network_kinase_reactive(),
+                                        heatmap_plot = K() %>% t() %>% data.frame() %>% heatmap_scores()
+                      ))
 })

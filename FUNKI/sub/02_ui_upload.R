@@ -12,107 +12,154 @@ tabPanel(
   ),
   fluidRow(
     column(4, align="left",
-           
            # show the upload stage if the example is not selected
            fluidRow(
-             column(7, align = "center",
-                    # data upload -----
-                    fileInput("upload_expr", 
-                              label = h5("Upload (.csv) file (max. 50 MB)",
+             # data upload -----
+             fileInput("upload_expr", 
+                              label = h5("Upload data (.csv) file (max. 50 MB)",
                                          tags$style(type = "text/css", "#q2_data {vertical-align: top;}"),
                                          bsButton("q2_data", label = "", icon = icon("question"), style = "info", size = "extra-small")),
                               accept = c("text/csv",
                                          "text/comma-separated-values,text/plain",
                                          ".csv")
                     ),
-                    
-                    bsPopover(id = "q2_data", title = "Upload data",
-                              content = "file with comma-separated-values. If there are multiple conditions, samples in columns and gene (HGNC symbol) in rows. If contrasts, HGNC symbol as row names and at least a column called t with the statistic value from the differential expression analysis. For COSMOS analysis, a column called ID with entrez ids should be provided (it the default networks is going to be used). Please contact us if you wish to upload more data than the current upload limit.",
+             bsPopover(id = "q2_data", title = "Upload data",
+                              content = "file with comma-separated-values. An ID column containing the gene names should be always provided. For multible conditions, samples should be in the colums.",
                               placement = "right", 
                               trigger = "click", 
                               options = list(container = "body")
+                    ),
+                    # select example data -----
+             actionButton(
+                      inputId = "examples",
+                      label = "Load Examples",
+                      icon = NULL
                     )
-                    
+           ),
+           fluidRow(
+                    conditionalPanel(
+                      condition = ("input.examples"),
+                      h5("Expression"),
+                      fluidRow(
+                        column(6, align = "center",
+                               materialSwitch(inputId = "example_data",
+                                              label = "Multiple conditions",
+                                              value = FALSE,
+                                              status = "default",
+                                              width = "100%"),
+                               p("Dataset taken from ",
+                                 a("Blackham et al, J Virol., 2010", 
+                                   href = "https://www.ncbi.nlm.nih.gov/pubmed/20200238",
+                                   target = "_blank"),
+                                 a("(GSE20948)",
+                                   href = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE20948",
+                                   target = "_blank"))
+                               
+                        ),
+                        column(6, align = "center",
+                               materialSwitch(inputId = "contrast_data",
+                                              label = "Constrast",
+                                              value = FALSE,
+                                              status = "default",
+                                              width = "100%"),
+                               p("Dataset taken from ",
+                                 a("Dugourd et al, Mol. Sys. Biology, 2021", 
+                                   href = "https://www.embopress.org/doi/full/10.15252/msb.20209730",
+                                   target = "_blank")),
+                        )
+                      ),
+                      h5("Phosphoproteomics"),
+                      materialSwitch(inputId = "phospho_data", 
+                                     label = "Phosphodata", 
+                                     value = FALSE,
+                                     status = "default",
+                                     width = "100%"),
+                      p("Dataset taken from ",
+                        a("Gonçalves et al, Met Eng, 2018", 
+                          href = "https://pubmed.ncbi.nlm.nih.gov/29191787/",
+                          target = "_blank"))
+                    )
+          ),
+          
+          fluidRow(),
+          
+          fluidRow(column(6, align = "left",
+                          conditionalPanel(
+                            condition = "output.fileUploaded == true",
+                            # select organism
+                            selectInput("select_organism", 
+                                        label = h5("Select Organism",
+                                                   tags$style(type = "text/css", "#q2_organism {vertical-align: top;}"),
+                                                   bsButton("q2_organism", label = "", icon = icon("question"), style = "info", size = "extra-small")),
+                                        choices = c("Homo sapiens" = "Human",
+                                                    "Mus musculus" = "Mouse"),
+                                        selected = "Human"),
+                            bsPopover(id = "q2_organism", title = "Select Organism",
+                                      content = "The model organism. Currently available for Human or Mouse.",
+                                      placement = "right", 
+                                      trigger = "click", 
+                                      options = list(container = "body")
+                            )
+                          )
+                          ),
+                   column(6, align = "center",
+                          conditionalPanel(
+                            condition = "output.fileUploaded == true",
+                            selectInput("gene_id_type", 
+                                      label = h5("Gene ID type",
+                                                 tags$style(type = "text/css", "#q2_geneID {vertical-align: top;}"),
+                                                 bsButton("q2_geneID", label = "", icon = icon("question"), style = "info", size = "extra-small")),
+                                      choices = c("Select gene ID", "ACCNUM","ALIAS", "ENSEMBL", "ENSEMBLPROT","ENSEMBLTRANS","ENTREZID",
+                                                  "ENZYME","EVIDENCE","EVIDENCEALL","GENENAME","GENETYPE","GO","GOALL",
+                                                  "IPI", "MAP","OMIM", "ONTOLOGY", "ONTOLOGYALL","PATH",
+                                                  "PFAM", "PMID", "PROSITE","REFSEQ","SYMBOL","UCSCKG","UNIPROT"),
+                                      selected = "Gene ID"),
+                            bsPopover(id = "q2_geneID", title = "Gene ID type",
+                                    content = "Gene ID. Select the type of ID provided in the data.",
+                                    placement = "right", 
+                                    trigger = "click", 
+                                    options = list(container = "body")
+                            )
+                          )
+                   )
+            ),
+           
+           fluidRow(
+             column(7, align = "center",
+                    conditionalPanel(
+                      condition = "output.fileUploaded == true",
+                      radioButtons("type_analysis",
+                                   label = h5("Type of analysis",
+                                              tags$style(type = "text/css", "#q3_typeanalysis {vertical-align: top;}"),
+                                              bsButton("q3_typeanalysis", label = "", icon = icon("question"), style = "info", size = "extra-small")),
+                                   choices = c("Multiple conditions" = "multi", "Contrast" = "contrast"),
+                                   selected = character(0),
+                                   inline = TRUE),
+                      bsPopover(id = "q3_typeanalysis",
+                                title = "Type of analysis",
+                                content = "Type of upload data. If the data come from a differential expression analysis, select contrast. If it contains multiple samples to analyse, select multiple conditions.",
+                                placement = "right",
+                                trigger = "click",
+                                options = list(container = "body")
+                      )
+                    )
              ),
              column(5, align = "center",
-                    # select organism
-                    selectInput("select_organism", 
-                                label = h5("Select Organism",
-                                           tags$style(type = "text/css", "#q2_organism {vertical-align: top;}"),
-                                           bsButton("q2_organism", label = "", icon = icon("question"), style = "info", size = "extra-small")),
-                                choices = c("Homo sapiens" = "Human",
-                                            "Mus musculus" = "Mouse"),
-                                selected = "Human"),
-                    bsPopover(id = "q2_organism", title = "Select Organism",
-                              content = "The model organism. Currently available for Human or Mouse.",
-                              placement = "right", 
-                              trigger = "click", 
-                              options = list(container = "body")
+                    conditionalPanel(
+                      condition = "output.fileUploaded == true",
+                      uiOutput("select_statistic_contrast",
+                               label = h5("Select statistic",
+                                          tags$style(type = "text/css", "#q2c_sample {vertical-align: top;}"),
+                                          bsButton("q2c_sample", label = "", icon = icon("question"), style = "info", size = "extra-small"))),
+                      bsPopover(id = "q2c_sample", 
+                                title = "Select statistict",
+                                content = "Select statistic to run the analysis.",
+                                placement = "right", 
+                                trigger = "click", 
+                                options = list(container = "body")
+                      )
                     )
-                    
-             ),
-           ),
-           radioButtons("type_analysis", 
-                        label = h5("Type of analysis",
-                                   tags$style(type = "text/css", "#q3_typeanalysis {vertical-align: top;}"),
-                                   bsButton("q3_typeanalysis", label = "", icon = icon("question"), style = "info", size = "extra-small")),
-                        choices = c("Multiple conditions" = "multi", "Contrast" = "contrast"), 
-                        selected = character(0),
-                        inline = TRUE),
-           bsPopover(id = "q3_typeanalysis",
-                     title = "Type of analysis",
-                     content = "Type of upload data. If the data come from a differential expression analysis, select contrast. If it contains multiple samples to analyse, select multiple conditions.",
-                     placement = "right", 
-                     trigger = "click", 
-                     options = list(container = "body")
-                     ),
-           # select example data -----
-           actionButton(
-             inputId = "examples",
-             label = "Load Examples",
-             icon = NULL
-           ),
-           conditionalPanel(
-             condition =  ("input.examples"),
-             h5("Expression"),
-             fluidRow(
-               column(6, align = "center",
-                      materialSwitch(inputId = "example_data",
-                                     label = "Multiple conditions",
-                                     value = FALSE,
-                                     status = "default",
-                                     width = "100%"),
-                      p("Dataset taken from ",
-                        a("Blackham et al, J Virol., 2010", 
-                          href = "https://www.ncbi.nlm.nih.gov/pubmed/20200238",
-                          target = "_blank"),
-                        a("(GSE20948)",
-                          href = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE20948",
-                          target = "_blank"))
-                      
-               ),
-               column(6, align = "center",
-                      materialSwitch(inputId = "contrast_data",
-                                     label = "Constrast",
-                                     value = FALSE,
-                                     status = "default",
-                                     width = "100%"),
-                      p("Dataset taken from ",
-                        a("Dugourd et al, Mol. Sys. Biology, 2021", 
-                          href = "https://www.embopress.org/doi/full/10.15252/msb.20209730",
-                          target = "_blank")),
-               )
-             ),
-             h5("Phosphoproteomics"),
-             materialSwitch(inputId = "phospho_data", 
-                            label = "Phosphodata", 
-                            value = FALSE,
-                            status = "default",
-                            width = "100%"),
-             p("Dataset taken from ",
-               a("Gonçalves et al, Met Eng, 2018", 
-                 href = "https://pubmed.ncbi.nlm.nih.gov/29191787/",
-                 target = "_blank"))
+                  )
            )
     ),
     
@@ -202,7 +249,14 @@ tabPanel(
                )
         ),
         column(1, align="center",
-               actionButton("an_dorothea", "Run DoRothEA") )
+               withBusyIndicatorUI(
+                 actionButton(
+                   "an_dorothea",
+                   "Run DoRothEA",
+                   class = "btn-primary"
+                 )
+               )
+               )
       )
     ),
     # Progeny ------------------
@@ -248,7 +302,13 @@ tabPanel(
                )
         ),
         column(1, align="center",
-               actionButton("an_progeny", "Run PROGENy")
+               withBusyIndicatorUI(
+                 actionButton(
+                   "an_progeny",
+                   "Run PROGENy",
+                   class = "btn-primary"
+                 )
+               )
         )
 
         )
@@ -269,11 +329,11 @@ tabPanel(
                numericInput(inputId = "minsize_kinact",
                             label = h5("Regulon's minimal size",
                                        tags$style(type = "text/css", "#q2d_regulon {vertical-align: top;}"),
-                                       bsButton("q2d_regulon", label = "", icon = icon("question"),
+                                       bsButton("q2k_regulon", label = "", icon = icon("question"),
                                                 style = "info", size = "extra-small")),
                             min = 1, max = NA, value = 5
                ),
-               bsPopover(id = "q2d_regulon",
+               bsPopover(id = "q2k_regulon",
                          title = "Minimal size of the regulon",
                          content = "Minimun number of genes targeted by a kinase.",
                          placement = "right",
@@ -285,7 +345,7 @@ tabPanel(
                selectInput(inputId = "method_kinact",
                            label = h5("Method for computing signatures",
                                       tags$style(type = "text/css", "#q2d_method {vertical-align: top;}"),
-                                      bsButton("q2d_method", label = "", icon = icon("question"),
+                                      bsButton("q2k_method", label = "", icon = icon("question"),
                                                style = "info", size = "extra-small")),
                            choices = c("scale" = "scale",
                                        "rank" = "rank",
@@ -294,7 +354,7 @@ tabPanel(
                                        "none" = "none"),
                            selected = "none"
                ),
-               bsPopover(id = "q2d_method",
+               bsPopover(id = "q2k_method",
                          title = "Method for computing signature",
                          content = "Method for computing the single sample signatures.",
                          placement = "right",
@@ -303,7 +363,14 @@ tabPanel(
                )
         ),
         column(1, align="center",
-               actionButton("an_kinact", "Run KinAct") )
+               withBusyIndicatorUI(
+                 actionButton(
+                   "an_kinact",
+                   "Run KinAct",
+                   class = "btn-primary"
+                 )
+               )
+               )
       )
     ),
 
@@ -451,7 +518,13 @@ tabPanel(
                                   multiple = FALSE),
                  # fileInput("solverPath", label = "Select path to execute cbc/cplex file")
                ),
-               actionButton("an_carnival", "Run CARNIVAL")
+               withBusyIndicatorUI(
+                 actionButton(
+                   "an_carnival",
+                   "Run CARNIVAL",
+                   class = "btn-primary"
+                 )
+               )
         )
       )
     ),
@@ -547,7 +620,15 @@ tabPanel(
                                   multiple = FALSE),
                ),
         ),
-        column(1, align="center", actionButton("an_cosmos", "Run COSMOS"))
+        column(1, align="center", 
+               withBusyIndicatorUI(
+                 actionButton(
+                   "an_cosmos",
+                   "Run COSMOS",
+                   class = "btn-primary"
+                 )
+               )
+               )
       )
     )
   )

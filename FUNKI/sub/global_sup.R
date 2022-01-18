@@ -170,21 +170,94 @@ get_labels <- function(df, nlabel, npaths, threshold){
 }
 
 #function to handle if the data come from example or upload to make it suitable for the analysis
-progessDATA <- function(data, contrast_data = F, upload_expr, type_analysis){
+progessDATA <- function(data, contrast_data = F, upload_expr, type_analysis, 
+                        gene_id_type = NULL, running_method = "cosmos", select_statistic = "t"){
   
+  if (running_method == "kinact"){
+    data = data %>%
+      dplyr::rename(ID = ID_site)
+  }
+  
+  #change ids to correct ones
+  if(all(!is.null(gene_id_type), gene_id_type != "Select gene ID")){
+    
+    if (running_method == "kinact"){
+      
+      data = data %>%
+        tidyr::separate(col = "ID", into = c("ID", "site"), sep = "_")
+      
+      data = convert_genes_ids(data$ID, gene_id_type) %>% 
+        as.matrix() %>% 
+        as.data.frame() %>% 
+        tibble::rownames_to_column(var = "ID") %>% 
+        dplyr::rename(newID = V1) %>%
+        merge.data.frame(., data, by = "ID", all.y = T) %>%
+        tidyr::drop_na() %>%
+        dplyr::select(!ID) %>%
+        dplyr::rename(ID = newID) %>%
+        dplyr::mutate(ID = paste(ID, site, sep = "_")) %>%
+        dplyr::select(ID, activity) %>%
+        unique.data.frame()
+      
+    }else if(running_method == "cosmos"){
+        data = convert_genes_ids(data$ID, gene_id_type, target_ID = "ENTREZID") %>% 
+        as.matrix() %>% 
+        as.data.frame() %>% 
+        tibble::rownames_to_column(var = "ID") %>% 
+        dplyr::rename(newID = V1) %>%
+        merge.data.frame(., data, by = "ID", all.y = T) %>%
+        dplyr::select(!ID) %>%
+        dplyr::rename(ID = newID) %>%
+        tidyr::drop_na() %>%
+        unique.data.frame()
+
+    }else{
+      data = convert_genes_ids(data$ID, gene_id_type) %>% 
+        as.matrix() %>% 
+        as.data.frame() %>% 
+        tibble::rownames_to_column(var = "ID") %>% 
+        dplyr::rename(newID = V1) %>%
+        merge.data.frame(., data, by = "ID", all.y = T) %>%
+        dplyr::select(!ID) %>%
+        dplyr::rename(ID = newID) %>%
+        tidyr::drop_na() %>%
+        unique.data.frame() 
+    }
+  }
+  
+  if(running_method != "cosmos"){
+    data = data %>%
+      tibble::column_to_rownames(var = "ID")
+  }
+  
+  #select ID and t columns for contrast analysis
   if( any( contrast_data | all(!is.null(upload_expr) & !is.null(type_analysis)) ) ){
-    upcon = T
+    
+    upcon = F
     
     if(!is.null(type_analysis)){
-      if(type_analysis == "multi"){
-        upcon = F
+      if(type_analysis == "contrast"){
+        upcon = T
       }
     }
     
     if(any(contrast_data | upcon)){
-      data = data %>%
-        dplyr::select(t) %>%
-        unique.data.frame()
+      if(running_method != "cosmos"){
+        data = data %>%
+          dplyr::select(!!as.name(select_statistic)) %>%
+          unique.data.frame()
+        
+      } else {
+        aux = data %>%
+          dplyr::select(ID,!!as.name(select_statistic)) %>%
+          unique.data.frame() %>%
+          dplyr::mutate(ID = paste0("X", ID)) %>%
+          as.data.frame()
+
+        data = aux[,2]
+        names(data) = aux[,1]
+      }
+      
     }
   }
   
@@ -217,12 +290,12 @@ return(list(nodes = background_nodes, edges = background_edges))
 }
 
 ##A function to convert a vector of gene identifiers to symbol
-#Accepted identifier_type values are : "ACCNUM","ALIAS", "ENSEMBL",
+#Accepted identifier_type and target_ID values are : "ACCNUM","ALIAS", "ENSEMBL",
 #"ENSEMBLPROT","ENSEMBLTRANS","ENTREZID","ENZYME","EVIDENCE",
 #"EVIDENCEALL","GENENAME","GENETYPE","GO","GOALL","IPI", "MAP","OMIM",
 #"ONTOLOGY", "ONTOLOGYALL","PATH", "PFAM", "PMID", "PROSITE",
 #"REFSEQ","SYMBOL","UCSCKG","UNIPROT" 
-convert_genes_ids <- function(genes, identifier_type)
+convert_genes_ids <- function(genes, identifier_type, target_ID = "SYMBOL")
 {
   out <- tryCatch(
     {
@@ -232,7 +305,7 @@ convert_genes_ids <- function(genes, identifier_type)
         return(genes)
       }
       
-      mapping <- unlist(AnnotationDbi::mapIds(org.Hs.eg.db::org.Hs.eg.db, genes, "SYMBOL", identifier_type))
+      mapping <- unlist(AnnotationDbi::mapIds(org.Hs.eg.db::org.Hs.eg.db, genes, target_ID, identifier_type))
       print(paste(length(mapping[is.na(mapping)])," identifiers could not be mapped to gene symbole.", sep =""))
       
       dubs <- mapping[duplicated(mapping)]
